@@ -3,7 +3,7 @@ import numpy as np
 import progressbar
 
 from settings import original_data, extracted_data, hydrophobic_value, polar_value, hydrophobic_types, float_type, \
-    formatter, protein_value, ligand_value, protein_suffix, widgets_progressbar
+    formatter, protein_value, ligand_value, widgets_progressbar
 
 
 def values_range():

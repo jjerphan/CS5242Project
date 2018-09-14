@@ -42,15 +42,18 @@ The final score is proportional to the total number of match for proteins.
 
 - Would performing 3D rotations be usefull to have more examples ? 
 - It is possible to find a canonical representation for molecules ? I.E for a given protein in a random position, is it possible to find a "natural" position of this same protein easily for every random position ?
+  - It should be possible using PCA on the system of protein and ligand, yes!
 
 ###### Proteins and their atoms:
 
-- Is there a specific fixed number of proteins for each protein?
+- Is there a specific fixed number of atoms for each protein?
+  -  No : molecules do have differents number of atoms (see bellow). Generally, proteins have much more atoms than ligands.
 - Why considering only 2 types of atoms (*hydrophobic* and *polar*) instead of the 3 first types (*C*, *O* and *N*) ?
 
 ###### Data and training
 
 - Where is the data coming from? What are the other features present in the files?
+  - It should be coming from the popular [PDBBind](http://www.pdbbind.org.cn/) data base.
 - For now, we have $n=3000$ examples (pair of protein and ligens). But if we see the problem as a classification problem from a couple protein/ligen to a prediction fit / not fit, we can construct loads of differents examples. More expecially, we can for each example construct $n-1$ other examples. Those examples won't represent a protein-ligand system, but can be used as example for the "not-fit" class. Hence we could have in total $3000 \times 2999 = 8\ 997\ 000$ examples
 - **Bigest problem for now:** the number of atoms is extremely variant for the molecules. See [`info`](./info) .
 
@@ -75,6 +78,41 @@ We need to find a way to resolve this problem. There are [several approaches](ht
 
 
 
+- A (naîve ?) but working solution is to discretize the space containing the protein-ligand system and then represented on each little cube the information of atom. For a given cube, if there is no atom, then, the information is nulled. This approach is used in different models (such as AtomNet and Pafnucy).
+
+  ​
+
+###### Curious observations about the data set   
+
+- Some files do not contain atoms, the molecules are empty, even for some proteins.
+  - We should identify wich are those files exactly and then think about how we could handle those missing examples
+
+###### Some others thoughts
+
+- When we are going to test, the approach would be to return the ligands with the highest probability. However, we know that there is an extra constraint on atom, more precisely that there is a one to one correspondance. Hence, we *should or must* take decisions for ligands generally and not per case as we could choose several ligands for several protein with an high confidence. If we are given $n_p$ proteins and $n_l$ ligands to test :
+  - The first (naiver) approach would consist to evaluate the $n_l$ ligands and take the 10 best ones.
+  - The second approach would consist to evaluate the $n_p\times n_l$ systems and then take, for each ligands that are chosen several times, the associated protein of highest confidence.
+
+
+
+## Things to do
+
+- [ ] Handle missing molecules
+- [ ] Do some research on proteins-ligands binding
+- [ ] Ask questions on forum regarding atom type and origin of data (see above)
+- [ ] Understand how to feed tensors of sizes `(res, res, res, 2)` in Keras `Conv3D` layers
+- [ ] Find appropriate computing ressources
+      - [ ] AWS
+      - [ ] Google Cloud
+      - [ ] NUS Clusters
+      - [ ] [NSCC](https://help.nscc.sg/)
+- [ ] Work on a better representation of data
+      - [ ] Rotation Invariance : use ACP on example or generate rotated examples of existing ones (should change naming convention though)
+      - [ ] Avoid schrinkage of molecules when scaling
+      - [ ] One-Hot-Representation for categorical features
+
+
+
 ## Some resources
 
 - [Protein on Wikipedia](https://en.wikipedia.org/wiki/Protein)
@@ -83,3 +121,5 @@ We need to find a way to resolve this problem. There are [several approaches](ht
 - [Format of `pdb` files](ftp://ftp.wwpdb.org/pub/pdb/doc/format_descriptions/Format_v33_A4.pdf)
 - [Download PyMol](https://pymol.org/2/#download)
 - [Doc of PyMol](http://pymol.sourceforge.net/newman/userman.pdf)
+- [Keras Documentation - Sequence Model](https://keras.io/getting-started/sequential-model-guide/)
+- [PDBBind](http://www.pdbbind.org.cn/)

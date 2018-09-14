@@ -1,17 +1,23 @@
 import numpy as np
 import os
 import matplotlib.pyplot as plt
-
-
 from mpl_toolkits.mplot3d import Axes3D # needed by the 3D plotter
+
 from settings import float_type, comment_delimiter, examples_data, resolution_cube
 
 
-def cuboise(example: np.ndarray, res):
-    # For now making cubes really naively as follow:
-    # Scaling on each coordinates : the result can be distorted.
-    # Rounding down each time (not to the closest
+def make_cube(example: np.ndarray, res) -> np.ndarray:
+    """
+    For now making cubes really naively as follow:
+    Scaling on each coordinates : the result can be distorted.
+    Rounding down each time (not to the closest
 
+    :param example:
+    :param res: resolution for the discretization
+    :return: a cube 4D np.ndarray of size (res, res, res, nb_features)
+    """
+
+    # Spatial coordinates of atoms
     coords = example[:, 0:3]
     atom_features = example[:, 3:]
     nb_features = atom_features.shape[1]
@@ -34,15 +40,27 @@ def cuboise(example: np.ndarray, res):
     return cube
 
 
-def only_positive_examples(examples):
+def only_positive_examples(system_names):
+    """
+    Filter the names to return the ones of positive examples solely (i.e. with same)
+
+    :param system_names: name of the form "xxxx_yyyy" where xxxx is the system of the protein and yyyy of the ligand
+    :return: the list of system names of the form "xxxx_xxxx"
+    """
     def is_positive(name):
         systems = name.replace(".csv", "").split("_")
         return systems[0] == systems[1]
 
-    return list(filter(is_positive, examples))
+    return list(filter(is_positive, system_names))
 
 
 def values_range(spatial_coordinates):
+    """
+    Return the extreme values for atoms coordinates.
+
+    :param spatial_coordinates: np.ndarray of size (nb_atoms, 3)
+    :return: extreme values for each coordinates x, y, z
+    """
     x_min = np.min(spatial_coordinates[:, 0])
     y_min = np.min(spatial_coordinates[:, 1])
     z_min = np.min(spatial_coordinates[:, 2])
@@ -55,6 +73,11 @@ def values_range(spatial_coordinates):
 
 
 def plot_cube(cube):
+    """
+    Plot the cube representation of a given system of protein and ligand.
+
+    :param cube: np.ndarray of size (res,res,res,2)
+    """
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     xs = []
@@ -83,13 +106,14 @@ def plot_cube(cube):
 
 if __name__ == "__main__":
 
+    # Just to test
     examples = sorted(os.listdir(examples_data))
     positives = only_positive_examples(examples)
     for example in positives:
         file_name = os.path.join(examples_data, example)
 
         example = np.loadtxt(file_name, dtype=float_type, comments=comment_delimiter)
-        cube = cuboise(example, resolution_cube)
+        cube = make_cube(example, resolution_cube)
         print(cube.shape)
         plot_cube(cube)
         break

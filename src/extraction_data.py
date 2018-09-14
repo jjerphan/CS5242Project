@@ -7,6 +7,9 @@ from settings import original_data, extracted_data, hydrophobic_value, polar_val
 
 
 def values_range():
+    """
+    :return: global values of coordinates and atoms type present in the original files
+    """
     x_min = np.inf
     y_min = np.inf
     z_min = np.inf
@@ -45,6 +48,13 @@ def values_range():
 
 
 def read_pdb(file_name) -> (list, list, list, list):
+    """
+    Read a original pdb file and return the data.
+    The lists contains ordered information about each atom.
+
+    :param file_name: the file to extract data
+    :return: lists of coordinates and atom type for each atom
+    """
     x_list = list()
     y_list = list()
     z_list = list()
@@ -79,8 +89,23 @@ def read_pdb(file_name) -> (list, list, list, list):
     return x_list, y_list, z_list, atom_type_list
 
 
-def create_example(x_list: list, y_list: list, z_list: list, atom_type_list: list, molecule_value) -> np.array:
+def convert_data(x_list: list, y_list: list, z_list: list, atom_type_list: list, molecule_value) -> np.array:
+    """
+    Convert the data extract from file into a np.ndarray.
+
+    The information of one atom is represented as a line in the array.
+
+    See settings.py for values used to represented categorical features (molecule type and atom type)
+
+    :param x_list: list of x coordinates
+    :param y_list: list of y coordinates
+    :param z_list: list of z coordinates
+    :param atom_type_list: list of atom type (string)
+    :param molecule_value: the numerical value associated to the molecule
+    :return: np.ndarray of dimension (nb_atoms, 3 + nb_atom_features)
+    """
     molecule_values = [molecule_value] * len(x_list)
+
     encoded_ato_type_list = [hydrophobic_value if type in hydrophobic_types else polar_value for type in atom_type_list]
     return np.array([x_list, y_list, z_list, encoded_ato_type_list, molecule_values]).T
 
@@ -89,6 +114,7 @@ if __name__ == "__main__":
     if not(os.path.exists(extracted_data)):
         os.makedirs(extracted_data)
 
+    # For each file, we extract the info and save it into a file in a specified folders
     for pdb_original_file in progressbar.progressbar(sorted(os.listdir(original_data)), widgets=widgets_progressbar,
                                                      redirect_stdout=True):
         pdb_original_file_path = os.path.join(original_data, pdb_original_file)
@@ -97,7 +123,8 @@ if __name__ == "__main__":
 
         molecule_value = protein_value if "pro" in pdb_original_file else ligand_value
 
-        example = create_example(x_list, y_list, z_list, atom_type_list, molecule_value)
+        example = convert_data(x_list, y_list, z_list, atom_type_list, molecule_value)
 
+        # Saving the data is a csv file with the same name
         extracted_file_path = os.path.join(extracted_data, pdb_original_file.replace(".pdb", ".csv"))
         np.savetxt(fname=extracted_file_path, X=example, fmt=formatter)

@@ -1,7 +1,7 @@
 import numpy as np
 import os
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D # needed by the 3D plotter
+from mpl_toolkits.mplot3d import Axes3D  # needed by the 3D plotter
 
 from settings import float_type, comment_delimiter, examples_data, resolution_cube
 
@@ -47,6 +47,7 @@ def only_positive_examples(system_names):
     :param system_names: name of the form "xxxx_yyyy" where xxxx is the system of the protein and yyyy of the ligand
     :return: the list of system names of the form "xxxx_xxxx"
     """
+
     def is_positive(name):
         systems = name.replace(".csv", "").split("_")
         return systems[0] == systems[1]
@@ -87,7 +88,7 @@ def plot_cube(cube):
     for x in range(resolution_cube):
         for y in range(resolution_cube):
             for z in range(resolution_cube):
-                c = cube[x, y, z, 1] # plotting accordingly to the molecule
+                c = cube[x, y, z, 1]  # plotting accordingly to the molecule
                 print()
                 if c != 0:
                     xs.append(x)
@@ -104,15 +105,23 @@ def plot_cube(cube):
     plt.show()
 
 
+def load_nparray(file_name: str):
+    example = np.loadtxt(file_name, dtype=float_type, comments=comment_delimiter)
+    # If it's a vector (i.e if there is just one atom, we reshape it)
+    if len(example.shape) == 1:
+        example = example.reshape(1, -1)
+
+    return example
+
+
 if __name__ == "__main__":
 
     # Just to test
-    examples = sorted(os.listdir(examples_data))
-    positives = only_positive_examples(examples)
-    for example in positives:
-        file_name = os.path.join(examples_data, example)
-
-        example = np.loadtxt(file_name, dtype=float_type, comments=comment_delimiter)
+    examples_files = sorted(os.listdir(examples_data))
+    positives_files = only_positive_examples(examples_files)
+    for pos_ex_file in positives_files:
+        file_name = os.path.join(examples_data, pos_ex_file)
+        example = load_nparray(pos_ex_file)
         cube = make_cube(example, resolution_cube)
         print(cube.shape)
         plot_cube(cube)

@@ -6,47 +6,6 @@ from settings import original_data, extracted_data, hydrophobic_value, polar_val
     formatter, protein_value, ligand_value, widgets_progressbar
 
 
-def values_range():
-    """
-    :return: global values of coordinates and atoms type present in the original files
-    """
-    x_min = np.inf
-    y_min = np.inf
-    z_min = np.inf
-
-    x_max = - np.inf
-    y_max = - np.inf
-    z_max = - np.inf
-
-    atom_types = set()
-
-    for pdb_original_file in progressbar.progressbar(sorted(os.listdir(original_data))):
-        pdb_original_file_path = os.path.join(original_data, pdb_original_file)
-
-        x_list, y_list, z_list, atom_type_list = read_pdb(pdb_original_file_path)
-
-        if len(x_list) == 0:
-            print(f"{pdb_original_file} is empty")
-            continue
-
-        x_min = min(x_min, min(x_list))
-        y_min = min(y_min, min(y_list))
-        z_min = min(z_min, min(z_list))
-
-        x_max = max(x_max, max(x_list))
-        y_max = max(y_max, max(y_list))
-        z_max = max(z_max, max(y_list))
-
-        atom_types = atom_types.union(set(atom_type_list))
-
-    print("Range of values")
-    print(f"x : [{x_min}, {x_max}]")
-    print(f"y : [{y_min}, {y_max}]")
-    print(f"z : [{z_min}, {z_max}]")
-    print(f"atomtypes : {atom_types}")
-    return x_min, x_max, y_min, y_max, z_min, z_max, atom_types
-
-
 def read_pdb(file_name) -> (list, list, list, list):
     """
     Read a original pdb file and return the data.

@@ -3,6 +3,7 @@ import os
 import shutil
 import progressbar
 
+from discretization import load_nparray
 from settings import examples_data, extracted_data, float_type, protein_suffix, ligand_suffix, comment_delimiter, \
     widgets_progressbar
 
@@ -59,8 +60,8 @@ if __name__ == "__main__":
 
     # For each system, we create the associated positive example and we generate some negative examples
     for system in progressbar.progressbar(sorted(list_systems), widgets=widgets_progressbar,redirect_stdout=True):
-        protein = np.loadtxt(fname=os.path.join(extracted_data, system + protein_suffix), dtype=float_type)
-        ligand = np.loadtxt(fname=os.path.join(extracted_data, system + ligand_suffix), dtype=float_type)
+        protein = load_nparray(os.path.join(extracted_data, system + protein_suffix))
+        ligand = load_nparray(os.path.join(extracted_data, system + ligand_suffix))
 
         # Saving positive example
         save_example(examples_data, protein, ligand, system, system)
@@ -69,7 +70,7 @@ if __name__ == "__main__":
         others_system = sorted(list(list_systems.difference(set(system))))
         some_others_systems_indices = np.random.randint(0, len(others_system), nb_neg_ex)
         for other_system in map(lambda index: others_system[index], some_others_systems_indices):
-            bad_ligand = np.loadtxt(fname=os.path.join(extracted_data, other_system + ligand_suffix), dtype=float_type)
+            bad_ligand = load_nparray(os.path.join(extracted_data, other_system + ligand_suffix))
 
             # Saving negative example
             save_example(examples_data, protein, bad_ligand, system, other_system)

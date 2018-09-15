@@ -121,7 +121,7 @@ if __name__ == "__main__":
     positives_files = only_positive_examples(examples_files)
     for pos_ex_file in positives_files:
         file_name = os.path.join(examples_data, pos_ex_file)
-        example = load_nparray(pos_ex_file)
+        example = load_nparray(os.path.join(examples_data,pos_ex_file))
         cube = make_cube(example, resolution_cube)
         print(cube.shape)
         plot_cube(cube)

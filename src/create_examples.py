@@ -4,7 +4,7 @@ import shutil
 import progressbar
 
 from discretization import load_nparray
-from settings import examples_data, extracted_data, float_type, protein_suffix, ligand_suffix, comment_delimiter, \
+from settings import examples_data, extracted_data, float_type, extracted_protein_suffix, extracted_ligand_suffix, comment_delimiter, \
     widgets_progressbar
 
 # We can augment the number of example combining
@@ -53,15 +53,15 @@ if __name__ == "__main__":
         shutil.rmtree(examples_data)
     os.makedirs(examples_data)
 
-    def drop_suffix(file_name): return file_name.replace(protein_suffix, "").replace(ligand_suffix, "")
+    def drop_suffix(file_name): return file_name.replace(extracted_protein_suffix, "").replace(extracted_ligand_suffix, "")
 
     # Getting all the systems
     list_systems = set(list(map(drop_suffix, os.listdir(extracted_data))))
 
     # For each system, we create the associated positive example and we generate some negative examples
     for system in progressbar.progressbar(sorted(list_systems), widgets=widgets_progressbar,redirect_stdout=True):
-        protein = load_nparray(os.path.join(extracted_data, system + protein_suffix))
-        ligand = load_nparray(os.path.join(extracted_data, system + ligand_suffix))
+        protein = load_nparray(os.path.join(extracted_data, system + extracted_protein_suffix))
+        ligand = load_nparray(os.path.join(extracted_data, system + extracted_ligand_suffix))
 
         # Saving positive example
         save_example(examples_data, protein, ligand, system, system)
@@ -70,7 +70,7 @@ if __name__ == "__main__":
         others_system = sorted(list(list_systems.difference(set(system))))
         some_others_systems_indices = np.random.randint(0, len(others_system), nb_neg_ex_per_pos)
         for other_system in map(lambda index: others_system[index], some_others_systems_indices):
-            bad_ligand = load_nparray(os.path.join(extracted_data, other_system + ligand_suffix))
+            bad_ligand = load_nparray(os.path.join(extracted_data, other_system + extracted_ligand_suffix))
 
             # Saving negative example
             save_example(examples_data, protein, bad_ligand, system, other_system)

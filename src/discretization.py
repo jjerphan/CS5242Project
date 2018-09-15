@@ -3,36 +3,105 @@ import os
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D  # needed by the 3D plotter
 
-from settings import float_type, comment_delimiter, examples_data, resolution_cube
+from settings import float_type, comment_delimiter, examples_data, resolution_cube, nb_features
 
 
-def make_cube(example: np.ndarray, res) -> np.ndarray:
+def representation_invariance(original_coords, is_from_protein_indices, verbose=False):
     """
-    For now making cubes really naively as follow:
-    Scaling on each coordinates : the result can be distorted.
-    Rounding down each time (not to the closest
+    Return an representation invariant of the system.
 
-    :param example:
-    :param res: resolution for the discretization
+    The rotation is found using PCA on the protein molecules
+    and is applied on all the atoms then.
+
+    This way we are guaranteed that we can find a canonical representation
+    of the system for all initial positions.
+
+    There should be no pro
+
+    :return: the canonical representation of the protein-ligand system
+    """
+    protein_coords = original_coords[is_from_protein_indices]
+    columns_means = np.mean(protein_coords, axis=0)
+    centered_protein_coords = protein_coords - columns_means
+
+    # Getting the rotation matrix by diagonalizing the
+    # covariance matrix of the centered protein coordinates
+    cov_matrix = np.cov(centered_protein_coords.T)
+    assert cov_matrix.shape == (3, 3)
+    eigen_vals, rotation_mat = np.linalg.eig(cov_matrix)
+
+    # Applying this rotation matrix on all points
+    # Note : we should not transpose the rotation matrix (tested)
+    new_coords = original_coords.dot(rotation_mat)
+
+    # Should have the same shape
+    assert new_coords.shape == original_coords.shape
+
+    if verbose:
+        print("Eigen Values (~ scale factor of molecules):"),
+        print("x factor : ", eigen_vals[0])
+        print("y factor : ", eigen_vals[1])
+        print("z factor : ", eigen_vals[2])
+        print("Rotation matrix")
+        print(rotation_mat)
+
+    return new_coords
+
+
+def make_cube(system: np.ndarray, resolution, use_rotation_invariance=True, keep_proportions=True,
+              verbose=False) -> np.ndarray:
+    """
+    Creating a cube from a system.
+
+    Using a rotation invariance representation and keeping the proportions gives better results normaly.
+
+    :param system: the protein-ligand system
+    :param resolution: resolution for the discretization
+    :param use_rotation_invariance: perform the canonical rotation of the PCA on the given points
+    :param keep_proportions: should keep the proportion
+    :param verbose: outputs info about transformation
     :return: a cube 4D np.ndarray of size (res, res, res, nb_features)
     """
 
     # Spatial coordinates of atoms
-    coords = example[:, 0:3]
-    atom_features = example[:, 3:]
-    nb_features = atom_features.shape[1]
+    original_coords = system[:, 0:3]
+
+    is_from_protein_column = 5
+    is_from_protein_indices = np.where(system[:, is_from_protein_column] == 1.)
+
+    if use_rotation_invariance:
+        coords = representation_invariance(original_coords, is_from_protein_indices, verbose=True)
+    else:
+        coords = original_coords
+
+    atom_features = system[:, 3:]
+    nb_feat = atom_features.shape[1]
+
+    assert nb_feat + coords.shape[1] == nb_features
 
     # Getting extreme values
     x_min, x_max, y_min, y_max, z_min, z_max = values_range(coords)
 
+    # Finding the maximum range between extreme points on each coordinates
+    x_range = x_max - x_min
+    y_range = y_max - y_min
+    z_range = z_max - z_min
+
+    # If we want to keep the proportion, we can scale adequately
+    if keep_proportions:
+        max_range = max([x_range, y_range, z_range])
+        x_range = max_range
+        y_range = max_range
+        z_range = max_range
+
     # Scaling coordinates to be in the cube [0,res]^3 then flooring
     scaled_coords = (coords * 0).astype(int)
     eps = 10e-4  # To be sure to round down on exact position
-    scaled_coords[:, 0] = np.floor((coords[:, 0] - x_min) / (x_max - x_min + eps) * res).astype(int)
-    scaled_coords[:, 1] = np.floor((coords[:, 1] - y_min) / (y_max - y_min + eps) * res).astype(int)
-    scaled_coords[:, 2] = np.floor((coords[:, 2] - z_min) / (z_max - z_min + eps) * res).astype(int)
+    scaled_coords[:, 0] = np.floor((coords[:, 0] - x_min) / (x_range + eps) * resolution).astype(int)
+    scaled_coords[:, 1] = np.floor((coords[:, 1] - y_min) / (y_range + eps) * resolution).astype(int)
+    scaled_coords[:, 2] = np.floor((coords[:, 2] - z_min) / (z_range + eps) * resolution).astype(int)
 
-    cube = np.zeros((res, res, res, nb_features))
+    cube = np.zeros((resolution, resolution, resolution, nb_feat))
 
     # Filling the cube with the features
     cube[scaled_coords[:, 0], scaled_coords[:, 1], scaled_coords[:, 2]] = atom_features
@@ -41,6 +110,17 @@ def make_cube(example: np.ndarray, res) -> np.ndarray:
 
 
 def is_positive(name):
+    """
+    name is of the form "xxxx_yyyy[.csv]"
+
+    'xxxx' corresponds to the protein.
+    'yyyy' corresponds to the ligands
+
+    Return xxxx == yyyy (that both molecules bind together)
+
+    :param name: the name of a file of the form "xxxx_yyyy[.csv]"
+    :return:
+    """
     systems = name.replace(".csv", "").split("_")
     return systems[0] == systems[1]
 
@@ -89,15 +169,22 @@ def plot_cube(cube):
     for x in range(resolution_cube):
         for y in range(resolution_cube):
             for z in range(resolution_cube):
-                c = cube[x, y, z, 1]  # plotting accordingly to the molecule
-                print()
-                if c != 0:
+                is_from_protein_pos = 2
+                is_from_ligand_pos = 3
+                is_atom_in_voxel = cube[x, y, z, is_from_protein_pos] + cube[x, y, z, is_from_ligand_pos] != 0
+                if is_atom_in_voxel:
+                    # Plotting accordingly to the molecule type
+                    color = 2 * cube[x, y, z, is_from_protein_pos] - 1
                     xs.append(x)
                     ys.append(y)
                     zs.append(z)
-                    cs.append(c)
+                    cs.append(color)
 
     ax.scatter(xs, ys, zs, c=cs, marker="o")
+
+    ax.set_xlim((0, resolution_cube))
+    ax.set_ylim((0, resolution_cube))
+    ax.set_zlim((0, resolution_cube))
 
     ax.set_xlabel('X Label')
     ax.set_ylabel('Y Label')
@@ -107,8 +194,15 @@ def plot_cube(cube):
 
 
 def load_nparray(file_name: str):
+    """
+    Loads an numpy ndarray stored in given file
+    :param file_name: the file to use
+    :return:
+    """
+
     example = np.loadtxt(file_name, dtype=float_type, comments=comment_delimiter)
-    # If it's a vector (i.e if there is just one atom, we reshape it)
+    # If it's a vector (i.e if there is just one atom),
+    # we reshape it into a (1,n nb_features) array
     if len(example.shape) == 1:
         example = example.reshape(1, -1)
 
@@ -119,11 +213,43 @@ if __name__ == "__main__":
 
     # Just to test
     examples_files = sorted(os.listdir(examples_data))
-    positives_files = only_positive_examples(examples_files)
-    for pos_ex_file in positives_files:
-        file_name = os.path.join(examples_data, pos_ex_file)
-        example = load_nparray(os.path.join(examples_data, pos_ex_file))
-        cube = make_cube(example, resolution_cube)
-        print(cube.shape)
+    plt.ion()
+    plt.show()
+    for ex_file in examples_files:
+        plt.close('all')
+        print(f"System {ex_file}")
+        file_name = os.path.join(examples_data, ex_file)
+        example = load_nparray(os.path.join(examples_data, ex_file))
+
+        print("Compressed Representation")
+        cube = make_cube(example, resolution_cube,
+                         use_rotation_invariance=False,
+                         keep_proportions=False,
+                         verbose=True)
         plot_cube(cube)
-        break
+        mngr = plt.get_current_fig_manager()
+        mngr.window.setGeometry(0, 100, 640, 545)
+        plt.pause(0.003)
+
+        print("Properly Scaled Representation")
+        cube = make_cube(example, resolution_cube,
+                         use_rotation_invariance=False,
+                         keep_proportions=True,
+                         verbose=True)
+        plot_cube(cube)
+        mngr = plt.get_current_fig_manager()
+        mngr.window.setGeometry(640, 100, 640, 545)
+        plt.pause(1)
+
+        print("Properly Scaled Rotation Invariant Representation")
+        cube = make_cube(example, resolution_cube,
+                         use_rotation_invariance=True,
+                         keep_proportions=True,
+                         verbose=True)
+
+        plot_cube(cube)
+        mngr = plt.get_current_fig_manager()
+        mngr.window.setGeometry(2 * 640, 100, 640, 545)
+        plt.pause(2)
+        input()
+

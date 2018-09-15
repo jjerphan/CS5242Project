@@ -98,16 +98,12 @@ We need to find a way to resolve this problem. There are [several approaches](ht
 ## Things to do
 
 - [ ] Do some research on proteins-ligands binding
-- [ ] Understand how to feed tensors of sizes `(res, res, res, 2)` in Keras `Conv3D` layers
 - [ ] Find appropriate computing ressources
       - [ ] AWS
       - [ ] Google Cloud
       - [ ] NUS Clusters
       - [ ] [NSCC](https://help.nscc.sg/)
-- [ ] Work on a better representation of data
-      - [ ] Rotation Invariance : use ACP on example or generate rotated examples of existing ones (should change naming convention though)
-      - [ ] Avoid schrinkage of molecules when scaling
-      - [ ] One-Hot-Representation for categorical features
+- [ ] Create final pipeline to test binding (as what's required)
 
 
 

@@ -2,8 +2,8 @@ import os
 import numpy as np
 import progressbar
 
-from settings import original_data, extracted_data, hydrophobic_value, polar_value, hydrophobic_types, float_type, \
-    formatter, protein_value, ligand_value, widgets_progressbar
+from settings import original_data, extracted_data, hydrophobic_types, float_type, \
+    formatter, widgets_progressbar, nb_features
 
 
 def read_pdb(file_name) -> (list, list, list, list):
@@ -19,23 +19,19 @@ def read_pdb(file_name) -> (list, list, list, list):
     z_list = list()
     atom_type_list = list()
 
-    # First line of 0001_lig_cg.pdb for example:
-    #                                      x       y       z               atom_type
-    # ATOM      2  CA  HIS A   0      17.186 -28.155 -12.495  1.00 26.12           C
-    #
-    normal_len = 78
-
     with open(file_name, 'r') as file:
         for num_line, strline in enumerate(file.readlines()):
             # removes all whitespace at the start and end, including spaces, tabs, newlines and carriage returns
             stripped_line = strline.strip()
 
-            line_length = len(stripped_line)
-            # if line_length != normal_len:
-            #     print(
-            #         f'ERROR: line {num_line+1} length is different in file {file_name} .
-            # Expected={normal_len}, current={line_length}')
-            #     print(strline)
+            # Extracting the information here
+
+            # First line of 0001_lig_cg.pdb as an example:
+            #
+            # Features     |                                        x       y       z               atom_type
+            # Line in file |ATOM      2  CA  HIS A   0      17.186 -28.155 -12.495  1.00 26.12           C
+            #               ^                             ^       ^       ^       ^                     ^
+            # Position     |0                            30      38      46      54                    76
 
             x_list.append(float_type(stripped_line[30:38].strip()))
             y_list.append(float_type(stripped_line[38:46].strip()))
@@ -48,7 +44,7 @@ def read_pdb(file_name) -> (list, list, list, list):
     return x_list, y_list, z_list, atom_type_list
 
 
-def convert_data(x_list: list, y_list: list, z_list: list, atom_type_list: list, molecule_value) -> np.array:
+def extract_molecule(x_list: list, y_list: list, z_list: list, atom_type_list: list, molecule_is_protein:bool) -> np.array:
     """
     Convert the data extract from file into a np.ndarray.
 
@@ -60,13 +56,23 @@ def convert_data(x_list: list, y_list: list, z_list: list, atom_type_list: list,
     :param y_list: list of y coordinates
     :param z_list: list of z coordinates
     :param atom_type_list: list of atom type (string)
-    :param molecule_value: the numerical value associated to the molecule
+    :param molecule_is_protein: boolean
     :return: np.ndarray of dimension (nb_atoms, 3 + nb_atom_features)
     """
-    molecule_values = [molecule_value] * len(x_list)
 
-    encoded_ato_type_list = [hydrophobic_value if type in hydrophobic_types else polar_value for type in atom_type_list]
-    return np.array([x_list, y_list, z_list, encoded_ato_type_list, molecule_values]).T
+    nb_atoms = len(x_list)
+    # One hot encoding for atom type and molecule types
+    is_hydrophobic = np.array([1 if type in hydrophobic_types else 0 for type in atom_type_list])
+    is_polar = 1 - is_hydrophobic
+
+    is_from_protein = (1 * molecule_is_protein) * np.ones((nb_atoms,))
+    is_from_ligand = 1 - is_from_protein
+
+    formated_molecule = np.array([x_list, y_list, z_list, is_hydrophobic, is_polar, is_from_protein, is_from_ligand]).T
+
+    assert(formated_molecule.shape == (nb_atoms, nb_features))
+
+    return formated_molecule
 
 
 if __name__ == "__main__":
@@ -80,10 +86,10 @@ if __name__ == "__main__":
 
         x_list, y_list, z_list, atom_type_list = read_pdb(pdb_original_file_path)
 
-        molecule_value = protein_value if "pro" in pdb_original_file else ligand_value
+        is_protein = "pro" in pdb_original_file
 
-        example = convert_data(x_list, y_list, z_list, atom_type_list, molecule_value)
+        molecule = extract_molecule(x_list, y_list, z_list, atom_type_list, is_protein)
 
         # Saving the data is a csv file with the same name
         extracted_file_path = os.path.join(extracted_data, pdb_original_file.replace(".pdb", ".csv"))
-        np.savetxt(fname=extracted_file_path, X=example, fmt=formatter)
+        np.savetxt(fname=extracted_file_path, X=molecule, fmt=formatter)

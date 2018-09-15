@@ -104,8 +104,11 @@ We need to find a way to resolve this problem. There are [several approaches](ht
       - [ ] NUS Clusters
       - [ ] [NSCC](https://help.nscc.sg/)
 - [ ] Create final pipeline to test binding (as what's required)
+      - [ ] Use better metrics (Confusion Matrix, F1 Score, ROC)
 
 
+- [ ] Find a way to balance scores
+- [ ] Find goods numbers to scores
 
 ## Some resources
 

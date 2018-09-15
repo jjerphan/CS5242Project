@@ -3,7 +3,7 @@ import os
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D  # needed by the 3D plotter
 
-from settings import float_type, comment_delimiter, examples_data, resolution_cube, nb_features
+from settings import float_type, comment_delimiter, training_examples_folder, resolution_cube, nb_features
 
 
 def representation_invariance(original_coords, is_from_protein_indices, verbose=False):
@@ -70,7 +70,7 @@ def make_cube(system: np.ndarray, resolution, use_rotation_invariance=True, keep
     is_from_protein_indices = np.where(system[:, is_from_protein_column] == 1.)
 
     if use_rotation_invariance:
-        coords = representation_invariance(original_coords, is_from_protein_indices, verbose=True)
+        coords = representation_invariance(original_coords, is_from_protein_indices, verbose=verbose)
     else:
         coords = original_coords
 
@@ -212,14 +212,14 @@ def load_nparray(file_name: str):
 if __name__ == "__main__":
 
     # Just to test
-    examples_files = sorted(os.listdir(examples_data))
+    examples_files = sorted(os.listdir(training_examples_folder))
     plt.ion()
     plt.show()
     for ex_file in examples_files:
         plt.close('all')
         print(f"System {ex_file}")
-        file_name = os.path.join(examples_data, ex_file)
-        example = load_nparray(os.path.join(examples_data, ex_file))
+        file_name = os.path.join(training_examples_folder, ex_file)
+        example = load_nparray(os.path.join(training_examples_folder, ex_file))
 
         print("Compressed Representation")
         cube = make_cube(example, resolution_cube,

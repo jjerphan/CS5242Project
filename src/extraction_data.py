@@ -1,9 +1,12 @@
 import os
+import re
+
 import numpy as np
 import progressbar
 
-from settings import original_data, extracted_data, hydrophobic_types, float_type, \
-    formatter, widgets_progressbar, nb_features
+from settings import original_data_folder, extracted_data_folder, hydrophobic_types, float_type, \
+    formatter, widgets_progressbar, nb_features, split_index, extracted_data_train_folder, extracted_data_test_folder, \
+    progress
 
 
 def read_pdb(file_name) -> (list, list, list, list):
@@ -76,13 +79,14 @@ def extract_molecule(x_list: list, y_list: list, z_list: list, atom_type_list: l
 
 
 if __name__ == "__main__":
-    if not(os.path.exists(extracted_data)):
-        os.makedirs(extracted_data)
+    if not(os.path.exists(extracted_data_folder)):
+        os.makedirs(extracted_data_folder)
+        os.makedirs(extracted_data_train_folder)
+        os.makedirs(extracted_data_test_folder)
 
     # For each file, we extract the info and save it into a file in a specified folders
-    for pdb_original_file in progressbar.progressbar(sorted(os.listdir(original_data)), widgets=widgets_progressbar,
-                                                     redirect_stdout=True):
-        pdb_original_file_path = os.path.join(original_data, pdb_original_file)
+    for pdb_original_file in progress(sorted(os.listdir(original_data_folder))):
+        pdb_original_file_path = os.path.join(original_data_folder, pdb_original_file)
 
         x_list, y_list, z_list, atom_type_list = read_pdb(pdb_original_file_path)
 
@@ -91,5 +95,11 @@ if __name__ == "__main__":
         molecule = extract_molecule(x_list, y_list, z_list, atom_type_list, is_protein)
 
         # Saving the data is a csv file with the same name
-        extracted_file_path = os.path.join(extracted_data, pdb_original_file.replace(".pdb", ".csv"))
+        # Choosing the appropriate folder using the split index
+        molecule_index = int(re.match("\d+", pdb_original_file).group())
+        if molecule_index < split_index:
+            extracted_file_path = os.path.join(extracted_data_train_folder, pdb_original_file.replace(".pdb", ".csv"))
+        else:
+            extracted_file_path = os.path.join(extracted_data_test_folder, pdb_original_file.replace(".pdb", ".csv"))
+
         np.savetxt(fname=extracted_file_path, X=molecule, fmt=formatter)

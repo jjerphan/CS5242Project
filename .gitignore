@@ -1,6 +1,7 @@
 # Data
 training_data/
 *.idea
+models/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

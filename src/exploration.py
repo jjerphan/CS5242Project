@@ -1,10 +1,9 @@
 import os
 
 import numpy as np
-import progressbar
 
 from extraction_data import read_pdb
-from settings import original_data
+from settings import original_data_folder, progress
 
 
 def values_range():
@@ -22,8 +21,8 @@ def values_range():
     atom_types = set()
     empty_files = set()
 
-    for pdb_original_file in progressbar.progressbar(sorted(os.listdir(original_data))):
-        pdb_original_file_path = os.path.join(original_data, pdb_original_file)
+    for pdb_original_file in progress(sorted(os.listdir(original_data_folder))):
+        pdb_original_file_path = os.path.join(original_data_folder, pdb_original_file)
 
         x_list, y_list, z_list, atom_type_list = read_pdb(pdb_original_file_path)
 

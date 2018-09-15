@@ -97,9 +97,7 @@ We need to find a way to resolve this problem. There are [several approaches](ht
 
 ## Things to do
 
-- [ ] Handle missing molecules
 - [ ] Do some research on proteins-ligands binding
-- [ ] Ask questions on forum regarding atom type and origin of data (see above)
 - [ ] Understand how to feed tensors of sizes `(res, res, res, 2)` in Keras `Conv3D` layers
 - [ ] Find appropriate computing ressources
       - [ ] AWS

@@ -40,6 +40,11 @@ def make_cube(example: np.ndarray, res) -> np.ndarray:
     return cube
 
 
+def is_positive(name):
+    systems = name.replace(".csv", "").split("_")
+    return systems[0] == systems[1]
+
+
 def only_positive_examples(system_names):
     """
     Filter the names to return the ones of positive examples solely (i.e. with same)
@@ -47,10 +52,6 @@ def only_positive_examples(system_names):
     :param system_names: name of the form "xxxx_yyyy" where xxxx is the system of the protein and yyyy of the ligand
     :return: the list of system names of the form "xxxx_xxxx"
     """
-
-    def is_positive(name):
-        systems = name.replace(".csv", "").split("_")
-        return systems[0] == systems[1]
 
     return list(filter(is_positive, system_names))
 
@@ -121,7 +122,7 @@ if __name__ == "__main__":
     positives_files = only_positive_examples(examples_files)
     for pos_ex_file in positives_files:
         file_name = os.path.join(examples_data, pos_ex_file)
-        example = load_nparray(os.path.join(examples_data,pos_ex_file))
+        example = load_nparray(os.path.join(examples_data, pos_ex_file))
         cube = make_cube(example, resolution_cube)
         print(cube.shape)
         plot_cube(cube)

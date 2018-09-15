@@ -8,7 +8,7 @@ from settings import examples_data, extracted_data, float_type, protein_suffix, 
     widgets_progressbar
 
 # We can augment the number of example combining
-nb_neg_ex = 10
+nb_neg_ex_per_pos = 10
 
 
 def save_example(folder: str, protein: np.ndarray, ligand: np.ndarray, system_protein: str, system_ligand: str):
@@ -68,7 +68,7 @@ if __name__ == "__main__":
 
         # Creating false example using nb_neg_ex negatives examples
         others_system = sorted(list(list_systems.difference(set(system))))
-        some_others_systems_indices = np.random.randint(0, len(others_system), nb_neg_ex)
+        some_others_systems_indices = np.random.randint(0, len(others_system), nb_neg_ex_per_pos)
         for other_system in map(lambda index: others_system[index], some_others_systems_indices):
             bad_ligand = load_nparray(os.path.join(extracted_data, other_system + ligand_suffix))
 

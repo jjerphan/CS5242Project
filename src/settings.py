@@ -22,6 +22,9 @@ training_examples_folder = os.path.join(data_folder, "training_examples")
 extracted_protein_suffix = "_pro_cg.csv"
 extracted_ligand_suffix = "_lig_cg.csv"
 
+# Persisted models
+models_folders = os.path.join("..", "models")
+
 # Some settings for number and persisting tensors
 float_type = np.float32
 formatter = "%.16f"

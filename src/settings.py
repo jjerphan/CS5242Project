@@ -38,8 +38,14 @@ nb_features = len(features_names)
 # We have 3000 positives pairs of ligands
 nb_examples = 3000
 
-# We use the split_index first ones to train
-split_index = 2700
+n_training_examples = 2700
+train_indices = list(map(int, open(os.path.join(data_folder, "train_indices")).readlines()))
+test_indices = list(map(int, open(os.path.join(data_folder, "test_indices")).readlines()))
+
+assert (len(set(train_indices).intersection(set(test_indices))) == 0)
+assert (len(test_indices) + len(train_indices) == nb_examples)
+assert (len(train_indices) == n_training_examples)
+
 # All the other will be used to construct examples on the go
 
 # We augment the number of examples
@@ -79,7 +85,8 @@ def progress(iterable):
     :param iterable:
     :return:
     """
-    return progressbar.progressbar(iterable, widgets=widgets_progressbar, redirect_stdout=True)
+    # return progressbar.progressbar(iterable, widgets=widgets_progressbar, redirect_stdout=True)
+    return iterable
 
 
 def extract_id(file_name):

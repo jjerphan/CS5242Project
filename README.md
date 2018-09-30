@@ -105,6 +105,9 @@ We need to find a way to resolve this problem. There are [several approaches](ht
       - [ ] [NSCC](https://help.nscc.sg/)
 - [ ] Create final pipeline to test binding (as what's required)
       - [ ] Use better metrics (Confusion Matrix, F1 Score, ROC)
+- [ ] Use a regression network to have probabilities instead
+- [ ] Save indices for training and testing examples
+- [ ] Keeping size of molecules inside cubes (use absolute resolution in Å instead of relative ones based on the molecule size)
 
 
 - [ ] Find a way to balance scores

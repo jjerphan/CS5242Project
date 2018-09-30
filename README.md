@@ -97,19 +97,84 @@ We need to find a way to resolve this problem. There are [several approaches](ht
 
 ## Things to do
 
-- [ ] Handle missing molecules
 - [ ] Do some research on proteins-ligands binding
-- [ ] Ask questions on forum regarding atom type and origin of data (see above)
-- [ ] Understand how to feed tensors of sizes `(res, res, res, 2)` in Keras `Conv3D` layers
 - [ ] Find appropriate computing ressources
       - [ ] AWS
       - [ ] Google Cloud
       - [ ] NUS Clusters
       - [ ] [NSCC](https://help.nscc.sg/)
-- [ ] Work on a better representation of data
-      - [ ] Rotation Invariance : use ACP on example or generate rotated examples of existing ones (should change naming convention though)
-      - [ ] Avoid schrinkage of molecules when scaling
-      - [ ] One-Hot-Representation for categorical features
+- [ ] Create final pipeline to test binding (as what's required)
+      - [ ] Use better metrics (Confusion Matrix, F1 Score, ROC)
+
+
+- [ ] Find a way to balance scores
+- [ ] Find goods numbers to scores
+
+## Organisation of the pipeline and of the files
+
+In order to fit the model with the given data, some transformation need to be performed. Those transformation composed a pipeline that can be deconstructed in several stage. The first part of the pipeline is done in scripts wherease latter parts of the pipeline (training and testing) is done in the [`pipeline.ipynb`](./src/pipeline.ipynb) notebook for more interactivity (and to avoid forgetting to save a network after having it trained 🙃).
+
+- **Extraction of data** : the extraction of features of interest from the "raw data";	
+  - Original data in [`training_data/orignal`](./training_data/original) will be extracted in [`training_data/extracted/`](./training_data/extracted) ;
+  - Data extracted are into $7$ features:
+    - coordinates $(x,y,z) \in \mathbb{R}^3$
+    - type of atom (represented one $2$ features as it is one-hot encoded)
+    - type of molecules (represented one $2$ features as it is one-hot encoded)
+  - The naming convention here is kept from the original data:
+    - `original/xxxx_lig_clg.pdb` will be extracted into `extracted/xxxx_lig_clg.csv`
+    -  `original/yyyy_pro_clg.pdb` will be extracted into `extracted/yyyy_pro_clg.csv`
+  - This stage is perform in  [`extraction_data.py`](./src/extraction_data.py)
+
+
+- **Creating training examples**  (for now, $90/10$ is used)
+  - An **example** consist of the concatenation of the extracted file of a protein (let's say`extracted/xxxx_lig_clg.csv`) and of a ligand (let's say `extracted/yyyy_lig_clg.csv`)
+  - We have to splitting the data into 2 sets for training and testing purposes : 
+    - **Training set**: creation of training examples: *all* the positives examples and *some* negatives examples) from $90\%$ of the extracted data ;
+    - **Testing set** : creation of *all* the examples from $10\%$ of the extracted data
+    - *Only the training set gets created* (as the testing set is enormous as we are considering all the possible combinations!)
+    - `settings.py/split_index` indicates what is the last training example and what is the first testing example 
+  - Training examples are saved in `training_data/training_examples` under the naming convention `xxxx_yyyy.csv` (where `xxxx` is the id of the protein and `yyyy` the ligand's).
+  - This stage is perform in   [`create_training_examples.py`](./src/create_training_examples.py)
+- **Training of the model with constructed examples**
+  - Examples from the Training set (`training_data/training_examples`) are fed in the network directly.
+    - They have to be converted into cubes for now (see "Cube Creation" bellow for more info).
+  - This stage is done in [`pipeline.ipynb`](./src/pipeline.ipynb) 
+- **[TODO] Saving the network to memory**
+  - This stage has to be perform to save the model that just have been learned
+  - This would alow us to compare and use them afterwards
+  - This stage has to be done in [`pipeline.ipynb`](./src/pipeline.ipynb) 
+- **[TODO/ to complete] Evaluation of the model **
+  - Testing examples are constructed on the go (see "Cube Creation" bellow);
+  - They consist of all the combinations possibles on the extracted remaining data (after split index)
+    - Let's say we have 10 total original pairs of files (of indices from 0 to 9). If `split_index` is 6, we have the following index for the training and the testing dataset:
+      - Training : (0,1,2,3,4,5)
+      - Testing : (6,7,8,9)
+    - As all the combinations of protein ligand are constructed we have at the end the following testing examples:
+      - (6_6), (6_7), (6_8), (6_9), 
+      - (7_6), (7_7), (7_8), (7_9)
+      - (8_6), (8_7), (8_8), (8_9)
+      - (9_6), (9_7), (9_8), (9_9)
+        - where (6_6), (7_7), (8_8) and (9_9) are possitive example and all the others are negative
+    - This stage has to be done in [`pipeline.ipynb`](./src/pipeline.ipynb) 
+  - Some notes: accuracy is now used I thin, but it would be better to use a confusion matrix (as there might be a lot of false negatives)
+
+
+
+### Cube creation
+
+In order to fed examples (that are a  rotein-ligand system with varying number of atoms), we can discretize the space that surrounds this system into a cube whose voxel can contain information about atoms if any (like in Pufnacy — see the paper).
+
+Hence, cubes, given a `resolution`, can be deconstructed in `resolution^3` voxels. Each voxel can contain 4 information namely the one-hot encoding of the atom and molecule types. Thus a cube can be represented as a tensor of shape `(resolution, resolution, resolution, 4)`. On the last axis, the molecule type is presented before the atom type, hence:
+
+- `cube[:, :, :, 0:2]` all the molecules types at each position in the space
+-  `cube[:, :, :, 2:4]` all the atom types at each position in the space
+- `cube[42,42,42]` : all the information about the voxel in the 43rd position in every axes
+
+The discretization was first "schrinking/squashing/flattening" long molecule ; this is now resolved to be scale invariant but this first behavior can be trigerred.
+
+Also, the system is rotation to reach a representation invariance on the protein (using some bits of internals of PCA). This can be deactivate using an argument. 
+
+This transformation that is used both for training and testing is done in [`discretization.py`](./src/discretization.py).
 
 
 

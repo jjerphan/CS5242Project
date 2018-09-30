@@ -1,14 +1,10 @@
 import numpy as np
 import os
 import shutil
-import progressbar
 
 from discretization import load_nparray
-from settings import examples_data, extracted_data, float_type, protein_suffix, ligand_suffix, comment_delimiter, \
-    widgets_progressbar
-
-# We can augment the number of example combining
-nb_neg_ex = 10
+from settings import training_examples_folder, extracted_data_train_folder, extracted_protein_suffix, \
+    extracted_ligand_suffix, comment_delimiter, extract_id, progress, nb_neg_ex_per_pos
 
 
 def save_example(folder: str, protein: np.ndarray, ligand: np.ndarray, system_protein: str, system_ligand: str):
@@ -28,6 +24,7 @@ def save_example(folder: str, protein: np.ndarray, ligand: np.ndarray, system_pr
         print(f"Ligand  {system_ligand}: {ligand.shape}")
         return
 
+    # Merging the protein and the ligand together
     example = np.concatenate((protein, ligand), axis=0)
 
     type_example = ("Positive" if system_protein == system_ligand else "Negative") + " example "
@@ -49,28 +46,26 @@ np.random.seed(1337)
 if __name__ == "__main__":
 
     # Deleting the folders of examples and recreating it
-    if os.path.exists(examples_data):
-        shutil.rmtree(examples_data)
-    os.makedirs(examples_data)
-
-    def drop_suffix(file_name): return file_name.replace(protein_suffix, "").replace(ligand_suffix, "")
+    if os.path.exists(training_examples_folder):
+        shutil.rmtree(training_examples_folder)
+    os.makedirs(training_examples_folder)
 
     # Getting all the systems
-    list_systems = set(list(map(drop_suffix, os.listdir(extracted_data))))
+    list_systems = set(list(map(extract_id, os.listdir(extracted_data_train_folder))))
 
     # For each system, we create the associated positive example and we generate some negative examples
-    for system in progressbar.progressbar(sorted(list_systems), widgets=widgets_progressbar,redirect_stdout=True):
-        protein = load_nparray(os.path.join(extracted_data, system + protein_suffix))
-        ligand = load_nparray(os.path.join(extracted_data, system + ligand_suffix))
+    for system in progress(sorted(list_systems)):
+        protein = load_nparray(os.path.join(extracted_data_train_folder, system + extracted_protein_suffix))
+        ligand = load_nparray(os.path.join(extracted_data_train_folder, system + extracted_ligand_suffix))
 
         # Saving positive example
-        save_example(examples_data, protein, ligand, system, system)
+        save_example(training_examples_folder, protein, ligand, system, system)
 
         # Creating false example using nb_neg_ex negatives examples
         others_system = sorted(list(list_systems.difference(set(system))))
-        some_others_systems_indices = np.random.randint(0, len(others_system), nb_neg_ex)
+        some_others_systems_indices = np.random.randint(0, len(others_system), nb_neg_ex_per_pos)
         for other_system in map(lambda index: others_system[index], some_others_systems_indices):
-            bad_ligand = load_nparray(os.path.join(extracted_data, other_system + ligand_suffix))
+            bad_ligand = load_nparray(os.path.join(extracted_data_train_folder, other_system + extracted_ligand_suffix))
 
             # Saving negative example
-            save_example(examples_data, protein, bad_ligand, system, other_system)
+            save_example(training_examples_folder, protein, bad_ligand, system, other_system)

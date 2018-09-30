@@ -45,6 +45,7 @@ n_training_examples = 2700
 train_indices = list(map(int, open(os.path.join(data_folder, "train_indices")).readlines()))
 test_indices = list(map(int, open(os.path.join(data_folder, "test_indices")).readlines()))
 
+# Test the consistency : no overlap and all the files are used on the two sets
 assert (len(set(train_indices).intersection(set(test_indices))) == 0)
 assert (len(test_indices) + len(train_indices) == nb_examples)
 assert (len(train_indices) == n_training_examples)

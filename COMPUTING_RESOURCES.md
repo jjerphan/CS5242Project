@@ -42,7 +42,6 @@
 * scp \<Anacoda3\> NSCC:~/
 * scp Anaconda3-5.2.0-Linux-x86_64.sh nscc04-ib0:~/ 
 * bash Anaconda3-5.2.0-Linux-x86_64.sh
-* conda install tensorflow-gpu keras
 
 
 
@@ -137,6 +136,56 @@ PBS Pro quick start guide: https://help.nscc.sg/pbspro-quickstartguide/
   qstat -f \<jobid\>
 
 
+
+
+
+### *Submit our project job*
+
+* Create/enter conda environment 
+
+  $ conda create -n CS5242 python=3.6
+
+  $ source activate CS5242
+
+* Install libraries
+
+  $ conda install tensorflow-gpu keras progressbar2 matplotlib tensorflow
+
+* Create submit script
+
+  $  cat training.pbs 
+  #! /bin/bash
+  #PBS -q gpu 
+  #PBS -j oe
+  #PBS -l select=1:ngpus=1
+  #PBS -l walltime=00:10:00
+  #PBS -N CS5242_Training
+  cd $(PBS_O_WORKDIR)
+  source activate CS5242
+  python CNN.py
+
+* Submit the job
+
+  $ export PBS_O_WORKDIR=\`pwd\`
+
+  $ qsub training.pbs
+
+* Check job execution status
+  (CS5242) [e0319586@nscc04 src]$ qstat -f 7669002.wlm01
+  qstat: 7669002.wlm01 Job has finished, use -x or -H to obtain historical job information
+  (CS5242) [e0319586@nscc04 src]$ qstat -x
+  Job id            Name             User              Time Use S Queue
+
+  ----------------  ---------------- ----------------  -------- - -----
+  7669002.wlm01     CS5242_Training  e0319586          00:00:00 F gpunormal
+
+* Check queue information 
+
+  $ qstat -x
+
+* Check job execution output
+
+  $ cat CS5242_Training.o7669473
 
 
 

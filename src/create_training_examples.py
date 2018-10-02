@@ -43,8 +43,8 @@ def save_example(folder: str, protein: np.ndarray, ligand: np.ndarray, system_pr
 # To get reproducible generations of examples
 np.random.seed(1337)
 
-if __name__ == "__main__":
 
+def create_training_examples():
     # Deleting the folders of examples and recreating it
     if os.path.exists(training_examples_folder):
         shutil.rmtree(training_examples_folder)
@@ -69,3 +69,7 @@ if __name__ == "__main__":
 
             # Saving negative example
             save_example(training_examples_folder, protein, bad_ligand, system, other_system)
+
+
+if __name__ == "__main__":
+    create_training_examples()

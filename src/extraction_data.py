@@ -2,7 +2,6 @@ import os
 import re
 
 import numpy as np
-import progressbar
 
 from settings import original_data_folder, extracted_data_folder, hydrophobic_types, float_type, \
     formatter, widgets_progressbar, nb_features, n_training_examples, extracted_data_train_folder, \
@@ -80,7 +79,7 @@ def extract_molecule(x_list: list, y_list: list, z_list: list, atom_type_list: l
     return formated_molecule
 
 
-if __name__ == "__main__":
+def extract_data():
 
     # Creating folders if they don't exist
     for folder in [extracted_data_folder,extracted_data_test_folder, extracted_data_train_folder]:
@@ -106,3 +105,6 @@ if __name__ == "__main__":
             extracted_file_path = os.path.join(extracted_data_test_folder, pdb_original_file.replace(".pdb", ".csv"))
 
         np.savetxt(fname=extracted_file_path, X=molecule, fmt=formatter)
+
+if __name__ == "__main__":
+    extract_data()

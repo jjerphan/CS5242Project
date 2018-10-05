@@ -117,13 +117,27 @@ def is_positive(name):
     'xxxx' corresponds to the protein.
     'yyyy' corresponds to the ligands
 
-    Return xxxx == yyyy (that both molecules bind together)
+    Return xxxx == yyyy (both molecules bind together)
 
     :param name: the name of a file of the form "xxxx_yyyy[.csv]"
     :return:
     """
     systems = name.replace(".csv", "").split("_")
     return systems[0] == systems[1]
+
+def is_negative(name):
+    """
+    name is of the form "xxxx_yyyy[.csv]"
+
+    'xxxx' corresponds to the protein.
+    'yyyy' corresponds to the ligands
+
+    Return xxxx != yyyy (both molecules don't bind together)
+
+    :param name: the name of a file of the form "xxxx_yyyy[.csv]"
+    :return:
+    """
+    return not(is_positive(name))
 
 
 def only_positive_examples(system_names):

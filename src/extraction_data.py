@@ -4,7 +4,7 @@ import numpy as np
 import logging
 
 from settings import original_data_folder, extracted_data_folder, hydrophobic_types, float_type, \
-    formatter, widgets_progressbar, nb_features, n_training_examples, extracted_data_train_folder, \
+    formatter, nb_features, extracted_data_train_folder, \
     extracted_data_test_folder, \
     progress, train_indices
 

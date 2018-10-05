@@ -107,11 +107,14 @@ def create_training_examples(nb_neg: int):
         save_example(training_examples_folder, protein, ligand, system, system)
 
         # Creating false example using nb_neg_ex negatives examples
-        other_systems = sorted(list(list_systems.difference(set(system))))
+        other_systems = sorted(list(list_systems.difference({system})))
         some_others_systems_indices = np.random.permutation(len(other_systems))[0:nb_neg]
 
         for other_system in map(lambda index: other_systems[index], some_others_systems_indices):
             bad_ligand = load_nparray(os.path.join(extracted_data_train_folder, other_system + extracted_ligand_suffix))
+
+            if other_system == system:
+                raise RuntimeError(f"other_system = {other_system} shoud be != system = {system}")
 
             nb_examples = len(os.listdir(training_examples_folder))
             # Saving negative example

@@ -1,5 +1,26 @@
 # CS5242 Project : Predicting Protein – Ligand Interaction by using Deep Learning Models
 
+## Installation
+
+We use Anaconda as well as an environment for this project.
+
+To use this project on your machine, we recommend creating such an environment with the following command:
+```bash
+conda env create -f environment.yml
+conda env create -f environment_gpu.yml # for GPU only
+```
+Then, you can actrivate this environment like this:
+```bash
+source activate CS5242
+# source activate CS5242_gpu # for GPU only
+```
+
+To exit the environment:
+```bash
+source deactivate
+```
+
+
 ## Description of the project
 
 **See [project_description.pdf](./project_description.pdf) for the full description of the project **
@@ -98,17 +119,24 @@ We need to find a way to resolve this problem. There are [several approaches](ht
 ## Things to do
 
 - [ ] Do some research on proteins-ligands binding
+- [ ] Make absolute cubes (with fixed Å size like in Pafnucy)
+- [ ] Make sure systems of molecules get centered in the cube 
 - [ ] Find appropriate computing ressources
-      - [ ] AWS
-      - [ ] Google Cloud
-      - [ ] NUS Clusters
-      - [ ] [NSCC](https://help.nscc.sg/)
+      - [ ] Find solutions :
+            - [ ] [NSCC](https://help.nscc.sg/)
+            - [ ] Other solutions (AWS, Google Cloud, NUS Clusters) ?
+      - [ ] Setup Python environnement there
+      - [ ] Split `pipeline.ipynb` into several script for:
+            - [ ] selecting a model, training and saving it in a `.h5` file
+            - [ ] evaluating a model using the `.h5` file
+            - [ ] some more comparation across models ?
 - [ ] Create final pipeline to test binding (as what's required)
       - [ ] Use better metrics (Confusion Matrix, F1 Score, ROC)
 
 
-- [ ] Find a way to balance scores
-- [ ] Find goods numbers to scores
+- [ ] (Find a way to balance scores : wtf Julien ?)
+- [ ] (Find goods numbers to scores: wtf Julien ???)
+- [ ] Create a model like Pafnucy or something else … ?
 
 ## Organisation of the pipeline and of the files
 

@@ -76,7 +76,11 @@ def create_training_examples():
 
             # Saving negative example
             save_example(training_examples_folder, protein, bad_ligand, system, other_system)
+<<<<<<< HEAD
     logger.debug('Training data has been saved into training examples folder.')
+=======
+
+>>>>>>> da5c0a9fd77ccd70cf26b2970160b53c6739a57c
 
 if __name__ == "__main__":
     create_training_examples()

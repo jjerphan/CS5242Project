@@ -1,5 +1,8 @@
 # Data
-training_data/
+training_data/extracted/
+training_data/original/
+training_data/training_examples/
+
 *.idea
 models/
 

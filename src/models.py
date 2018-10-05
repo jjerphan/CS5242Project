@@ -1,10 +1,10 @@
 from keras import Sequential, Input, Model
 from keras.layers import Dense, Flatten, Conv3D, Activation
 
-from settings import resolution_cube, nb_features
+from settings import resolution_cube, nb_features, nb_channels
 
 # Configurations of the shape of data
-input_shape = (resolution_cube, resolution_cube, resolution_cube, nb_features-3)
+input_shape = (resolution_cube, resolution_cube, resolution_cube, nb_channels)
 data_format = "channels_last"
 
 def first_model():

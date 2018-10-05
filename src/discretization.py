@@ -170,7 +170,7 @@ def plot_cube(cube):
     for x in range(resolution_cube):
         for y in range(resolution_cube):
             for z in range(resolution_cube):
-                is_from_protein_pos = indices_features["is_from_protein"]
+                is_from_protein_pos = indices_features["is_from_protein"]-3
                 is_atom_in_voxel = cube[x, y, z, is_from_protein_pos] != 0
                 if is_atom_in_voxel:
                     # Plotting accordingly to the molecule type

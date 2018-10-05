@@ -38,7 +38,8 @@ comment_delimiter = "#"
 
 features_names = ["x", "y", "z", "is_hydrophobic", "is_from_protein"]
 nb_features = len(features_names)
-indices_features = dict(zip(features_names,list(range(nb_features))))
+nb_channels = nb_features - 3 # coordinates are not used as features
+indices_features = dict(zip(features_names, list(range(nb_features))))
 
 # We have 3000 positives pairs of ligands
 nb_examples = 3000

@@ -69,7 +69,7 @@ def make_cube(system: np.ndarray, resolution, use_rotation_invariance=True, keep
     # Spatial coordinates of atoms
     original_coords = system[:, 0:3]
 
-    is_from_protein_column = 4
+    is_from_protein_column = system.shape[1] - 1
     is_from_protein_indices = np.where(system[:, is_from_protein_column] == 1.)
 
     if use_rotation_invariance:
@@ -79,8 +79,6 @@ def make_cube(system: np.ndarray, resolution, use_rotation_invariance=True, keep
 
     atom_features = system[:, 3:]
     nb_feat = atom_features.shape[1]
-
-    logger.debug('Number of features: %d, coordinate shape: %d, nb features: %d', nb_feat, coords.shape[1], nb_features)
 
     assert nb_feat + coords.shape[1] == nb_features
 
@@ -107,6 +105,7 @@ def make_cube(system: np.ndarray, resolution, use_rotation_invariance=True, keep
     scaled_coords[:, 2] = np.floor((coords[:, 2] - z_min) / (z_range + eps) * resolution).astype(int)
 
     cube = np.zeros((resolution, resolution, resolution, nb_feat))
+    logger.debug("Cube size is %s", str(cube.shape))
 
     # Filling the cube with the features
     cube[scaled_coords[:, 0], scaled_coords[:, 1], scaled_coords[:, 2]] = atom_features

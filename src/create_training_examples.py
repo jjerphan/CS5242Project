@@ -60,13 +60,15 @@ def create_training_examples():
     list_systems = set(list(map(extract_id, os.listdir(extracted_data_train_folder))))
 
     # For each system, we create the associated positive example and we generate some negative examples
-    logger.debug('Create positive and negative protein-ligand binding.')
+    logger.debug('Create 1 positive binding and %d random negative protein-ligand bindings.', nb_neg_ex_per_pos)
+    total_files = 0
     for system in progress(sorted(list_systems)):
         protein = load_nparray(os.path.join(extracted_data_train_folder, system + extracted_protein_suffix))
         ligand = load_nparray(os.path.join(extracted_data_train_folder, system + extracted_ligand_suffix))
 
         # Saving positive example
         save_example(training_examples_folder, protein, ligand, system, system)
+        total_files += 1
 
         # Creating false example using nb_neg_ex negatives examples
         others_system = sorted(list(list_systems.difference(set(system))))
@@ -76,11 +78,8 @@ def create_training_examples():
 
             # Saving negative example
             save_example(training_examples_folder, protein, bad_ligand, system, other_system)
-<<<<<<< HEAD
-    logger.debug('Training data has been saved into training examples folder.')
-=======
-
->>>>>>> da5c0a9fd77ccd70cf26b2970160b53c6739a57c
+            total_files += 1
+    logger.debug('Total %d training data has been saved into training examples folder.', total_files)
 
 if __name__ == "__main__":
     create_training_examples()

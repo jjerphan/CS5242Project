@@ -30,13 +30,15 @@ float_type = np.float32
 formatter = "%.16f"
 comment_delimiter = "#"
 
+
 # Features used to train:
 #  - 3 spatial coordinates : x , y, z (floating values)
 #  - 2 features for one hot encoding of atom types (is_hydrophobic, is_polar)
 #  - 2 features for one hot encoding of molecules types (is_from_protein, is_from_ligand)
 
-features_names = ["x", "y", "z", "is_hydrophobic", "is_polar", "is_from_protein", "is_from_ligand"]
+features_names = ["x", "y", "z", "is_hydrophobic", "is_from_protein"]
 nb_features = len(features_names)
+indices_features = dict(zip(features_names,list(range(nb_features))))
 
 # We have 3000 positives pairs of ligands
 nb_examples = 3000
@@ -86,11 +88,10 @@ widgets_progressbar = [
 def progress(iterable):
     """
     Custom progress bar
-    :param iterable:
+    :param iterable: the iterable to wrap
     :return:
     """
-    # return progressbar.progressbar(iterable, widgets=widgets_progressbar, redirect_stdout=True)
-    return iterable
+    return progressbar.progressbar(iterable, widgets=widgets_progressbar, redirect_stdout=True)
 
 
 def extract_id(file_name):

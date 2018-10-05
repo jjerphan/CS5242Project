@@ -6,7 +6,19 @@
 
 - Go to https://user.nscc.sg/saml
 
-- Login -> NUS -> Enter username/password -> Yes, continue -> Your NSCC account is e0319586 -> Click "Reset SSH Key" -> Copy the public key -> # touch ~/.ssh/id_rsa #chmod 600 ~/.ssh/id_rsa and paste the key into ~/.ssh/id_rsa -> Click "Set/Reset Password" -> Enter password -> Done
+- Login:
+    - NUS
+    - Enter username/password
+    - Yes, continue
+    - "Your NSCC account is e0319586é
+    - Click "Reset SSH Key"
+    - Copy the public key
+    - `# touch ~/.ssh/id_rsa`
+    - `# chmod 600 ~/.ssh/id_rsa`
+    - And paste the key into `~/.ssh/id_rsa`
+    - Click "Set/Reset Password"
+    - Enter password
+    - Done
 
 
 ##### Step 2: Access ASPIRE 1 login nodes
@@ -16,15 +28,15 @@
   - ssh -i ~/.ssh/id_rsa exxxxxxx@nus.nscc.sg 
 
   - Alternatively create SSH config 
-
+    ```
     Host NSCC nus.nscc.sg
     ​    HostName nus.nscc.sg
     ​    IdentityFile ~/.ssh/id_rsa
     ​    User exxxxxxxx
-
+    ```
   - Then ssh to nscc04-ib0
 
-    ssh nscc04-ib0
+    `ssh nscc04-ib0`
 
 - From outside using VPN
 
@@ -39,10 +51,12 @@
 ##### Step 3: Getting the environment ready
 
 * Download Anacoda3 
-* scp \<Anacoda3\> NSCC:~/
-* scp Anaconda3-5.2.0-Linux-x86_64.sh nscc04-ib0:~/ 
-* bash Anaconda3-5.2.0-Linux-x86_64.sh
-
+    ```bash
+    scp Anaconda3-5.2.0-Linux-x86_64.sh NSCC:~/
+    scp Anaconda3-5.2.0-Linux-x86_64.sh nscc04-ib0:~/
+    chmod +x Anaconda3-5.2.0-Linux-x86_64.sh
+    bash Anaconda3-5.2.0-Linux-x86_64.sh
+    ```
 
 
 ### *Submitting jobs*
@@ -69,60 +83,46 @@ PBS Pro quick start guide: https://help.nscc.sg/pbspro-quickstartguide/
 
 - Submit using pipe 
 
-  $ echo sleep 10 | qsub -q normal -l select=1:ncpus=1,walltime=00:13:00 
+```bash
+echo sleep 10 | qsub -q normal -l select=1:ncpus=1,walltime=00:13:00 
+\#\# 1 chunk with 1 cpus, total 13 minutes of wall time 
+```
 
-  \#\# 1 chunk with 1 cpus, total 13 minutes of wall time 
 
 - Submit using job submission script
 
-  $ qsub submit.pbs
+```bash
+$ cat submit.pbs
+#! /bin/bash
+#PBS -q normal
+#PBS -l select=1:ncpus=1:mem=100M		# request for resources
+#PBS -l walltime=00:10:00 		# request for resources
+#PBS -P Personal 		# the project name
+#PBS -N Sleep_Job 		# the name of the job 
+#PBS -o ~/outputfiles/Sleep_Job.o		# the output file
+#PBS -e ~/errorfiles/Sleep_Job.e 		# the error file 
+echo sleep job for 30 seconds
+sleep 30 
+##
 
-  $ cat submit.pbs
+$ qsub submit.pbs
+```
 
-     #! /bin/bash
-
-    #PBS -q normal
-
-    #PBS -l select=1:ncpus=1:mem=100M		# request for resources
-
-    #PBS -l walltime=00:10:00 		# request for resources
-
-    #PBS -P Personal 		# the project name
-
-    #PBS -N Sleep_Job 		# the name of the job 
-
-    #PBS -o ~/outputfiles/Sleep_Job.o		# the output file
-
-    #PBS -e ~/errorfiles/Sleep_Job.e 		# the error file 
-
-    echo sleep job for 30 seconds
-
-    sleep 30 
 
 - Example submitting CS5242 jobs
-
-  $ export PBS_O_WORKDIR=\`pwd\`
-
-  $ cat training.pbs
-
-  #! /bin/bash
-
-  #PBS -q gpu
-
-  #PBS -j oe
-
-  #PBS -l select=1:ngpus=1
-
-  #PBS -l walltime=23:00:00 
-
-  #PBS -N CS5242_Hello 
-
-  cd ${PBS_O_WORKDIR}
-
-  source activate CS5242
-
-  python -c "import keras; print('if you see no errors, it\'s good to go.')"
-
+```bash
+$ export PBS_O_WORKDIR=`pwd`
+$ cat training.pbs
+#! /bin/bash
+#PBS -q gpu
+#PBS -j oe
+#PBS -l select=1:ngpus=1
+#PBS -l walltime=23:00:00 
+#PBS -N CS5242_Hello 
+cd ${PBS_O_WORKDIR}
+source activate CS5242
+python -c "import keras; print('if you see no errors, it\'s good to go.')"
+```
 
 
 ### *Checking job status*
@@ -130,13 +130,10 @@ PBS Pro quick start guide: https://help.nscc.sg/pbspro-quickstartguide/
 * See output in <job_name>.oXXXXX
 
 * Run qstat command 
-
+  ```bash
   qstat -x 
-
   qstat -f \<jobid\>
-
-
-
+  ```
 
 
 ### *Submit our project job*
@@ -152,7 +149,7 @@ PBS Pro quick start guide: https://help.nscc.sg/pbspro-quickstartguide/
   $ conda install tensorflow-gpu keras progressbar2 matplotlib tensorflow
 
 * Create submit script
-
+  ```bash
   $  cat training.pbs 
   #! /bin/bash
   #PBS -q gpu 
@@ -163,29 +160,34 @@ PBS Pro quick start guide: https://help.nscc.sg/pbspro-quickstartguide/
   cd $(PBS_O_WORKDIR)
   source activate CS5242
   python CNN.py
-
+  ```
+  
 * Submit the job
-
+  ```bash
   $ export PBS_O_WORKDIR=\`pwd\`
-
   $ qsub training.pbs
+  ```
 
 * Check job execution status
-  (CS5242) [e0319586@nscc04 src]$ qstat -f 7669002.wlm01
+  ```bash
+  (CS5242) [exxxxxxx@nscc04 src]$ qstat -f 7669002.wlm01
   qstat: 7669002.wlm01 Job has finished, use -x or -H to obtain historical job information
-  (CS5242) [e0319586@nscc04 src]$ qstat -x
+  (CS5242) [exxxxxxx@nscc04 src]$ qstat -x
   Job id            Name             User              Time Use S Queue
 
   ----------------  ---------------- ----------------  -------- - -----
   7669002.wlm01     CS5242_Training  e0319586          00:00:00 F gpunormal
+  ```
 
 * Check queue information 
-
+  ```bash
   $ qstat -x
+  ```
 
 * Check job execution output
-
+  ```bash
   $ cat CS5242_Training.o7669473
+  ```
 
 
 

@@ -1,14 +1,15 @@
 import os
 import re
-
 import numpy as np
-import progressbar
+import logging
 
 from settings import original_data_folder, extracted_data_folder, hydrophobic_types, float_type, \
     formatter, widgets_progressbar, nb_features, n_training_examples, extracted_data_train_folder, \
     extracted_data_test_folder, \
     progress, train_indices
 
+
+logger = logging.getLogger('extract data')
 
 def read_pdb(file_name) -> (list, list, list, list):
     """
@@ -80,17 +81,21 @@ def extract_molecule(x_list: list, y_list: list, z_list: list, atom_type_list: l
     return formated_molecule
 
 
-if __name__ == "__main__":
+def extract_data():
+
+    logger.info('Checking if extracted_data, extracted_data_train, extracted_data_test folder exists.')
 
     # Creating folders if they don't exist
-    for folder in [extracted_data_folder,extracted_data_test_folder, extracted_data_train_folder]:
+    for folder in [extracted_data_folder, extracted_data_test_folder, extracted_data_train_folder]:
         if not(os.path.exists(folder)):
+            logger.debug(f'The {folder}folder does not exist. Creating it.')
             os.makedirs(folder)
 
     # For each file, we extract the info and save it into a file in a specified folders
     for pdb_original_file in progress(sorted(os.listdir(original_data_folder))):
         pdb_original_file_path = os.path.join(original_data_folder, pdb_original_file)
 
+        logger.debug('Reading orginal pdb files.')
         x_list, y_list, z_list, atom_type_list = read_pdb(pdb_original_file_path)
 
         is_protein = "pro" in pdb_original_file
@@ -106,3 +111,6 @@ if __name__ == "__main__":
             extracted_file_path = os.path.join(extracted_data_test_folder, pdb_original_file.replace(".pdb", ".csv"))
 
         np.savetxt(fname=extracted_file_path, X=molecule, fmt=formatter)
+
+if __name__ == "__main__":
+    extract_data()

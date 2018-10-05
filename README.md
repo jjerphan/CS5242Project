@@ -1,5 +1,26 @@
 # CS5242 Project : Predicting Protein – Ligand Interaction by using Deep Learning Models
 
+## Installation
+
+We use Anaconda as well as an environment for this project.
+
+To use this project on your machine, we recommend creating such an environment with the following command:
+```bash
+conda env create -f environment.yml
+conda env create -f environment_gpu.yml # for GPU only
+```
+Then, you can actrivate this environment like this:
+```bash
+source activate CS5242
+# source activate CS5242_gpu # for GPU only
+```
+
+To exit the environment:
+```bash
+source deactivate
+```
+
+
 ## Description of the project
 
 **See [project_description.pdf](./project_description.pdf) for the full description of the project **

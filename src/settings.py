@@ -32,7 +32,7 @@ comment_delimiter = "#"
 #  - 2 features for one hot encoding of atom types (is_hydrophobic, is_polar)
 #  - 2 features for one hot encoding of molecules types (is_from_protein, is_from_ligand)
 
-features_names = ["x", "y", "z", "is_hydrophobic", "is_polar", "is_from_protein", "is_from_ligand"]
+features_names = ["x", "y", "z", "is_hydrophobic", "is_from_protein"]
 nb_features = len(features_names)
 
 # We have 3000 positives pairs of ligands

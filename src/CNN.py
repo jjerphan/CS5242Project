@@ -7,23 +7,19 @@ import logging
 
 
 def main():
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger('cnn')
     logger.setLevel(logging.DEBUG)
-
     fh = logging.FileHandler("application.log")
     fh.setLevel(logging.DEBUG)
-
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-
     fh.setFormatter(formatter)
-
     logger.addHandler(fh)
 
 
-    logger.debug('Calling module extract data.')
-    extract_data()
+    logger.debug('Calling module extract data and training examples.')
+    #extract_data()
 
-    create_training_examples()
+    #create_training_examples()
 
     logger.debug('Creating network model')
     model = first_model()

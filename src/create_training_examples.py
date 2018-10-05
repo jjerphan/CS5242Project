@@ -1,11 +1,15 @@
 import numpy as np
 import os
 import shutil
+import logging
 
 from discretization import load_nparray
 from settings import training_examples_folder, extracted_data_train_folder, extracted_protein_suffix, \
     extracted_ligand_suffix, comment_delimiter, extract_id, progress, nb_neg_ex_per_pos
 
+
+logger = logging.getLogger('cnn.create_training_example')
+logger.addHandler(logging.NullHandler())
 
 def save_example(folder: str, protein: np.ndarray, ligand: np.ndarray, system_protein: str, system_ligand: str):
     file_name = system_protein + "_" + system_ligand + ".csv"
@@ -47,13 +51,16 @@ np.random.seed(1337)
 def create_training_examples():
     # Deleting the folders of examples and recreating it
     if os.path.exists(training_examples_folder):
+        logger.debug('Delete training examples folder.')
         shutil.rmtree(training_examples_folder)
     os.makedirs(training_examples_folder)
+    logger.debug('Create new training examples folder.')
 
     # Getting all the systems
     list_systems = set(list(map(extract_id, os.listdir(extracted_data_train_folder))))
 
     # For each system, we create the associated positive example and we generate some negative examples
+    logger.debug('Create positive and negative protein-ligand binding.')
     for system in progress(sorted(list_systems)):
         protein = load_nparray(os.path.join(extracted_data_train_folder, system + extracted_protein_suffix))
         ligand = load_nparray(os.path.join(extracted_data_train_folder, system + extracted_ligand_suffix))
@@ -69,7 +76,7 @@ def create_training_examples():
 
             # Saving negative example
             save_example(training_examples_folder, protein, bad_ligand, system, other_system)
-
+    logger.debug('Training data has been saved into training examples folder.')
 
 if __name__ == "__main__":
     create_training_examples()

@@ -1,10 +1,13 @@
 import numpy as np
 import os
 import matplotlib.pyplot as plt
+import logging
 from mpl_toolkits.mplot3d import Axes3D  # needed by the 3D plotter
 
 from settings import float_type, comment_delimiter, training_examples_folder, resolution_cube, nb_features
 
+logger = logging.getLogger('cnn.discretization')
+logger.addHandler(logging.NullHandler())
 
 def representation_invariance(original_coords, is_from_protein_indices, verbose=False):
     """
@@ -66,7 +69,7 @@ def make_cube(system: np.ndarray, resolution, use_rotation_invariance=True, keep
     # Spatial coordinates of atoms
     original_coords = system[:, 0:3]
 
-    is_from_protein_column = 5
+    is_from_protein_column = 4
     is_from_protein_indices = np.where(system[:, is_from_protein_column] == 1.)
 
     if use_rotation_invariance:
@@ -76,6 +79,8 @@ def make_cube(system: np.ndarray, resolution, use_rotation_invariance=True, keep
 
     atom_features = system[:, 3:]
     nb_feat = atom_features.shape[1]
+
+    logger.debug('Number of features: %d, coordinate shape: %d, nb features: %d', nb_feat, coords.shape[1], nb_features)
 
     assert nb_feat + coords.shape[1] == nb_features
 

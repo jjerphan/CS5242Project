@@ -1,0 +1,15 @@
+#! /bin/bash
+#PBS -q gpu
+#PBS -j oe
+#PBS -l select=1:ngpus=3
+#PBS -l walltime=23:00:00
+#PBS -N CS5242_Training
+cd $PBS_O_WORKDIR/src
+source activate CS5242
+python $PBS_O_WORKDIR/src/train_cnn.py  --model_index 0 \
+                                         --nb_epochs 4 \
+                                         --batch_size 32 \
+                                         --nb_neg 3 \
+                                         --verbose 1 \
+                                         --max_examples 65 \
+                                         --preprocess 0

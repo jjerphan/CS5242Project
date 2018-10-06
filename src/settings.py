@@ -1,12 +1,16 @@
 import os
-
-import progressbar
 import numpy as np
+import progressbar
+
+import datetime
 
 # Folders
 # Global folder for data and logs
-data_folder = os.path.join("..", "training_data")
-logs_folder = os.path.join("..", "logs")
+absolute_path = os.path.abspath("..")
+
+data_folder = os.path.join(absolute_path, "training_data")
+logs_folder = os.path.join(absolute_path, "logs")
+job_submissions_folder = os.path.join(absolute_path, "job_submissions")
 
 # Data given (not modified)
 original_data_folder = os.path.join(data_folder, "original")
@@ -31,15 +35,14 @@ float_type = np.float32
 formatter = "%.16f"
 comment_delimiter = "#"
 
-
 # Features used to train:
 #  - 3 spatial coordinates : x , y, z (floating values)
-#  - 2 features for one hot encoding of atom types (is_hydrophobic, is_polar)
-#  - 2 features for one hot encoding of molecules types (is_from_protein, is_from_ligand)
+#  - 1 features for one hot encoding of atom types (is_hydrophobic)
+#  - 1 features for one hot encoding of molecules types (is_from_protein)
 
 features_names = ["x", "y", "z", "is_hydrophobic", "is_from_protein"]
 nb_features = len(features_names)
-nb_channels = nb_features - 3 # coordinates are not used as features
+nb_channels = nb_features - 3  # coordinates are not used as features
 indices_features = dict(zip(features_names, list(range(nb_features))))
 
 # We have 3000 positives pairs of ligands
@@ -86,6 +89,12 @@ widgets_progressbar = [
     ' (', progressbar.ETA(), ') ',
 ]
 
+# Training parameters
+nb_epochs_default = 1
+batch_size_default = 32
+n_gpu_default = 1
+optimizer_default = "rmsprop"
+
 
 def progress(iterable):
     """
@@ -99,3 +108,9 @@ def progress(iterable):
 def extract_id(file_name):
     new_name = file_name.replace(extracted_protein_suffix, "").replace(extracted_ligand_suffix, "")
     return new_name
+
+
+def get_current_timestamp():
+    utc_dt = datetime.datetime.now(datetime.timezone.utc)
+    local_time_dt = utc_dt.astimezone()
+    return f"{local_time_dt}".replace(" ", "_")

@@ -1,7 +1,7 @@
 from keras import Sequential, Input, Model
 from keras.layers import Dense, Flatten, Conv3D, Activation
 
-from settings import resolution_cube, nb_features, nb_channels
+from settings import resolution_cube, nb_channels
 
 # Configurations of the shape of data
 input_shape = (resolution_cube, resolution_cube, resolution_cube, nb_channels)
@@ -9,7 +9,7 @@ data_format = "channels_last"
 
 
 def first_model():
-    model = Sequential()
+    model = Sequential(name="first_simple_model")
     model.add(Conv3D(
         kernel_size=3,
         input_shape=input_shape,
@@ -42,7 +42,7 @@ def pafnucy_like():
     x = Dense(1)(x)
     outputs = Activation('relu')(x)
 
-    model = Model(inputs=inputs, outputs=outputs)
+    model = Model(inputs=inputs, outputs=outputs, name="pafnucy_like")
     return model
 
 
@@ -50,7 +50,7 @@ models_available = [first_model(), pafnucy_like()]
 models_available_names = list(map(lambda model: model.name, models_available))
 
 if __name__== "__main__":
-    print("2 Models : ")
+    print(f"{len(models_available_names)} Models availables: \n\n")
     for i, model in enumerate(models_available):
         print(f"#{i}: {model.name}")
-        print(model.summary())
+        model.summary()

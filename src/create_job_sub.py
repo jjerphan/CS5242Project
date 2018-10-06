@@ -46,7 +46,8 @@ if __name__ == "__main__":
     stub = f"""
             #! /bin/bash
             #PBS -q gpu
-            #PBS -j oe
+            #PBS -o $PBS_O_WORKDIR/logs/{name_job}.o		# the output file
+            #PBS -e $PBS_O_WORKDIR/logs/{name_job}.e 		# the error file 
             #PBS -l select=1:ngpus={n_gpu}
             #PBS -l walltime=23:00:00
             #PBS -N {name_job}

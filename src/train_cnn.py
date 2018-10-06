@@ -35,12 +35,17 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess,
     current_timestamp = get_current_timestamp()
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.DEBUG)
-    logfile = f"CNN-{current_timestamp}.log"
+    logfile = f"train_cnn.log"
+
+    # Making a folder for the job to save log, model, history in it.
+    job_folder = os.path.join(logs_folder, current_timestamp)
     if not (os.path.exists(logs_folder)):
         print(f"The {logs_folder} does not exist. Creating it.")
         os.makedirs(logs_folder)
 
-    fh = logging.FileHandler(os.path.join(logs_folder, logfile))
+    os.makedirs(job_folder)
+
+    fh = logging.FileHandler(os.path.join(job_folder, logfile))
     fh.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     fh.setFormatter(formatter)
@@ -75,6 +80,8 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess,
     logger.debug(f'preprocess  = {preprocess}')
     logger.debug(f'optimizer   = {optimizer}')
 
+    logger.debug(f'model, log and history to be saved in {job_folder}')
+
     # To load the data incrementally
     train_examples_iterator = ExamplesIterator(examples_folder=training_examples_folder,
                                                nb_neg=nb_neg,
@@ -104,8 +111,8 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess,
     logger.debug(f"Evaluation Loss: {loss}, Accuracy: {acc}, mean_pred: {mean_prediction}")
 
     # Saving models and history
-    model_file = os.path.join(models_folders, "model" + current_timestamp + model.name + '.h5')
-    history_file = os.path.join(models_folders, "history" + current_timestamp + model.name + '.pickle')
+    model_file = os.path.join(job_folder, "model.h5")
+    history_file = os.path.join(job_folder, "history.pickle")
 
     if not (os.path.exists(models_folders)):
         logger.debug(f'The {models_folders} folder does not exist. Creating it.')

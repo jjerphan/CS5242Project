@@ -4,8 +4,9 @@ import progressbar
 import numpy as np
 
 # Folders
-# Global folder for data
+# Global folder for data and logs
 data_folder = os.path.join("..", "training_data")
+logs_folder = os.path.join("..", "logs")
 
 # Data given (not modified)
 original_data_folder = os.path.join(data_folder, "original")
@@ -30,16 +31,19 @@ float_type = np.float32
 formatter = "%.16f"
 comment_delimiter = "#"
 
+
 # Features used to train:
 #  - 3 spatial coordinates : x , y, z (floating values)
 #  - 2 features for one hot encoding of atom types (is_hydrophobic, is_polar)
 #  - 2 features for one hot encoding of molecules types (is_from_protein, is_from_ligand)
 
-features_names = ["x", "y", "z", "is_hydrophobic", "is_polar", "is_from_protein", "is_from_ligand"]
+features_names = ["x", "y", "z", "is_hydrophobic", "is_from_protein"]
 nb_features = len(features_names)
+nb_channels = nb_features - 3 # coordinates are not used as features
+indices_features = dict(zip(features_names, list(range(nb_features))))
 
 # We have 3000 positives pairs of ligands
-nb_examples = 3000
+nb_systems = 3000
 
 n_training_examples = 2700
 train_indices = list(map(int, open(os.path.join(data_folder, "train_indices")).readlines()))
@@ -47,7 +51,7 @@ test_indices = list(map(int, open(os.path.join(data_folder, "test_indices")).rea
 
 # Test the consistency : no overlap and all the files are used on the two sets
 assert (len(set(train_indices).intersection(set(test_indices))) == 0)
-assert (len(test_indices) + len(train_indices) == nb_examples)
+assert (len(test_indices) + len(train_indices) == nb_systems)
 assert (len(train_indices) == n_training_examples)
 
 # All the other will be used to construct examples on the go
@@ -56,9 +60,9 @@ assert (len(train_indices) == n_training_examples)
 nb_neg_ex_per_pos = 10
 
 # To scale protein-ligands system in a cube of shape (resolution_cube,resolution_cube,resolution_cube)
-resolution_cube = 30
+resolution_cube = 20
 
-# Obtained with values_range on the complete original dataset
+# Obtained with values_range on the complete original dataset : to be rerun again
 hydrophobic_types = {"C"}
 polar_types = {'P', 'O', 'TE', 'F', 'N', 'AS', 'O1-', 'MO',
                'B', 'BR', 'SB', 'RU', 'SE', 'HG', 'CL',
@@ -86,11 +90,10 @@ widgets_progressbar = [
 def progress(iterable):
     """
     Custom progress bar
-    :param iterable:
+    :param iterable: the iterable to wrap
     :return:
     """
-    # return progressbar.progressbar(iterable, widgets=widgets_progressbar, redirect_stdout=True)
-    return iterable
+    return progressbar.progressbar(iterable, widgets=widgets_progressbar, redirect_stdout=True)
 
 
 def extract_id(file_name):

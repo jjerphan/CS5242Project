@@ -3,7 +3,8 @@ import os
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D  # needed by the 3D plotter
 
-from settings import float_type, comment_delimiter, training_examples_folder, resolution_cube, nb_features
+from settings import float_type, comment_delimiter, training_examples_folder, resolution_cube, nb_features, \
+    indices_features
 
 
 def representation_invariance(original_coords, is_from_protein_indices, verbose=False):
@@ -66,7 +67,7 @@ def make_cube(system: np.ndarray, resolution, use_rotation_invariance=True, keep
     # Spatial coordinates of atoms
     original_coords = system[:, 0:3]
 
-    is_from_protein_column = 5
+    is_from_protein_column = indices_features["is_from_protein"]
     is_from_protein_indices = np.where(system[:, is_from_protein_column] == 1.)
 
     if use_rotation_invariance:
@@ -116,13 +117,27 @@ def is_positive(name):
     'xxxx' corresponds to the protein.
     'yyyy' corresponds to the ligands
 
-    Return xxxx == yyyy (that both molecules bind together)
+    Return xxxx == yyyy (both molecules bind together)
 
     :param name: the name of a file of the form "xxxx_yyyy[.csv]"
     :return:
     """
     systems = name.replace(".csv", "").split("_")
     return systems[0] == systems[1]
+
+def is_negative(name):
+    """
+    name is of the form "xxxx_yyyy[.csv]"
+
+    'xxxx' corresponds to the protein.
+    'yyyy' corresponds to the ligands
+
+    Return xxxx != yyyy (both molecules don't bind together)
+
+    :param name: the name of a file of the form "xxxx_yyyy[.csv]"
+    :return:
+    """
+    return not(is_positive(name))
 
 
 def only_positive_examples(system_names):
@@ -169,9 +184,8 @@ def plot_cube(cube):
     for x in range(resolution_cube):
         for y in range(resolution_cube):
             for z in range(resolution_cube):
-                is_from_protein_pos = 2
-                is_from_ligand_pos = 3
-                is_atom_in_voxel = cube[x, y, z, is_from_protein_pos] + cube[x, y, z, is_from_ligand_pos] != 0
+                is_from_protein_pos = indices_features["is_from_protein"]-3
+                is_atom_in_voxel = cube[x, y, z, is_from_protein_pos] != 0
                 if is_atom_in_voxel:
                     # Plotting accordingly to the molecule type
                     color = 2 * cube[x, y, z, is_from_protein_pos] - 1

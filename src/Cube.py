@@ -11,6 +11,9 @@ logger.addHandler(logging.NullHandler())
 
 
 class Cube:
+    """
+    Cube object consist of x, y, z coordinates, atom type (hydrophobic, polar) and origin (protein, ligand).
+    """
     def __init__(self, protein_file, resolution):
         self.x = protein_file[:, 0]
         self.y = protein_file[:, 1]
@@ -20,8 +23,8 @@ class Cube:
 
     def find_coord_min_max(self):
         """
-        Get minimum and maximum values of x, y, z.
-        :return: min, max values
+        Get minimum and maximum values of x, y, z. Then the range of x, y, z.
+        :return: x_min, y_min, z_min, x_range, y_range, z_range
         """
         x_min = np.min(self.x)
         x_max = np.max(self.x)

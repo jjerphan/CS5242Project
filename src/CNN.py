@@ -21,7 +21,7 @@ def main(interactive=False):
     """
     1. Extract data from the given pdb file.
     2. Create training examples by mixing protein and ligand bindings, both positive and negative bindings are created.
-    3.
+    3. Normalize Training data
     :return:
     """
     logger = logging.getLogger('cnn')
@@ -118,7 +118,7 @@ def main(interactive=False):
 
     logger.debug("Done")
 
-    logger.debug(('Saving model.'))
+    logger.debug('Saving model.')
     model.save(whole_model)
 
 

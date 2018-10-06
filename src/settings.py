@@ -14,6 +14,9 @@ original_data_folder = os.path.join(data_folder, "original")
 extracted_data_folder = os.path.join(data_folder, "extracted")
 extracted_data_train_folder = os.path.join(extracted_data_folder, "train")
 extracted_data_test_folder = os.path.join(extracted_data_folder, "test")
+normalized_data_folder = os.path.join(data_folder, "normalized")
+normalized_data_train_folder = os.path.join(normalized_data_folder, "train")
+normalized_data_test_folder = os.path.join(normalized_data_folder, "test")
 
 # Conversion to examples
 training_examples_folder = os.path.join(data_folder, "training_examples")
@@ -91,8 +94,8 @@ def progress(iterable):
     :param iterable:
     :return:
     """
-    # return progressbar.progressbar(iterable, widgets=widgets_progressbar, redirect_stdout=True)
-    return iterable
+    return progressbar.progressbar(iterable, widgets=widgets_progressbar, redirect_stdout=True)
+    #return iterable
 
 
 def extract_id(file_name):

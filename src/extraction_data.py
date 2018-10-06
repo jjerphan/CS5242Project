@@ -4,7 +4,7 @@ import numpy as np
 import logging
 
 from settings import original_data_folder, extracted_data_folder, hydrophobic_types, float_type, \
-    formatter, widgets_progressbar, nb_features, n_training_examples, extracted_data_train_folder, \
+    formatter, nb_features, extracted_data_train_folder, \
     extracted_data_test_folder, \
     progress, train_indices
 
@@ -71,10 +71,14 @@ def extract_molecule(x_list: list, y_list: list, z_list: list, atom_type_list: l
 
     is_from_protein = (1 * molecule_is_protein) * np.ones((nb_atoms,))
     #is_from_ligand = 1 - is_from_protein
+    is_hydrophobic_list = np.array([1 if type in hydrophobic_types else -1 for type in atom_type_list])
+
+    is_from_protein_list = (2 * molecule_is_protein) * np.ones((nb_atoms,)) - 1
 
     formated_molecule = np.array([x_list, y_list, z_list, is_hydrophobic, is_from_protein]).T
     # See `features_names` in settings to see how the features are organised
-    formated_molecule = np.array([x_list, y_list, z_list, is_hydrophobic, is_from_protein]).T
+    #formated_molecule = np.array([x_list, y_list, z_list, is_hydrophobic, is_from_protein]).T
+    formated_molecule = np.array([x_list, y_list, z_list, is_hydrophobic_list, is_from_protein_list]).T
 
     assert(formated_molecule.shape == (nb_atoms, nb_features))
 

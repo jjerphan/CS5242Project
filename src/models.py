@@ -1,20 +1,15 @@
-from keras import Sequential
-from keras.layers import Dense, Flatten, Conv3D
-import keras.backend as K
-from keras.losses import MSE
+from keras import Sequential, Input, Model
+from keras.layers import Dense, Flatten, Conv3D, Activation
 
-from settings import resolution_cube, nb_features
+from settings import resolution_cube, nb_features, nb_channels
+
+# Configurations of the shape of data
+input_shape = (resolution_cube, resolution_cube, resolution_cube, nb_channels)
+data_format = "channels_last"
 
 
 def first_model():
-    # Configurations of the shape of data
-
-    input_shape = (resolution_cube, resolution_cube, resolution_cube, nb_features-3)
-    data_format = "channels_last"
-
-    # Defining the model
     model = Sequential()
-    # model.add(ZeroPadding3D()) # TODO : add this layer
     model.add(Conv3D(
         kernel_size=3,
         input_shape=input_shape,
@@ -28,9 +23,34 @@ def first_model():
     model.add(Dense(1, activation='sigmoid'))
     model.build()
 
-    def mean_pred(y_true, y_pred):
-        return K.mean(y_pred)
-
-    model.compile(optimizer='rmsprop', loss=MSE, metrics=['accuracy', mean_pred])
-
     return model
+
+def pafnucy_like():
+    kernel_size = 5
+    inputs = Input(shape=input_shape)
+
+    x = Conv3D(kernel_size=kernel_size, filters=64)(inputs)
+    x = Conv3D(kernel_size=kernel_size, filters=128)(x)
+    x = Conv3D(kernel_size=kernel_size, filters=256)(x)
+    x = Conv3D(kernel_size=kernel_size, filters=512)(x)
+    # x = Conv3D(kernel_size=kernel_size, filters=1024)(x)
+
+    x = Flatten()(x)
+    x = Dense(1000)(x)
+    x = Dense(500)(x)
+    x = Dense(200)(x)
+    x = Dense(1)(x)
+    outputs = Activation('relu')(x)
+
+    model = Model(inputs=inputs, outputs=outputs)
+    return model
+
+
+models_available = [first_model(), pafnucy_like()]
+models_available_names = list(map(lambda model: model.name, models_available))
+
+if __name__== "__main__":
+    print("2 Models : ")
+    for i, model in enumerate(models_available):
+        print(f"#{i}: {model.name}")
+        print(model.summary())

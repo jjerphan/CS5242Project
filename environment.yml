@@ -45,6 +45,8 @@ dependencies:
   - ncurses=6.1=hf484d3e_0
   - numpy=1.14.2=py36hdbf6ddf_1
   - openssl=1.0.2p=h14c3975_0
+  - pandas=0.23.4=py36h04863e7_0
+  - patsy=0.5.0=py36_0
   - pcre=8.42=h439df22_0
   - pip=10.0.1=py36_0
   - pluggy=0.7.1=py36h28b3542_0
@@ -62,11 +64,14 @@ dependencies:
   - pyyaml=3.13=py36h14c3975_0
   - qt=5.6.2=hd25b39d_14
   - readline=7.0=h7b6447c_5
+  - scikit-learn=0.20.0=py36h4989274_1
   - scipy=1.1.0=py36hd20e5f9_0
+  - seaborn=0.9.0=py36_0
   - setuptools=40.4.3=py36_0
   - sip=4.18.1=py36hf484d3e_2
   - six=1.11.0=py36_1
   - sqlite=3.25.2=h7b6447c_0
+  - statsmodels=0.9.0=py36h035aef0_0
   - tensorboard=1.7.0=py36hf484d3e_1
   - tensorflow=1.7.0=0
   - tensorflow-base=1.7.0=py36hdbcaa40_2
@@ -79,8 +84,12 @@ dependencies:
   - yaml=0.1.7=had09818_2
   - zlib=1.2.11=ha838bed_2
   - pip:
+    - chardet==3.0.4
+    - idna==2.7
     - pkginfo==1.4.2
+    - requests==2.19.1
     - requests-toolbelt==0.8.0
     - tqdm==4.25.0
     - twine==1.11.0
+    - urllib3==1.23
 

@@ -57,13 +57,15 @@ class Training_Example_Iterator(keras.utils.Sequence):
                  examples_folder,
                  batch_size=32,
                  nb_neg=nb_neg_ex_per_pos,
-                 shuffle_after_epoch=True):
+                 shuffle_after_epoch=True,
+                 max_examples: int=None):
         """
 
         :param examples_folder: the folder containing the examples
         :param batch_size: the batch size to use to train
         :param nb_neg: the number of positive example (this controls the number of examples
         :param shuffle_after_epoch: to shuffle the data or not after each epoch
+        :param max_examples: if specified, just use the number of examples given
         """
 
         self.batch_size = batch_size
@@ -89,10 +91,15 @@ class Training_Example_Iterator(keras.utils.Sequence):
         filtered_neg_files = sorted([file for group in grouped_files.values() for file in group])
 
         self.examples_files = pos_files + filtered_neg_files
+
+        # Taking you some examples if not
+        if isinstance(max_examples, int):
+            self.examples_files = self.examples_files[0:max_examples]
+
         self.indexes = np.arange(len(self.examples_files))
 
         # We shuffle the data at least once
-        # np.random.shuffle(self.indexes)
+        np.random.shuffle(self.indexes)
 
     def __len__(self):
         """
@@ -169,13 +176,13 @@ class LogEpochBatchCallback(keras.callbacks.LambdaCallback):
     # on_batch_end: logs include loss, and optionally acc (if accuracy monitoring is enabled).
 
     def _on_batch_begin(self, batch, logs=None):
-        self.logger.debug(f" - batch {batch} ; size {logs['size']}")
+        self.logger.debug(f"batch {batch} ; size {logs['size']}")
 
     def _on_batch_end(self, batch, logs=None):
-        self.logger.debug("    - loss {:10.4f}".format(logs["loss"]))
+        self.logger.debug("loss {:10.4f}".format(logs["loss"]))
 
     def _on_epoch_begin(self, epoch, logs=None):
-        self.logger.debug(f"\n\nStarting epoch {epoch}")
+        self.logger.debug(f"Starting epoch {epoch}")
 
     def _on_epoch_end(self, epoch, logs=None):
         self.logger.debug(f"Ending epoch {epoch}" + " ; accuracy  {:.2%} ; loss {:10.4f}".format(logs["acc"],
@@ -185,6 +192,7 @@ class LogEpochBatchCallback(keras.callbacks.LambdaCallback):
         self.logger = logger
         super().__init__(on_epoch_begin=self._on_epoch_begin,
                          on_epoch_end=self._on_epoch_end,
+                         on_batch_begin=self._on_batch_begin,
                          on_batch_end=self._on_batch_end)
 
 if __name__ == "__main__":

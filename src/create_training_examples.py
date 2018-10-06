@@ -1,10 +1,14 @@
 import numpy as np
 import os
 import shutil
-
+import logging
 from discretization import load_nparray
 from settings import training_examples_folder, extracted_data_train_folder, extracted_protein_suffix, \
     extracted_ligand_suffix, comment_delimiter, extract_id, progress, nb_neg_ex_per_pos, nb_systems, features_names
+
+
+logger = logging.getLogger('cnn.create_training_example')
+logger.addHandler(logging.NullHandler())
 
 
 def save_example(folder: str, protein: np.ndarray, ligand: np.ndarray, protein_system: str, ligand_system: str):
@@ -92,19 +96,24 @@ def create_training_examples(nb_neg: int):
 
     # Deleting the folders of examples and recreating it
     if os.path.exists(training_examples_folder):
+        logger.debug('Delete training examples folder.')
         shutil.rmtree(training_examples_folder)
     os.makedirs(training_examples_folder)
+    logger.debug('Create new training examples folder.')
 
     # Getting all the systems
     list_systems = set(list(map(extract_id, os.listdir(extracted_data_train_folder))))
 
     # For each system, we create the associated positive example and we generate some negative examples
+    logger.debug('Create 1 positive binding and %d random negative protein-ligand bindings.', nb_neg_ex_per_pos)
+    total_files = 0
     for system in progress(sorted(list_systems)):
         protein = load_nparray(os.path.join(extracted_data_train_folder, system + extracted_protein_suffix))
         ligand = load_nparray(os.path.join(extracted_data_train_folder, system + extracted_ligand_suffix))
 
         # Saving positive example
         save_example(training_examples_folder, protein, ligand, system, system)
+        total_files += 1
 
         # Creating false example using nb_neg_ex negatives examples
         other_systems = sorted(list(list_systems.difference({system})))
@@ -119,9 +128,11 @@ def create_training_examples(nb_neg: int):
             nb_examples = len(os.listdir(training_examples_folder))
             # Saving negative example
             save_example(training_examples_folder, protein, bad_ligand, system, other_system)
+            total_files += 1
             new_nb_examples = len(os.listdir(training_examples_folder))
             if nb_examples == new_nb_examples:
                 print(f"Example {system}-{other_system} not created")
+    logger.debug('Total %d training data has been saved into training examples folder.', total_files)
 
 
 if __name__ == "__main__":

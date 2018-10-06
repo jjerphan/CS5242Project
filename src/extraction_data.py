@@ -8,8 +8,8 @@ from settings import original_data_folder, extracted_data_folder, hydrophobic_ty
     extracted_data_test_folder, \
     progress, train_indices
 
-
-logger = logging.getLogger('extract data')
+logger = logging.getLogger('cnn.extract_data')
+logger.addHandler(logging.NullHandler())
 
 def read_pdb(file_name) -> (list, list, list, list):
     """
@@ -64,14 +64,20 @@ def extract_molecule(x_list: list, y_list: list, z_list: list, atom_type_list: l
     :param molecule_is_protein: boolean
     :return: np.ndarray of dimension (nb_atoms, 3 + nb_atom_features)
     """
-
     nb_atoms = len(x_list)
     # One hot encoding for atom type and molecule types
+    is_hydrophobic = np.array([1 if type in hydrophobic_types else 0 for type in atom_type_list])
+    #is_polar = 1 - is_hydrophobic
+
+    is_from_protein = (1 * molecule_is_protein) * np.ones((nb_atoms,))
+    #is_from_ligand = 1 - is_from_protein
     is_hydrophobic_list = np.array([1 if type in hydrophobic_types else -1 for type in atom_type_list])
 
     is_from_protein_list = (2 * molecule_is_protein) * np.ones((nb_atoms,)) - 1
 
+    formated_molecule = np.array([x_list, y_list, z_list, is_hydrophobic, is_from_protein]).T
     # See `features_names` in settings to see how the features are organised
+    #formated_molecule = np.array([x_list, y_list, z_list, is_hydrophobic, is_from_protein]).T
     formated_molecule = np.array([x_list, y_list, z_list, is_hydrophobic_list, is_from_protein_list]).T
 
     assert(formated_molecule.shape == (nb_atoms, nb_features))
@@ -80,20 +86,27 @@ def extract_molecule(x_list: list, y_list: list, z_list: list, atom_type_list: l
 
 
 def extract_data():
+    logger.debug('Checking if extracted_data, extracted_data_train, extracted_data_test folder exists.')
+    if not(os.path.exists(extracted_data_folder)):
+        logger.debug('The extracted_data folder does not exist. Creating the three folders.')
+        os.makedirs(extracted_data_folder)
+        os.makedirs(extracted_data_train_folder)
+        os.makedirs(extracted_data_test_folder)
 
     logger.info('Checking if extracted_data, extracted_data_train, extracted_data_test folder exists.')
 
     # Creating folders if they don't exist
     for folder in [extracted_data_folder, extracted_data_test_folder, extracted_data_train_folder]:
         if not(os.path.exists(folder)):
-            logger.debug(f'The {folder}folder does not exist. Creating it.')
+            logger.debug('The %s folder does not exist. Creating it.', folder)
             os.makedirs(folder)
 
     # For each file, we extract the info and save it into a file in a specified folders
+    logger.debug('Read orginal pdb files from %s.', original_data_folder)
+    logger.debug('Total files are %d', len(os.listdir(original_data_folder)))
     for pdb_original_file in progress(sorted(os.listdir(original_data_folder))):
         pdb_original_file_path = os.path.join(original_data_folder, pdb_original_file)
 
-        logger.debug('Reading orginal pdb files.')
         x_list, y_list, z_list, atom_type_list = read_pdb(pdb_original_file_path)
 
         is_protein = "pro" in pdb_original_file
@@ -109,6 +122,8 @@ def extract_data():
             extracted_file_path = os.path.join(extracted_data_test_folder, pdb_original_file.replace(".pdb", ".csv"))
 
         np.savetxt(fname=extracted_file_path, X=molecule, fmt=formatter)
+
+    logger.debug('Molecules saved into train and test folder in csv.')
 
 if __name__ == "__main__":
     extract_data()

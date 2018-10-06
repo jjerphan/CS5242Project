@@ -15,6 +15,9 @@ original_data_folder = os.path.join(data_folder, "original")
 extracted_data_folder = os.path.join(data_folder, "extracted")
 extracted_data_train_folder = os.path.join(extracted_data_folder, "train")
 extracted_data_test_folder = os.path.join(extracted_data_folder, "test")
+normalized_data_folder = os.path.join(data_folder, "normalized")
+normalized_data_train_folder = os.path.join(normalized_data_folder, "train")
+normalized_data_test_folder = os.path.join(normalized_data_folder, "test")
 
 # Conversion to examples
 training_examples_folder = os.path.join(data_folder, "training_examples")
@@ -25,6 +28,8 @@ extracted_ligand_suffix = "_lig_cg.csv"
 
 # Persisted models
 models_folders = os.path.join("..", "models")
+model_weights = os.path.join(data_folder, "model_weights.h5")
+whole_model = os.path.join(data_folder, "whole_model.h5")
 
 # Some settings for number and persisting tensors
 float_type = np.float32

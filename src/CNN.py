@@ -1,3 +1,6 @@
+from models import first_model
+from settings import nb_neg_ex_per_pos, model_weights, whole_model
+from GetCubes import get_cubes
 import pickle
 from time import strftime, gmtime
 
@@ -15,7 +18,15 @@ from keras.losses import MSE
 
 
 def main(interactive=False):
-
+    """
+    1. Extract data from the given pdb file.
+    2. Create training examples by mixing protein and ligand bindings, both positive and negative bindings are created.
+    3. Normalize Training data
+    :return:
+    """
+    logger = logging.getLogger('cnn')
+    logger.setLevel(logging.DEBUG)
+    fh = logging.FileHandler("application.log")
     # Formatting fixtures
     current_datetime = strftime("%Y-%m-%d-%H:%M:%S", gmtime())
     logger = logging.getLogger(__name__)
@@ -40,6 +51,21 @@ def main(interactive=False):
             print('Creating examples')
             create_training_examples()
 
+    logger.debug('Calling module extract data and training examples.')
+    # extract_data()
+
+    # create_training_examples()
+
+    logger.debug('Creating network model.')
+    model = first_model()
+
+    # We are taking systems of the first 200 proteins (pos and neg example)
+    nb_examples = 200 * (1 + nb_neg_ex_per_pos)
+    logger.debug('Creating cubes.')
+    cubes, ys = get_cubes(nb_examples)
+
+    logger.debug('Training the model.')
+    history = model.fit(cubes, ys)
     logger.debug('Creating network model')
 
     model_index = -1  # we chose the last model by default
@@ -91,6 +117,9 @@ def main(interactive=False):
     pickle.dump(open(history, "a"), history_file)
 
     logger.debug("Done")
+
+    logger.debug('Saving model.')
+    model.save(whole_model)
 
 
 if __name__ == "__main__":

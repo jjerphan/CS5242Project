@@ -129,10 +129,10 @@ def create_training_examples(nb_neg: int):
             # Saving negative example
             save_example(training_examples_folder, protein, bad_ligand, system, other_system)
             total_files += 1
-    logger.debug('Total %d training data has been saved into training examples folder.', total_files)
             new_nb_examples = len(os.listdir(training_examples_folder))
             if nb_examples == new_nb_examples:
                 print(f"Example {system}-{other_system} not created")
+    logger.debug('Total %d training data has been saved into training examples folder.', total_files)
 
 
 if __name__ == "__main__":

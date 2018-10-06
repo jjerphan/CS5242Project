@@ -67,13 +67,15 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess,
     model.compile(optimizer=optimizer, loss=MSE, metrics=['accuracy', mean_pred])
 
     logger.debug(f'{os.path.basename(__file__)} : Training the model with the following parameters')
-    logger.debug(f'model_index = {model_index}')
-    logger.debug(f'nb_epochs   = {nb_epochs}')
-    logger.debug(f'batch_size  = {batch_size}')
-    logger.debug(f'nb_neg      = {nb_neg}')
-    logger.debug(f'verbose     = {verbose}')
-    logger.debug(f'preprocess  = {preprocess}')
-    logger.debug(f'optimizer   = {optimizer}')
+    logger.debug(f'model_index   = {model_index}')
+    logger.debug(f'model_name    = {model.name}')
+    logger.debug(f'nb_epochs     = {nb_epochs}')
+    logger.debug(f'batch_size    = {batch_size}')
+    logger.debug(f'max_examples  = {max_examples}')
+    logger.debug(f'nb_neg        = {nb_neg}')
+    logger.debug(f'verbose       = {verbose}')
+    logger.debug(f'preprocess    = {preprocess}')
+    logger.debug(f'optimizer     = {optimizer}')
 
     # To load the data incrementally
     train_examples_iterator = Training_Example_Iterator(examples_folder=training_examples_folder,
@@ -104,10 +106,13 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess,
 
     model.save(model_file)
     logger.debug(f"Model saved in {model_file}")
-    with open(history_file, "wb") as handle:
-        pickle.dump(history, handle)
 
-    logger.debug(f"History saved in {model_file}")
+    # TODO : resolve bug with history
+    #  with open(history_file, "wb") as handle:
+    #     pickle.dump(history.history, handle)
+    #
+    # logger.debug(f"History saved in {model_file}")
+
     logger.debug(f"Done !")
     logger.debug(f"Preprocessing done in : {preprocessing_checkpoint - start_time}")
     logger.debug(f"Training done in      : {train_checkpoint - preprocessing_checkpoint}")

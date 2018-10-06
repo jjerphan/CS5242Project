@@ -3,13 +3,12 @@ import logging
 import os
 import argparse
 
-from time import strftime, gmtime
 from datetime import datetime
 
 from pipeline_fixtures import Training_Example_Iterator, LogEpochBatchCallback
 from models import models_available, models_available_names
-from settings import training_examples_folder, logs_folder, nb_neg_ex_per_pos, optimizer_default,\
-    batch_size_default, nb_epochs_default
+from settings import training_examples_folder, logs_folder, nb_neg_ex_per_pos, optimizer_default, \
+    batch_size_default, nb_epochs_default, get_current_timestamp
 from extraction_data import extract_data
 from create_training_examples import create_training_examples
 from settings import models_folders
@@ -31,10 +30,10 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess,
     :return:
     """
     # Formatting fixtures
-    current_datetime = strftime("%Y-%m-%d-%H:%M:%S", gmtime())
+    current_timestamp = get_current_timestamp()
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.DEBUG)
-    logfile = f"CNN-{current_datetime}.log"
+    logfile = f"CNN-{current_timestamp}.log"
     if not (os.path.exists(logs_folder)):
         print(f"The {logs_folder} does not exist. Creating it.")
         os.makedirs(logs_folder)
@@ -70,6 +69,7 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess,
     logger.debug(f'{os.path.basename(__file__)} : Training the model with the following parameters')
     logger.debug(f'model_index = {model_index}')
     logger.debug(f'nb_epochs   = {nb_epochs}')
+    logger.debug(f'batch_size  = {batch_size}')
     logger.debug(f'nb_neg      = {nb_neg}')
     logger.debug(f'verbose     = {verbose}')
     logger.debug(f'preprocess  = {preprocess}')
@@ -95,8 +95,8 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess,
     train_checkpoint = datetime.now()
 
     # Saving models and history
-    model_file = os.path.join(models_folders, "model" + current_datetime + model.name + '.h5')
-    history_file = os.path.join(models_folders, "history" + current_datetime + model.name + '.pickle')
+    model_file = os.path.join(models_folders, "model" + current_timestamp + model.name + '.h5')
+    history_file = os.path.join(models_folders, "history" + current_timestamp + model.name + '.pickle')
 
     if not (os.path.exists(models_folders)):
         logger.debug(f'The {models_folders} folder does not exist. Creating it.')

@@ -1,8 +1,8 @@
 import os
-from time import strftime, gmtime
 import textwrap
 from models import models_available, models_available_names
-from settings import job_submissions_folder, nb_neg_ex_per_pos, nb_epochs_default, batch_size_default, n_gpu_default
+from settings import job_submissions_folder, nb_neg_ex_per_pos, nb_epochs_default, batch_size_default, n_gpu_default, \
+    get_current_timestamp
 
 if __name__ == "__main__":
     name_job = "CS5242_Training"
@@ -64,27 +64,20 @@ if __name__ == "__main__":
     print("Stub inferred :")
     print(stub)
 
-    if input("Would you want to submit the following job ? [y/n (default)]").lower() != "y":
-        print("Job aborted")
+    if input("Would you want to save the following job ? [y/n (default)]").lower() != "y":
+        print("Not saved")
     else:
-        print("Submitting job")
-
         # Creating the folder for job submissions if not existing
         if not(os.path.exists(job_submissions_folder)):
             os.makedirs(job_submissions_folder)
 
-        current_datetime = strftime("%Y-%m-%d-%H:%M:%S", gmtime())
-        file_name = os.path.join(job_submissions_folder, f"{current_datetime}-{name_job}.pbs")
+        current_timestamp = get_current_timestamp()
+        file_name = os.path.join(job_submissions_folder, f"{current_timestamp}-{name_job}.pbs")
         with open(file_name, "a") as f_sub:
             # De-indenting the stub to make it in a file
             f_sub.write(textwrap.dedent(stub))
 
         # Showing the content of the file
         os.system(f"cat {file_name}")
-        exit_status = os.system(f"qsubmit {file_name}")
-
-        # Checking status code
-        if exit_status == 0:
-            print("Job submitted !")
-        else:
-            print(f"Job wasn't submitted (exit status : {exit_status})")
+        exit_status = os.system(f"qsub {file_name}")
+        print(f"Saved in {file_name}")

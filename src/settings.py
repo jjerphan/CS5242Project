@@ -1,7 +1,8 @@
 import os
-
-import progressbar
 import numpy as np
+import progressbar
+
+import datetime
 
 # Folders
 # Global folder for data and logs
@@ -34,7 +35,6 @@ float_type = np.float32
 formatter = "%.16f"
 comment_delimiter = "#"
 
-
 # Features used to train:
 #  - 3 spatial coordinates : x , y, z (floating values)
 #  - 1 features for one hot encoding of atom types (is_hydrophobic)
@@ -42,7 +42,7 @@ comment_delimiter = "#"
 
 features_names = ["x", "y", "z", "is_hydrophobic", "is_from_protein"]
 nb_features = len(features_names)
-nb_channels = nb_features - 3 # coordinates are not used as features
+nb_channels = nb_features - 3  # coordinates are not used as features
 indices_features = dict(zip(features_names, list(range(nb_features))))
 
 # We have 3000 positives pairs of ligands
@@ -95,6 +95,7 @@ batch_size_default = 32
 n_gpu_default = 1
 optimizer_default = "rmsprop"
 
+
 def progress(iterable):
     """
     Custom progress bar
@@ -107,3 +108,9 @@ def progress(iterable):
 def extract_id(file_name):
     new_name = file_name.replace(extracted_protein_suffix, "").replace(extracted_ligand_suffix, "")
     return new_name
+
+
+def get_current_timestamp():
+    utc_dt = datetime.datetime.now(datetime.timezone.utc)
+    local_time_dt = utc_dt.astimezone()
+    return f"{local_time_dt}".replace(" ", "_")

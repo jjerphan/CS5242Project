@@ -11,6 +11,9 @@ logs/
 training_data.zip
 *.h5
 
+*.idea
+models/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

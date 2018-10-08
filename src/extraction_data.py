@@ -15,7 +15,6 @@ def read_pdb(file_name) -> (list, list, list, list):
     """
     Read a original pdb file and return the data.
     The lists contains ordered information about each atom.
-
     :param file_name: the file to extract data
     :return: lists of coordinates and atom type for each atom
     """
@@ -52,11 +51,8 @@ def read_pdb(file_name) -> (list, list, list, list):
 def extract_molecule(x_list: list, y_list: list, z_list: list, atom_type_list: list, molecule_is_protein:bool) -> np.array:
     """
     Convert the data extract from file into a np.ndarray.
-
     The information of one atom is represented as a line in the array.
-
     See settings.py for values used to represented categorical features (molecule type and atom type)
-
     :param x_list: list of x coordinates
     :param y_list: list of y coordinates
     :param z_list: list of z coordinates
@@ -82,33 +78,6 @@ def extract_molecule(x_list: list, y_list: list, z_list: list, atom_type_list: l
     assert(formated_molecule.shape == (nb_atoms, nb_features))
 
     return formated_molecule
-
-
-def extract_data_bak():
-    logger.debug('Checking if extracted_data, extracted_data_train, extracted_data_test folder exists.')
-    if not(os.path.exists(extracted_data_folder)):
-        logger.debug('The extracted_data folder does not exist. Creating the three folders.')
-        os.makedirs(extracted_data_folder)
-        os.makedirs(extracted_data_train_folder)
-        os.makedirs(extracted_data_test_folder)
-
-    logger.info('Checking if extracted_data, extracted_data_train, extracted_data_test folder exists.')
-
-    # Creating folders if they don't exist
-    for folder in [extracted_data_folder, extracted_data_test_folder, extracted_data_train_folder]:
-        if not(os.path.exists(folder)):
-            logger.debug('The %s folder does not exist. Creating it.', folder)
-            os.makedirs(folder)
-
-    # For each file, we extract the info and save it into a file in a specified folders
-    logger.debug('Read orginal pdb files from %s.', original_data_folder)
-    logger.debug('Total files are %d', len(os.listdir(original_data_folder)))
-
-    with futures.ProcessPoolExecutor(max_workers=6) as executor:
-        for pdb_original_file in sorted(os.listdir(original_data_folder)):
-            executor.submit(save_data, pdb_original_file)
-
-    logger.debug('Molecules saved into train and test folder in csv.')
 
 
 def save_data(pdb_original_file, split_training):

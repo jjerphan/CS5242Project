@@ -162,7 +162,11 @@ In order to fit the model with the given data, some transformation need to be pe
     - *Only the training set gets created* (as the testing set is enormous as we are considering all the possible combinations!)
     - `settings.py/split_index` indicates what is the last training example and what is the first testing example 
   - Training examples are saved in `training_data/training_examples` under the naming convention `xxxx_yyyy.csv` (where `xxxx` is the id of the protein and `yyyy` the ligand's).
+<<<<<<< HEAD
   - This stage is perform in   [`create_training_examples.py`](src/create_examples.py)
+=======
+  - This stage is perform in   [`create_training_examples.py`](src/create_training_examples.py)
+>>>>>>> 07fd0f20959f75941794b03a839b9d1ae6ba1df8
 - **Training of the model with constructed examples**
   - Examples from the Training set (`training_data/training_examples`) are fed in the network directly.
     - They have to be converted into cubes for now (see "Cube Creation" bellow for more info).

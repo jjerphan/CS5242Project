@@ -56,6 +56,7 @@ nb_features = len(features_names)
 nb_channels = nb_features - 3  # coordinates are not used as features
 indices_features = dict(zip(features_names, list(range(nb_features))))
 
+# We have 3000 positives pairs of ligands
 n_training_examples = 2700
 train_indices = list(map(int, open(os.path.join(data_folder, "train_indices")).readlines()))
 test_indices = list(map(int, open(os.path.join(data_folder, "test_indices")).readlines()))

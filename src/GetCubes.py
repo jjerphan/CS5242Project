@@ -1,0 +1,41 @@
+import os
+import numpy as np
+from discretization import load_nparray, make_cube, is_positive
+from settings import training_examples_folder, resolution_cube
+import logging
+
+logger = logging.getLogger('cnn.get_cubes')
+logger.addHandler(logging.NullHandler())
+
+def get_cubes(nb_examples=128):
+    """
+    Return the first nb_examples cubes with their ys.
+    :param nb_examples:
+    :return: list of cubes and list of their ys
+    """
+    logger.debug('Reading first %d of examples from %s', nb_examples, training_examples_folder)
+    examples_files = sorted(os.listdir(training_examples_folder))[0:nb_examples]
+    logger.debug('The example files been loaded are %d', len(examples_files))
+
+    cubes = []
+    ys = []
+    logger.debug('Going to make cubes based on the %d of example files', len(examples_files))
+    logger.debug('Resolution of the cubes are %d.', resolution_cube)
+    for index, ex_file in enumerate(examples_files):
+        file_name = os.path.join(training_examples_folder, ex_file)
+        example = load_nparray(file_name)
+
+        cube = make_cube(example, resolution_cube)
+        y = 1 * is_positive(ex_file)
+
+        cubes.append(cube)
+        ys.append(y)
+
+    # Conversion to np.ndarrays with the first axes used for examples
+    cubes = np.array(cubes)
+    ys = np.array(ys)
+    assert(ys.shape[0] == nb_examples)
+    assert(cubes.shape[0] == nb_examples)
+    logger.debug("All the cubes has been created.")
+
+    return cubes, ys

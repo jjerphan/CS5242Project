@@ -37,7 +37,7 @@ class Cube:
         z_range = z_max - z_min
         return (x_min, y_min, z_min, x_range, y_range, z_range)
 
-    def scale(self):
+    def __scale(self):
         x_min, y_min, z_min, x_range, y_range, z_range = self.find_coord_min_max()
         eps = 10e-4
         self.x = np.floor((self.x - x_min) / (x_range + eps) * self.resolution).astype(int)
@@ -45,7 +45,7 @@ class Cube:
         self.z = np.floor((self.z - z_min) / (z_range + eps) * self.resolution).astype(int)
 
     def make_cube(self):
-        self.scale()
+        self.__scale()
         cube = np.zeros((self.resolution, self.resolution, self.resolution, self.atom_features.shape[1]))
         cube[self.x[:], self.y[:], self.z[:]] = self.atom_features
         return cube

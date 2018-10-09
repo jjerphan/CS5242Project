@@ -38,8 +38,6 @@ extracted_ligand_suffix = "_lig_cg.csv"
 
 # Persisted models
 models_folders = os.path.join("..", "models")
-#model_weights = os.path.join(data_folder, "model_weights.h5")
-#whole_model = os.path.join(data_folder, "whole_model.h5")
 
 # Some settings for number and persisting tensors
 float_type = np.float32

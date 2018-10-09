@@ -104,7 +104,7 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess,
     loss, acc, mean_prediction = model.evaluate_generator(generator=test_examples_iterator, verbose=verbose)
     evaluate_checkpoint =  datetime.now()
 
-    logger.debug(f"Loss: {loss}, Accuracy: {acc}, mean_pred: {mean_prediction}")
+    logger.debug(f"Evaluation Loss: {loss}, Accuracy: {acc}, mean_pred: {mean_prediction}")
 
     # Saving models and history
     model_file = os.path.join(models_folders, "model" + current_timestamp + model.name + '.h5')
@@ -124,11 +124,6 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess,
     logger.debug(f"Preprocessing done in : {preprocessing_checkpoint - start_time}")
     logger.debug(f"Training done in      : {train_checkpoint - preprocessing_checkpoint}")
     logger.debug(f"Evaluation done in    : {evaluate_checkpoint - train_checkpoint}")
-    # TODO : resolve bug with history
-    #  with open(history_file, "wb") as handle:
-    #     pickle.dump(history.history, handle)
-    #
-    # logger.debug(f"History saved in {model_file}")
 
 
 if __name__ == "__main__":

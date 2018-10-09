@@ -8,11 +8,11 @@ import datetime
 # Global folder for data and logs
 absolute_path = os.path.abspath("..")
 
-data_folder = os.path.join(absolute_path, "training_data")
 logs_folder = os.path.join(absolute_path, "logs")
 job_submissions_folder = os.path.join(absolute_path, "job_submissions")
 
 # Data given (not modified)
+data_folder = os.path.join(absolute_path, "training_data")
 original_data_folder = os.path.join(data_folder, "original")
 
 # First extraction of data
@@ -30,7 +30,7 @@ extracted_predict_folder = os.path.join(predict_folder, "extracted")
 # Conversion to examples
 training_examples_folder = os.path.join(data_folder, "training_examples")
 testing_examples_folder = os.path.join(data_folder, "testing_examples")
-predict_examples_folder = os.path.join(predict_folder, "predcit_examples")
+predict_examples_folder = os.path.join(predict_folder, "predict_examples")
 
 # Suffixes for extracted data files
 extracted_protein_suffix = "_pro_cg.csv"
@@ -102,6 +102,9 @@ batch_size_default = 32
 n_gpu_default = 1
 optimizer_default = "rmsprop"
 
+# Preprocessing settings
+nb_workers = 6
+
 
 def progress(iterable):
     """
@@ -113,8 +116,10 @@ def progress(iterable):
 
 
 def extract_id(file_name):
-    new_name = file_name.replace(extracted_protein_suffix, "").replace(extracted_ligand_suffix, "")
-    return new_name
+    """
+    "xxxx_pro_cg.pdb" to "xxxx"
+    """
+    return file_name.replace(extracted_protein_suffix, "").replace(extracted_ligand_suffix, "")
 
 
 def get_current_timestamp():

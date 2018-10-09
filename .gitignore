@@ -2,6 +2,14 @@
 training_data/extracted/
 training_data/original/
 training_data/training_examples/
+training_data/testing_examples/
+predict_data/
+
+*.idea
+models/
+logs/
+training_data.zip
+*.h5
 
 *.idea
 models/

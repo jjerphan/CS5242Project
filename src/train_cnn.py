@@ -5,17 +5,19 @@ import argparse
 
 from datetime import datetime
 
-from pipeline_fixtures import Training_Example_Iterator, LogEpochBatchCallback
+from pipeline_fixtures import ExamplesIterator, LogEpochBatchCallback
 from models import models_available, models_available_names
-from settings import training_examples_folder, logs_folder, nb_neg_ex_per_pos, optimizer_default, \
-    batch_size_default, nb_epochs_default, get_current_timestamp
+from settings import training_examples_folder, testing_examples_folder, logs_folder, nb_neg_ex_per_pos, \
+    optimizer_default, batch_size_default, nb_epochs_default, get_current_timestamp, original_data_folder, \
+    extracted_data_train_folder, extracted_data_test_folder
 from extraction_data import extract_data
-from create_training_examples import create_training_examples
+from create_examples import create_examples
 from settings import models_folders
-import keras.backend as K
 from keras.losses import MSE
 
-def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess, batch_size, optimizer=optimizer_default):
+
+def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess, batch_size,
+              optimizer=optimizer_default):
     """
     Train a given CNN.
 
@@ -50,9 +52,10 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess,
     if preprocess:
         logger.debug('Calling module extract data.')
         print("Extracting the data")
-        extract_data()
+        extract_data(original_data_folder)
         print('Creating examples')
-        create_training_examples(nb_neg_ex_per_pos)
+        create_examples(extracted_data_train_folder, training_examples_folder, nb_neg_ex_per_pos)
+        create_examples(extracted_data_test_folder, testing_examples_folder, nb_neg_ex_per_pos)
 
     preprocessing_checkpoint = datetime.now()
 
@@ -61,27 +64,27 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess,
     logger.debug(f"Model {model.name} chosen")
     logger.debug(model.summary())
 
-    def mean_pred(y_true, y_pred):
-        return K.mean(y_pred)
-
-    model.compile(optimizer=optimizer, loss=MSE, metrics=['accuracy', mean_pred])
+    model.compile(optimizer=optimizer, loss=MSE, metrics=['accuracy'])
 
     logger.debug(f'{os.path.basename(__file__)} : Training the model with the following parameters')
-    logger.debug(f'model_index   = {model_index}')
-    logger.debug(f'model_name    = {model.name}')
-    logger.debug(f'nb_epochs     = {nb_epochs}')
-    logger.debug(f'batch_size    = {batch_size}')
-    logger.debug(f'max_examples  = {max_examples}')
-    logger.debug(f'nb_neg        = {nb_neg}')
-    logger.debug(f'verbose       = {verbose}')
-    logger.debug(f'preprocess    = {preprocess}')
-    logger.debug(f'optimizer     = {optimizer}')
+    logger.debug(f'model_index = {model_index}')
+    logger.debug(f'nb_epochs   = {nb_epochs}')
+    logger.debug(f'batch_size  = {batch_size}')
+    logger.debug(f'nb_neg      = {nb_neg}')
+    logger.debug(f'verbose     = {verbose}')
+    logger.debug(f'preprocess  = {preprocess}')
+    logger.debug(f'optimizer   = {optimizer}')
 
     # To load the data incrementally
-    train_examples_iterator = Training_Example_Iterator(examples_folder=training_examples_folder,
-                                                        nb_neg=nb_neg,
-                                                        batch_size=batch_size,
-                                                        max_examples=max_examples)
+    train_examples_iterator = ExamplesIterator(examples_folder=training_examples_folder,
+                                               nb_neg=nb_neg,
+                                               batch_size=batch_size,
+                                               max_examples=max_examples)
+
+    test_examples_iterator = ExamplesIterator(examples_folder=testing_examples_folder,
+                                              nb_neg=nb_neg,
+                                              batch_size=batch_size,
+                                              max_examples=max_examples)
 
     # To log batches and epoch
     epoch_batch_callback = LogEpochBatchCallback(logger)
@@ -93,8 +96,12 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess,
                                   callbacks=[epoch_batch_callback])
 
     logger.debug('Done training !')
-
     train_checkpoint = datetime.now()
+
+    loss, acc, mean_prediction = model.evaluate_generator(generator=test_examples_iterator, verbose=verbose)
+    evaluate_checkpoint = datetime.now()
+
+    logger.debug(f"Evaluation Loss: {loss}, Accuracy: {acc}, mean_pred: {mean_prediction}")
 
     # Saving models and history
     model_file = os.path.join(models_folders, "model" + current_timestamp + model.name + '.h5')
@@ -106,16 +113,14 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess,
 
     model.save(model_file)
     logger.debug(f"Model saved in {model_file}")
+    with open(history_file, "wb") as handle:
+        pickle.dump(history.history, handle)
 
-    # TODO : resolve bug with history
-    #  with open(history_file, "wb") as handle:
-    #     pickle.dump(history.history, handle)
-    #
-    # logger.debug(f"History saved in {model_file}")
-
+    logger.debug(f"History saved in {model_file}")
     logger.debug(f"Done !")
     logger.debug(f"Preprocessing done in : {preprocessing_checkpoint - start_time}")
     logger.debug(f"Training done in      : {train_checkpoint - preprocessing_checkpoint}")
+    logger.debug(f"Evaluation done in    : {evaluate_checkpoint - train_checkpoint}")
 
 
 if __name__ == "__main__":

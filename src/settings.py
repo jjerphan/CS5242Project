@@ -8,20 +8,29 @@ import datetime
 # Global folder for data and logs
 absolute_path = os.path.abspath("..")
 
-data_folder = os.path.join(absolute_path, "training_data")
 logs_folder = os.path.join(absolute_path, "logs")
 job_submissions_folder = os.path.join(absolute_path, "job_submissions")
 
 # Data given (not modified)
+data_folder = os.path.join(absolute_path, "training_data")
 original_data_folder = os.path.join(data_folder, "original")
 
 # First extraction of data
 extracted_data_folder = os.path.join(data_folder, "extracted")
 extracted_data_train_folder = os.path.join(extracted_data_folder, "train")
 extracted_data_test_folder = os.path.join(extracted_data_folder, "test")
+normalized_data_folder = os.path.join(data_folder, "normalized")
+normalized_data_train_folder = os.path.join(normalized_data_folder, "train")
+normalized_data_test_folder = os.path.join(normalized_data_folder, "test")
+
+predict_folder = os.path.join(absolute_path, "predict_data")
+original_predict_folder = os.path.join(predict_folder, "original")
+extracted_predict_folder = os.path.join(predict_folder, "extracted")
 
 # Conversion to examples
 training_examples_folder = os.path.join(data_folder, "training_examples")
+testing_examples_folder = os.path.join(data_folder, "testing_examples")
+predict_examples_folder = os.path.join(predict_folder, "predict_examples")
 
 # Suffixes for extracted data files
 extracted_protein_suffix = "_pro_cg.csv"
@@ -46,15 +55,13 @@ nb_channels = nb_features - 3  # coordinates are not used as features
 indices_features = dict(zip(features_names, list(range(nb_features))))
 
 # We have 3000 positives pairs of ligands
-nb_systems = 3000
-
 n_training_examples = 2700
 train_indices = list(map(int, open(os.path.join(data_folder, "train_indices")).readlines()))
 test_indices = list(map(int, open(os.path.join(data_folder, "test_indices")).readlines()))
 
 # Test the consistency : no overlap and all the files are used on the two sets
 assert (len(set(train_indices).intersection(set(test_indices))) == 0)
-assert (len(test_indices) + len(train_indices) == nb_systems)
+# assert (len(test_indices) + len(train_indices) == nb_systems)
 assert (len(train_indices) == n_training_examples)
 
 # All the other will be used to construct examples on the go
@@ -95,6 +102,9 @@ batch_size_default = 32
 n_gpu_default = 1
 optimizer_default = "rmsprop"
 
+# Preprocessing settings
+nb_workers = 6
+
 
 def progress(iterable):
     """
@@ -106,8 +116,10 @@ def progress(iterable):
 
 
 def extract_id(file_name):
-    new_name = file_name.replace(extracted_protein_suffix, "").replace(extracted_ligand_suffix, "")
-    return new_name
+    """
+    "xxxx_pro_cg.pdb" to "xxxx"
+    """
+    return file_name.replace(extracted_protein_suffix, "").replace(extracted_ligand_suffix, "")
 
 
 def get_current_timestamp():

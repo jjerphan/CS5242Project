@@ -110,33 +110,10 @@ We need to find a way to resolve this problem. There are [several approaches](ht
 
 ###### Some others thoughts
 
-- When we are going to test, the approach would be to return the ligands with the highest probability. However, we know that there is an extra constraint on atom, more precisely that there is a one to one correspondance. Hence, we *should or must* take decisions for ligands generally and not per case as we could choose several ligands for several protein with an high confidence. If we are given $n_p$ proteins and $n_l$ ligands to test :
+- When we are going to test, the approach would be to return the ligands with the highest probability. However, we know that there is an extra constraint on atom, more precisely that there is a one to one correspondance. Hence, we *should or must* take decisions for ligands generally and not per case as we could choose several ligands for several protein with an high confidence. If we are given $n_p​$ proteins and $n_l​$ ligands to test :
   - The first (naiver) approach would consist to evaluate the $n_l$ ligands and take the 10 best ones.
   - The second approach would consist to evaluate the $n_p\times n_l$ systems and then take, for each ligands that are chosen several times, the associated protein of highest confidence.
 
-
-
-## Things to do
-
-- [ ] Do some research on proteins-ligands binding
-- [ ] Make absolute cubes (with fixed Å size like in Pafnucy)
-- [ ] Make sure systems of molecules get centered in the cube 
-- [ ] Find appropriate computing ressources
-      - [ ] Find solutions :
-            - [ ] [NSCC](https://help.nscc.sg/)
-            - [ ] Other solutions (AWS, Google Cloud, NUS Clusters) ?
-      - [ ] Setup Python environnement there
-      - [ ] Split `pipeline.ipynb` into several script for:
-            - [ ] selecting a model, training and saving it in a `.h5` file
-            - [ ] evaluating a model using the `.h5` file
-            - [ ] some more comparation across models ?
-- [ ] Create final pipeline to test binding (as what's required)
-      - [ ] Use better metrics (Confusion Matrix, F1 Score, ROC)
-
-
-- [ ] (Find a way to balance scores : wtf Julien ?)
-- [ ] (Find goods numbers to scores: wtf Julien ???)
-- [ ] Create a model like Pafnucy or something else … ?
 
 ## Organisation of the pipeline and of the files
 
@@ -162,7 +139,8 @@ In order to fit the model with the given data, some transformation need to be pe
     - *Only the training set gets created* (as the testing set is enormous as we are considering all the possible combinations!)
     - `settings.py/split_index` indicates what is the last training example and what is the first testing example 
   - Training examples are saved in `training_data/training_examples` under the naming convention `xxxx_yyyy.csv` (where `xxxx` is the id of the protein and `yyyy` the ligand's).
-  - This stage is perform in   [`create_training_examples.py`](src/create_training_examples.py)
+  - This stage is perform in   [`create_examples.py`](src/create_examples.py)
+
 - **Training of the model with constructed examples**
   - Examples from the Training set (`training_data/training_examples`) are fed in the network directly.
     - They have to be converted into cubes for now (see "Cube Creation" bellow for more info).

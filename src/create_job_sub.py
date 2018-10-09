@@ -79,4 +79,5 @@ if __name__ == "__main__":
 
         # Showing the content of the file
         os.system(f"cat {file_name}")
+        exit_status = os.system(f"qsub {file_name}")
         print(f"Saved in {file_name}")

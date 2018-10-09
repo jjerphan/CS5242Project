@@ -95,7 +95,7 @@ def save_extracted_data(pdb_original_file, is_for_training):
 
     # Saving the data is a csv file with the same name
     # Choosing the appropriate folder using the split index
-    molecule_index = int(extract_id(pdb_original_file))
+    molecule_index = int(pdb_original_file.split("_")[0])
 
     new_file_name = pdb_original_file.replace(".pdb", ".csv")
 
@@ -139,4 +139,4 @@ if __name__ == "__main__":
             os.makedirs(folder)
 
     extract_data(original_data_folder, is_for_training=True)
-    extract_data(original_predict_folder, is_for_training=False)
+    # extract_data(original_predict_folder, is_for_training=False)

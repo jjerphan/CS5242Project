@@ -5,7 +5,7 @@ import logging
 from discretization import load_nparray
 from concurrent import futures
 from settings import extracted_data_train_folder, extracted_data_test_folder, extracted_protein_suffix, \
-    extracted_ligand_suffix, comment_delimiter, extract_id, nb_neg_ex_per_pos, features_names, training_examples_folder, \
+    extracted_ligand_suffix, comment_delimiter, nb_neg_ex_per_pos, features_names, training_examples_folder, \
     testing_examples_folder, nb_workers
 
 logger = logging.getLogger('__main__.create_example')
@@ -140,6 +140,8 @@ def create_examples(extracted_data_folder, examples_folder, nb_neg: int=-1):
     :return:
     """
     # Getting all the systems
+    extract_id = lambda x: x.split("_")[0]
+
     list_systems = set(list(map(extract_id, os.listdir(extracted_data_folder))))
     logger.debug(f'Get systems ids from {extracted_data_folder}')
 

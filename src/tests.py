@@ -2,6 +2,7 @@ import unittest
 from extraction_data import extract_molecule
 import numpy as np
 
+
 class MyTests(unittest.TestCase):
     def test_extraction_molecule(self):
         x_list = [1, 2, 3]

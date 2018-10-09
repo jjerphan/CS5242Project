@@ -91,12 +91,14 @@ class ExamplesIterator(keras.utils.Sequence):
         filtered_neg_files = sorted([file for group in grouped_files.values() for file in group])
 
         self.examples_files = pos_files + filtered_neg_files
+        self.labels = np.array([1] * len(pos_files) + [0] * len(filtered_neg_files))
+
+        assert len(self.labels) == len(self.examples_files)
+        self.indexes = np.arange(len(self.examples_files))
 
         # Taking you some examples if not
-        if isinstance(max_examples, int):
-            self.examples_files = self.examples_files[0:max_examples]
-
-        self.indexes = np.arange(len(self.examples_files))
+        if isinstance(max_examples, int) and max_examples < len(self.examples_files):
+            self.indexes = self.indexes[0:max_examples]
 
         # We shuffle the data at least once
         np.random.shuffle(self.indexes)
@@ -106,6 +108,12 @@ class ExamplesIterator(keras.utils.Sequence):
         :return: the total number of examples
         """
         return len(self.indexes)
+
+    def get_labels(self):
+        """
+        :return:
+        """
+        return self.labels[self.indexes]
 
     def __len__(self):
         """

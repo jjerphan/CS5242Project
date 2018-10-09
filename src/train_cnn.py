@@ -6,10 +6,10 @@ import argparse
 from datetime import datetime
 
 from pipeline_fixtures import ExamplesIterator, LogEpochBatchCallback
-from models import models_available, models_available_names
+from architectures import architectures_available, architectures_available_names
 from settings import training_examples_folder, testing_examples_folder, logs_folder, nb_neg_ex_per_pos, \
     optimizer_default, batch_size_default, nb_epochs_default, get_current_timestamp, original_data_folder, \
-    extracted_data_train_folder, extracted_data_test_folder
+    extracted_data_train_folder, extracted_data_test_folder, serialized_model_file_name, history_fie_name, parameters_file_name
 from extraction_data import extract_data
 from create_examples import create_examples
 from settings import models_folders
@@ -55,30 +55,41 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess,
 
     # Eventual pre-processing
     if preprocess:
-        logger.debug('Calling module extract data.')
-        print("Extracting the data")
+        logger.debug('Extracting data.')
         extract_data(original_data_folder)
-        print('Creating examples')
+        print('Creating training examples')
         create_examples(extracted_data_train_folder, training_examples_folder, nb_neg_ex_per_pos)
+        print('Creating testing examples')
         create_examples(extracted_data_test_folder, testing_examples_folder, nb_neg_ex_per_pos)
 
     preprocessing_checkpoint = datetime.now()
 
     logger.debug('Creating network model')
-    model = models_available[model_index]
+    model = architectures_available[model_index]
     logger.debug(f"Model {model.name} chosen")
     logger.debug(model.summary())
 
     model.compile(optimizer=optimizer, loss=MSE, metrics=['accuracy'])
 
     logger.debug(f'{os.path.basename(__file__)} : Training the model with the following parameters')
-    logger.debug(f'model_index = {model_index}')
+    logger.debug(f'architecture = {model.name}')
     logger.debug(f'nb_epochs   = {nb_epochs}')
+    logger.debug(f'max_examples   = {max_examples}')
     logger.debug(f'batch_size  = {batch_size}')
     logger.debug(f'nb_neg      = {nb_neg}')
     logger.debug(f'verbose     = {verbose}')
     logger.debug(f'preprocess  = {preprocess}')
     logger.debug(f'optimizer   = {optimizer}')
+
+    with open(os.path.join(job_folder, parameters_file_name), "w") as f:
+        f.write(f'architecture={model.name}')
+        f.write(f'nb_epochs={nb_epochs}')
+        f.write(f'max_examples={max_examples}')
+        f.write(f'batch_size={batch_size}')
+        f.write(f'nb_neg={nb_neg}')
+        f.write(f'verbose={verbose}')
+        f.write(f'preprocess={preprocess}')
+        f.write(f'optimizer={optimizer}')
 
     logger.debug(f'model, log and history to be saved in {job_folder}')
 
@@ -111,8 +122,8 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess,
     logger.debug(f"Evaluation Loss: {loss}, Accuracy: {acc}, mean_pred: {mean_prediction}")
 
     # Saving models and history
-    model_file = os.path.join(job_folder, "model.h5")
-    history_file = os.path.join(job_folder, "history.pickle")
+    model_file = os.path.join(job_folder, serialized_model_file_name)
+    history_file = os.path.join(job_folder, history_fie_name)
 
     if not (os.path.exists(models_folders)):
         logger.debug(f'The {models_folders} folder does not exist. Creating it.')
@@ -136,7 +147,7 @@ if __name__ == "__main__":
 
     parser.add_argument('--model_index', metavar='model_index',
                         type=int, default=0,
-                        help=f'the index of the model to use in the list {models_available_names}')
+                        help=f'the index of the model to use in the list {architectures_available_names}')
 
     parser.add_argument('--nb_epochs', metavar='nb_epochs',
                         type=int, default=nb_epochs_default,
@@ -166,7 +177,7 @@ if __name__ == "__main__":
 
     print("Argument parsed : ", args)
 
-    assert (args.model_index < len(models_available_names))
+    assert (args.model_index < len(architectures_available_names))
     assert (args.nb_epochs > 0)
     assert (args.nb_neg > 0)
 

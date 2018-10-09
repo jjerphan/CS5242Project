@@ -7,17 +7,25 @@ from sklearn.metrics import f1_score, precision_score, accuracy_score, recall_sc
 
 from matplotlib import pyplot as plt
 
+from create_job_sub import ModelInspector
 from pipeline_fixtures import ExamplesIterator
-from settings import testing_examples_folder, nb_workers
+from settings import testing_examples_folder, nb_workers, models_folders
 
 
 def evaluate_model(serialized_model):
+    """
+
+    :param serialized_model:
+    :return:
+    """
     model = load_model(serialized_model)
 
-    test_examples_iterator = ExamplesIterator(examples_folder=testing_examples_folder)
+    test_examples_iterator = ExamplesIterator(examples_folder=testing_examples_folder,
+                                              shuffle_after_completion=False)
     model.evaluate_generator(test_examples_iterator, workers=nb_workers)
 
-    # or
+    ys = test_examples_iterator.get_labels()
+
     y_preds = model.predict_generator(test_examples_iterator)
 
     # Rounding the prediction : using the second one
@@ -40,5 +48,18 @@ def evaluate_model(serialized_model):
 
 
 if __name__ == "__main__":
-    serialized_model = ""
-    evaluate_model(serialized_model)
+
+    model_inspector = ModelInspector(models_folders=models_folders)
+    model_index = -1
+    while model_index not in range(len(model_inspector)):
+        print("Choose the model to evaluate")
+        for index, (folder, set_parameters, chosen_model, history) in enumerate(model_inspector):
+            print(f"#{index} Name : {set_parameters['name']} (from {folder})")
+            for key, value in set_parameters.items():
+                print(f" - {key}: {value}")
+
+        model_index = int(input("Your choice : # "))
+
+    _, _, chosen_model, _ = model_inspector[model_index]
+    print(chosen_model)
+    evaluate_model(chosen_model)

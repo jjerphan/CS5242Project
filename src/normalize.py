@@ -1,6 +1,5 @@
 from sklearn import preprocessing
 
-from pipeline_fixtures import ExamplesIterator
 from settings import extracted_data_train_folder, extracted_data_test_folder, normalized_data_train_folder, \
     normalized_data_test_folder, normalized_data_folder, progress, data_folder
 import os, logging

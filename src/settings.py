@@ -6,7 +6,7 @@ import datetime
 
 # Folders
 # Global folder for data and logs
-absolute_path = os.path.abspath("..")
+absolute_path = os.path.abspath(os.path.join(os.path.realpath(__file__), "..", ".."))
 
 logs_folder = os.path.join(absolute_path, "logs")
 job_submissions_folder = os.path.join(absolute_path, "job_submissions")
@@ -38,6 +38,10 @@ extracted_ligand_suffix = "_lig_cg.csv"
 
 # Persisted models
 models_folders = os.path.join("..", "models")
+parameters_file_name = "parameters.txt"
+serialized_model_file_name = "model.h5"
+history_fie_name = "history.pickle"
+
 
 # Some settings for number and persisting tensors
 float_type = np.float32
@@ -101,6 +105,7 @@ nb_epochs_default = 1
 batch_size_default = 32
 n_gpu_default = 1
 optimizer_default = "rmsprop"
+
 
 # Preprocessing settings
 nb_workers = 6

@@ -1,30 +1,35 @@
 import os
 import textwrap
+
+from ModelsInspector import ModelsInspector
 from models import models_available, models_available_names
-from settings import job_submissions_folder, nb_neg_ex_per_pos, nb_epochs_default, batch_size_default, n_gpu_default
+from settings import job_submissions_folder, nb_neg_ex_per_pos, nb_epochs_default, batch_size_default, n_gpu_default, \
+    results_folder, name_env
 
 
-def save_job_file(stub, file_name):
+def save_job_file(stub, name_job):
     """
     Save a submission file.
 
     The stub is inserted in the given file.
 
     :param stub: the string that will be used as the contain of the file
-    :param file_name: the name of the file to use
+    :param name_job: the name of the job
     :return:
     """
     print("Stub inferred :")
     print(stub)
 
-    if input("Would you want to save the following job ? [y/n (default)]").lower() != "y":
+    file_name = os.path.join(job_submissions_folder, f"{name_job}.pbs")
+
+    if input("Would you want to save the following job ? [y (default) /n]").lower() == "n":
         print("Not saved")
     else:
         # Creating the folder for job submissions if not existing
         if not (os.path.exists(job_submissions_folder)):
             os.makedirs(job_submissions_folder)
 
-        with open(file_name, "a") as f_sub:
+        with open(file_name, "w") as f_sub:
             # De-indenting the stub to make it in a file
             f_sub.write(textwrap.dedent(stub))
 
@@ -41,7 +46,6 @@ def create_train_job():
 
     The name of the file is made using the parameters given.
     This way we have a collection of file to submit that is easy to inspect.
-
     """
     script_name = "train_cnn.py"
 
@@ -86,8 +90,7 @@ def create_train_job():
     stub = f"""
                 #! /bin/bash
                 #PBS -q gpu
-                #PBS -o $PBS_O_WORKDIR/logs/{name_job}.o
-                #PBS -e $PBS_O_WORKDIR/logs/{name_job}.e
+                #PBS -j oe
                 #PBS -l select=1:ngpus={n_gpu}
                 #PBS -l walltime=23:00:00
                 #PBS -N {name_job}
@@ -103,18 +106,74 @@ def create_train_job():
     # We remove the first return in the string
     stub = stub[1:]
 
-    file_name = os.path.join(job_submissions_folder, f"{name_job}.pbs")
+    save_job_file(stub, name_job)
 
-    save_job_file(stub, file_name)
+
+def create_job_with_on_serialized_model(script_name, name_job):
+    """
+    The file gets saved in `job_submissions`.
+    """
+
+    # Asking for the different parameters
+    model_inspector = ModelsInspector(results_folder=results_folder)
+    id_model, serialized_model_path = model_inspector.choose_model()
+
+    nb_neg = input(f"Number of negatives examples to use (leave empty for default = {nb_neg_ex_per_pos}) : ")
+    nb_neg = nb_neg_ex_per_pos if nb_neg == "" else int(nb_neg)
+
+    max_examples = input(f"Number of maximum examples to use (leave empty to use all examples) : ")
+    max_examples = None if max_examples == "" else int(max_examples)
+
+    verbose = 1 * (input(f"Keras verbose output during training? [y (default)/n] : ").lower() != "n")
+    preprocess = 1 * (input(f"Extract data and create training examples? [y/n (default)] :").lower() == "y")
+
+    n_gpu = input(f"Choose number of GPU (leave blank for default = {n_gpu_default}) : ")
+    n_gpu = n_gpu_default if n_gpu == "" else int(n_gpu)
+
+    # TODO : fix this hack to add the option
+    option_max = f"\n                                                     --max_examples {max_examples} \\"
+
+    # We append the ID for the model to it
+    name_job += "_" + id_model
+    assert (n_gpu > 0)
+
+    stub = f"""
+                    #! /bin/bash
+                    #PBS -q gpu
+                    #PBS -j oe
+                    #PBS -l select=1:ngpus={n_gpu}
+                    #PBS -l walltime=23:00:00
+                    #PBS -N {name_job}
+                    cd $PBS_O_WORKDIR/src/
+                    source activate {name_env}
+                    python $PBS_O_WORKDIR/src/{script_name}  --model_path {serialized_model_path} \\
+                                                             --nb_neg {nb_neg} \\
+                                                             --verbose {verbose} \\{option_max if max_examples is not None else ''}
+                                                             --preprocess {preprocess}
+                    """
+    # We remove the first return in the string
+    stub = stub[1:]
+
+    save_job_file(stub, name_job)
 
 
 def create_evaluation_job():
-    pass
+    create_job_with_on_serialized_model(script_name="evaluate.py",
+                                        name_job="evaluate")
 
 
 def create_prediction_job():
-    pass
+    create_job_with_on_serialized_model(script_name="predict.py",
+                                        name_job="predict")
 
 
 if __name__ == "__main__":
-    create_train_job()
+    # Choosing the time of job to create
+    choice = -1
+    jobs = [create_train_job, create_evaluation_job, create_prediction_job]
+    while choice not in range(len(jobs)):
+        for i, job in enumerate(jobs):
+            print(i, job.__name__)
+        choice = int(input("Your choice : # "))
+
+    jobs[choice]()

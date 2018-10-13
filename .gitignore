@@ -4,6 +4,7 @@ training_data/original/
 training_data/training_examples/
 training_data/testing_examples/
 predict_data/
+results/
 
 *.idea
 models/

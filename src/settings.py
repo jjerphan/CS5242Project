@@ -5,7 +5,6 @@ import numpy as np
 # Global folder for data and logs
 absolute_path = os.path.abspath(os.path.join(os.path.realpath(__file__), "..", ".."))
 
-logs_folder = os.path.join(absolute_path, "logs")
 job_submissions_folder = os.path.join(absolute_path, "job_submissions")
 
 # Data given (not modified)
@@ -33,11 +32,11 @@ predict_examples_folder = os.path.join(predict_folder, "predict_examples")
 extracted_protein_suffix = "_pro_cg.csv"
 extracted_ligand_suffix = "_lig_cg.csv"
 
-# Persisted models.py
-models_folders = os.path.join("..", "models")
+# Results
+results_folder = os.path.join(absolute_path, "results")
 parameters_file_name = "parameters.txt"
 serialized_model_file_name = "model.h5"
-history_fie_name = "history.pickle"
+history_file_name = "history.pickle"
 
 
 # Some settings for number and persisting tensors

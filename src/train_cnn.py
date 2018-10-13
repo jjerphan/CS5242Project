@@ -8,12 +8,12 @@ from datetime import datetime
 from pipeline_fixtures import LogEpochBatchCallback, get_current_timestamp
 from ExamplesIterator import ExamplesIterator
 from models import models_available, models_available_names
-from settings import training_examples_folder, testing_examples_folder, logs_folder, nb_neg_ex_per_pos, \
+from settings import training_examples_folder, testing_examples_folder, results_folder, nb_neg_ex_per_pos, \
     optimizer_default, batch_size_default, nb_epochs_default, original_data_folder, \
-    extracted_data_train_folder, extracted_data_test_folder, serialized_model_file_name, history_fie_name, parameters_file_name
+    extracted_data_train_folder, extracted_data_test_folder, serialized_model_file_name, history_file_name,\
+    parameters_file_name
 from extraction_data import extract_data
 from create_examples import create_examples
-from settings import models_folders
 from keras.losses import MSE
 
 
@@ -39,11 +39,12 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess,
     logfile = f"train_cnn.log"
 
     # Making a folder for the job to save log, model, history in it.
-    job_folder = os.path.join(logs_folder, current_timestamp)
-    if not (os.path.exists(logs_folder)):
-        print(f"The {logs_folder} does not exist. Creating it.")
-        os.makedirs(logs_folder)
+    job_folder = os.path.join(results_folder, current_timestamp)
+    if not (os.path.exists(results_folder)):
+        print(f"The {results_folder} does not exist. Creating it.")
+        os.makedirs(results_folder)
 
+    # Creating the folder for the job
     os.makedirs(job_folder)
 
     fh = logging.FileHandler(os.path.join(job_folder, logfile))
@@ -124,11 +125,7 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess,
 
     # Saving models.py and history
     model_file = os.path.join(job_folder, serialized_model_file_name)
-    history_file = os.path.join(job_folder, history_fie_name)
-
-    if not (os.path.exists(models_folders)):
-        logger.debug(f'The {models_folders} folder does not exist. Creating it.')
-        os.makedirs(models_folders)
+    history_file = os.path.join(job_folder, history_file_name)
 
     model.save(model_file)
     logger.debug(f"Model saved in {model_file}")
@@ -172,7 +169,7 @@ if __name__ == "__main__":
 
     parser.add_argument('--preprocess', metavar='preprocess',
                         type=int, default=True,
-                        help='if !=0 triggers the preprocessing of the data')
+                        help='if !=0 triggers the pre-processing of the data')
 
     args = parser.parse_args()
 

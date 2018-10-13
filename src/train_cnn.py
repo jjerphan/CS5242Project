@@ -113,15 +113,11 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess,
     history = model.fit_generator(generator=train_examples_iterator,
                                   epochs=nb_epochs,
                                   verbose=verbose,
+                                  validation_data=test_examples_iterator,
                                   callbacks=[epoch_batch_callback])
 
     logger.debug('Done training !')
     train_checkpoint = datetime.now()
-
-    loss, acc = model.evaluate_generator(generator=test_examples_iterator, verbose=verbose)
-    evaluate_checkpoint = datetime.now()
-
-    logger.debug(f"Evaluation Loss: {loss}, Accuracy: {acc}.")
 
     # Saving models.py and history
     model_file = os.path.join(job_folder, serialized_model_file_name)
@@ -136,7 +132,6 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess,
     logger.debug(f"Done !")
     logger.debug(f"Preprocessing done in : {preprocessing_checkpoint - start_time}")
     logger.debug(f"Training done in      : {train_checkpoint - preprocessing_checkpoint}")
-    logger.debug(f"Evaluation done in    : {evaluate_checkpoint - train_checkpoint}")
 
 
 if __name__ == "__main__":

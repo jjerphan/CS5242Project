@@ -9,7 +9,7 @@ import keras.backend as K
 from ModelsInspector import ModelsInspector
 from ExamplesIterator import ExamplesIterator
 from pipeline_fixtures import get_current_timestamp
-from settings import testing_examples_folder, nb_workers, nb_neg_ex_per_pos, metrics_for_evaluation, results_folder
+from settings import testing_examples_folder, nb_neg_ex_per_pos, metrics_for_evaluation, results_folder
 
 
 def mean_pred(y_pred,y_true):

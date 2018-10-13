@@ -76,7 +76,7 @@ The final score is proportional to the total number of match for proteins.
 - Where is the data coming from? What are the other features present in the files?
   - It should be coming from the popular [PDBBind](http://www.pdbbind.org.cn/) data base.
 - For now, we have $n=3000$ examples (pair of protein and ligens). But if we see the problem as a classification problem from a couple protein/ligen to a prediction fit / not fit, we can construct loads of differents examples. More expecially, we can for each example construct $n-1$ other examples. Those examples won't represent a protein-ligand system, but can be used as example for the "not-fit" class. Hence we could have in total $3000 \times 2999 = 8\ 997\ 000$ examples
-- **Bigest problem for now:** the number of atoms is extremely variant for the molecules. See [`info`](./info) .
+- **Bigest problem for now:** the number of atoms is extremely variant for the molecules. See [`info`](exploration) .
 
 ```
 # Number of atoms for proteins and ligands
@@ -89,7 +89,7 @@ The final score is proportional to the total number of match for proteins.
  Max.   :14102   Max.   :300.000 
 ```
 
-![Density estimation](./info/density.png)
+![Density estimation](exploration/density.png)
 
 We need to find a way to resolve this problem. There are [several approaches](https://ai.stackexchange.com/questions/2008/how-can-neural-networks-deal-with-varying-input-sizes):
 
@@ -110,33 +110,10 @@ We need to find a way to resolve this problem. There are [several approaches](ht
 
 ###### Some others thoughts
 
-- When we are going to test, the approach would be to return the ligands with the highest probability. However, we know that there is an extra constraint on atom, more precisely that there is a one to one correspondance. Hence, we *should or must* take decisions for ligands generally and not per case as we could choose several ligands for several protein with an high confidence. If we are given $n_p$ proteins and $n_l$ ligands to test :
+- When we are going to test, the approach would be to return the ligands with the highest probability. However, we know that there is an extra constraint on atom, more precisely that there is a one to one correspondance. Hence, we *should or must* take decisions for ligands generally and not per case as we could choose several ligands for several protein with an high confidence. If we are given $n_p​$ proteins and $n_l​$ ligands to test :
   - The first (naiver) approach would consist to evaluate the $n_l$ ligands and take the 10 best ones.
   - The second approach would consist to evaluate the $n_p\times n_l$ systems and then take, for each ligands that are chosen several times, the associated protein of highest confidence.
 
-
-
-## Things to do
-
-- [ ] Do some research on proteins-ligands binding
-- [ ] Make absolute cubes (with fixed Å size like in Pafnucy)
-- [ ] Make sure systems of molecules get centered in the cube 
-- [ ] Find appropriate computing ressources
-      - [ ] Find solutions :
-            - [ ] [NSCC](https://help.nscc.sg/)
-            - [ ] Other solutions (AWS, Google Cloud, NUS Clusters) ?
-      - [ ] Setup Python environnement there
-      - [ ] Split `pipeline.ipynb` into several script for:
-            - [ ] selecting a model, training and saving it in a `.h5` file
-            - [ ] evaluating a model using the `.h5` file
-            - [ ] some more comparation across models ?
-- [ ] Create final pipeline to test binding (as what's required)
-      - [ ] Use better metrics (Confusion Matrix, F1 Score, ROC)
-
-
-- [ ] (Find a way to balance scores : wtf Julien ?)
-- [ ] (Find goods numbers to scores: wtf Julien ???)
-- [ ] Create a model like Pafnucy or something else … ?
 
 ## Organisation of the pipeline and of the files
 

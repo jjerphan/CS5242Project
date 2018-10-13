@@ -2,13 +2,13 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 import logging
-from mpl_toolkits.mplot3d import Axes3D  # needed by the 3D plotter
 
 from settings import float_type, comment_delimiter, training_examples_folder, resolution_cube, nb_features, \
     indices_features
 
 logger = logging.getLogger('cnn.discretization')
 logger.addHandler(logging.NullHandler())
+
 
 def representation_invariance(original_coords, is_from_protein_indices, verbose=False):
     """
@@ -114,47 +114,6 @@ def make_cube(system: np.ndarray, resolution, use_rotation_invariance=True, keep
     return cube
 
 
-def is_positive(name):
-    """
-    name is of the form "xxxx_yyyy[.csv]"
-
-    'xxxx' corresponds to the protein.
-    'yyyy' corresponds to the ligands
-
-    Return xxxx == yyyy (both molecules bind together)
-
-    :param name: the name of a file of the form "xxxx_yyyy[.csv]"
-    :return:
-    """
-    systems = name.replace(".csv", "").split("_")
-    return systems[0] == systems[1]
-
-def is_negative(name):
-    """
-    name is of the form "xxxx_yyyy[.csv]"
-
-    'xxxx' corresponds to the protein.
-    'yyyy' corresponds to the ligands
-
-    Return xxxx != yyyy (both molecules don't bind together)
-
-    :param name: the name of a file of the form "xxxx_yyyy[.csv]"
-    :return:
-    """
-    return not(is_positive(name))
-
-
-def only_positive_examples(system_names):
-    """
-    Filter the names to return the ones of positive examples solely (i.e. with same)
-
-    :param system_names: name of the form "xxxx_yyyy" where xxxx is the system of the protein and yyyy of the ligand
-    :return: the list of system names of the form "xxxx_xxxx"
-    """
-
-    return list(filter(is_positive, system_names))
-
-
 def values_range(spatial_coordinates):
     """
     Return the extreme values for atoms coordinates.
@@ -188,7 +147,7 @@ def plot_cube(cube):
     for x in range(resolution_cube):
         for y in range(resolution_cube):
             for z in range(resolution_cube):
-                is_from_protein_pos = indices_features["is_from_protein"]-3
+                is_from_protein_pos = indices_features["is_from_protein"] - 3
                 is_atom_in_voxel = cube[x, y, z, is_from_protein_pos] != 0
                 if is_atom_in_voxel:
                     # Plotting accordingly to the molecule type
@@ -270,4 +229,3 @@ if __name__ == "__main__":
         mngr.window.setGeometry(2 * 640, 100, 640, 545)
         plt.pause(2)
         input()
-

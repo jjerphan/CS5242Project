@@ -5,15 +5,15 @@ import logging
 from discretization import load_nparray
 from concurrent import futures
 from settings import extracted_data_train_folder, extracted_data_test_folder, extracted_protein_suffix, \
-    extracted_ligand_suffix, comment_delimiter, extract_id, nb_neg_ex_per_pos, features_names, training_examples_folder,\
-    testing_examples_folder, extracted_predict_folder, predict_examples_folder
+    extracted_ligand_suffix, comment_delimiter, nb_neg_ex_per_pos, features_names, training_examples_folder, \
+    testing_examples_folder, nb_workers
 
-
-logger = logging.getLogger('__main__.create_training_example')
+logger = logging.getLogger('__main__.create_example')
 logger.addHandler(logging.NullHandler())
 
 
-def save_example(folder: str, protein: np.ndarray, ligand: np.ndarray, protein_system: str, ligand_system: str):
+def save_example(examples_folder: str, protein: np.ndarray, ligand: np.ndarray,
+                 protein_system: str, ligand_system: str):
     """
     Save an example of a system using representations of a protein and of a ligand.
 
@@ -25,7 +25,7 @@ def save_example(folder: str, protein: np.ndarray, ligand: np.ndarray, protein_s
 
     Hence `xxxx` == `yyyy` if and only if the system is a positive example.
 
-    :param folder: the folder where the training examples are saved
+    :param examples_folder: the folder where the examples are saved
     :param protein: the representation of the protein
     :param ligand: the representation of the ligand
     :param protein_system: the ID of the system of the protein
@@ -33,7 +33,7 @@ def save_example(folder: str, protein: np.ndarray, ligand: np.ndarray, protein_s
     :return:
     """
     file_name = protein_system + "_" + ligand_system + ".csv"
-    file_path = os.path.join(folder, file_name)
+    file_path = os.path.join(examples_folder, file_name)
 
     if len(protein.shape) < 2 or len(ligand.shape) < 2:
         print("\nOne molecule is empty")
@@ -70,42 +70,55 @@ def save_example(folder: str, protein: np.ndarray, ligand: np.ndarray, protein_s
 np.random.seed(1337)
 
 
-def save_examples(system, list_systems, nb_neg, data_folder, save_folder):
-    folder_path = data_folder
+def save_system_examples(system, list_systems, nb_neg, extracted_data_folder, examples_folder):
+    """
+    For one system in the `extracted_data_folder`, save its positive example and `nb_neg` random negative example.
+    Example get saved in `examples_folder`.
+
+
+    :param system: an id xxxx
+    :param list_systems: the complete list of id in data folder
+    :param nb_neg: the number of negative examples to create
+    :param extracted_data_folder: where the original data is
+    :param examples_folder: where to save the new data
+    :return:
+    """
 
     try:
-        protein = load_nparray(os.path.join(folder_path, system + extracted_protein_suffix))
-        ligand = load_nparray(os.path.join(folder_path, system + extracted_ligand_suffix))
-    except:
-        logger.debug(f"Loading protein/ligand failed. Protein folder {os.path.join(folder_path, system + extracted_protein_suffix)}, Ligand folder {os.path.join(folder_path, system + extracted_ligand_suffix)}")
-        print(f"Loading protein/ligand failed. Protein folder {os.path.join(folder_path, system + extracted_protein_suffix)}, Ligand folder {os.path.join(folder_path, system + extracted_ligand_suffix)}")
-        raise
+        system_protein = load_nparray(os.path.join(extracted_data_folder, system + extracted_protein_suffix))
+        system_ligand = load_nparray(os.path.join(extracted_data_folder, system + extracted_ligand_suffix))
+    except Exception:
+        warning_message = f"Loading protein/ligand failed. Protein folder " + \
+                          f"{os.path.join(extracted_data_folder, system + extracted_protein_suffix)}, " + \
+                          f"Ligand folder {os.path.join(extracted_data_folder, system + extracted_ligand_suffix)}"
+        logger.debug(warning_message)
+        print(warning_message)
+        raise RuntimeError()
 
     # Saving positive example
-    save_example(save_folder, protein, ligand, system, system)
+    save_example(examples_folder, system_protein, system_ligand, system, system)
 
     # Creating false example using nb_neg_ex negatives examples
     other_systems = sorted(list(list_systems.difference({system})))
     some_others_systems_indices = np.random.permutation(len(other_systems))[0:nb_neg]
 
     for other_system in map(lambda index: other_systems[index], some_others_systems_indices):
-        bad_ligand = load_nparray(os.path.join(folder_path, other_system + extracted_ligand_suffix))
+        other_ligand = load_nparray(os.path.join(extracted_data_folder, other_system + extracted_ligand_suffix))
 
         if other_system == system:
             raise RuntimeError(f"other_system = {other_system} shoud be != system = {system}")
 
         # Saving negative example
         try:
-            save_example(save_folder, protein, bad_ligand, system, other_system)
-        except:
-            logger.debug(f'Save failed to {save_folder}')
-            raise
+            save_example(examples_folder, system_protein, other_ligand, system, other_system)
+        except Exception:
+            logger.debug(f'Save failed to {examples_folder}')
+            raise RuntimeError()
 
 
-def create_examples(data_folder, example_folder, nb_neg: int=-1):
+def create_examples(extracted_data_folder, examples_folder, nb_neg: int=-1):
     """
-    Create training examples and saves them in files in the
-    `extracted_data_train_folder` folder.
+    Create examples using data present in `data_folder` and saves them in files in the `example_folder` folder.
 
     Here, we create both positive and negative examples.
 
@@ -121,12 +134,16 @@ def create_examples(data_folder, example_folder, nb_neg: int=-1):
 
     Hence this procedure creates `n_systems` * (1 + `nb_neg`) examples, that is at max `nb_systems^2` examples.
 
-    :type nb_neg: the number of negative example to create per positive example. Default -1 means maximum.
+    :param extracted_data_folder:
+    :param examples_folder:
+    :param nb_neg: the number of negative example to create per positive example. Default -1 means maximum.
     :return:
     """
     # Getting all the systems
-    list_systems = set(list(map(extract_id, os.listdir(data_folder))))
-    logger.debug(f'Get system id from {data_folder}')
+    extract_id = lambda x: x.split("_")[0]
+
+    list_systems = set(list(map(extract_id, os.listdir(extracted_data_folder))))
+    logger.debug(f'Get systems ids from {extracted_data_folder}')
 
     nb_systems = len(list_systems)
 
@@ -137,22 +154,22 @@ def create_examples(data_folder, example_folder, nb_neg: int=-1):
         nb_neg = nb_systems - 1
 
     # Deleting the folders of examples and recreating it
-    if os.path.exists(example_folder):
-        logger.debug(f'Delete {example_folder} examples folder.')
-        shutil.rmtree(example_folder)
-    os.makedirs(example_folder)
-    logger.debug(f'Create new {example_folder} examples folder.')
+    if os.path.exists(examples_folder):
+        logger.debug(f'Delete {examples_folder} examples folder.')
+        shutil.rmtree(examples_folder)
+    os.makedirs(examples_folder)
+    logger.debug(f'Create new {examples_folder} examples folder.')
 
     # For each system, we create the associated positive example and we generate some negative examples
     logger.debug('Create 1 positive binding and %d random negative protein-ligand bindings.', nb_neg)
-    with futures.ProcessPoolExecutor(max_workers=6) as executor:
+    with futures.ProcessPoolExecutor(max_workers=nb_workers) as executor:
         for system in sorted(list_systems):
-            executor.submit(save_examples, system, list_systems, nb_neg, data_folder, example_folder)
+            executor.submit(save_system_examples, system, list_systems, nb_neg, extracted_data_folder, examples_folder)
 
-    logger.debug(f'Create {example_folder} examples done.')
+    logger.debug(f'Create {examples_folder} examples done.')
 
 
 if __name__ == "__main__":
     create_examples(extracted_data_train_folder, training_examples_folder, nb_neg_ex_per_pos)
     create_examples(extracted_data_test_folder, testing_examples_folder, nb_neg_ex_per_pos)
-    create_examples(extracted_predict_folder, predict_examples_folder)
+    # create_examples(extracted_predict_folder, predict_examples_folder)

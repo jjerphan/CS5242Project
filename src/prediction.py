@@ -4,8 +4,7 @@ from settings import original_predict_folder, extracted_predict_folder, predict_
 
 from extraction_data import extract_data
 from create_examples import create_examples
-from pipeline_fixtures import Training_Example_Iterator
-from train_cnn import mean_pred
+from ExamplesIterator import ExamplesIterator
 
 def predict(model):
     # Preprocessing - 1. Extract data from original pdb file and create as molecues.
@@ -15,11 +14,11 @@ def predict(model):
         create_examples(extracted_predict_folder, predict_examples_folder)
 
     # Load pre-trained good model
-    my_model = load_model(model, custom_objects={'mean_pred': mean_pred})
+    my_model = load_model(model)
 
     #complexes = os.listdir(predict_examples_folder)
 
-    predict_examples_iterator = Training_Example_Iterator(examples_folder=predict_examples_folder,
+    predict_examples_iterator = ExamplesIterator(examples_folder=predict_examples_folder,
                                                        nb_neg=9,
                                                        max_examples=10)
 

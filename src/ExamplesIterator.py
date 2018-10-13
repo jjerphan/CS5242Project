@@ -4,10 +4,11 @@ from collections import defaultdict
 import keras
 import numpy as np
 
-from discretization import load_nparray, make_cube
+from discretization import load_nparray, make_cube, plot_cube
 from pipeline_fixtures import is_positive, is_negative
-from settings import nb_neg_ex_per_pos, resolution_cube, training_examples_folder
+from settings import nb_neg_ex_per_pos, resolution_cube, training_examples_folder, shape_cube, testing_examples_folder
 
+from mpl_toolkits.mplot3d import Axes3D
 
 class ExamplesIterator(keras.utils.Sequence):
     """
@@ -65,12 +66,12 @@ class ExamplesIterator(keras.utils.Sequence):
         assert len(self.labels) == len(self.examples_files)
         self.indexes = np.arange(len(self.examples_files))
 
-        # Taking you some examples if not
-        if isinstance(max_examples, int) and max_examples < len(self.examples_files):
-            self.indexes = self.indexes[0:max_examples]
-
         # We shuffle the data at least once
         np.random.shuffle(self.indexes)
+
+        # Taking you some examples if asked
+        if isinstance(max_examples, int) and max_examples < len(self.examples_files):
+            self.indexes = self.indexes[0:max_examples]
 
     def nb_examples(self):
         """
@@ -150,16 +151,18 @@ class ExamplesIterator(keras.utils.Sequence):
         ys = np.array(ys)
         assert (ys.shape[0] == len(files_to_use))
         assert (cubes.shape[0] == len(files_to_use))
-
+        assert (cubes.shape[1:] == shape_cube)
         return cubes, ys
 
 
 if __name__ == "__main__":
-    iterator = ExamplesIterator(training_examples_folder)
+    for folder in [training_examples_folder, testing_examples_folder]:
+        iterator = ExamplesIterator(folder)
 
-    # Reverse iterator
-    for i, (batch, ys) in enumerate(reversed(iterator)):
-        print("Checking size of last batch")
-        assert (batch.shape[0] == iterator.nb_examples() % iterator.batch_size)
-        print(i, batch.shape, np.mean(ys))
-        break
+        # Reverse iterator
+        for i, (batch, ys) in enumerate(reversed(iterator)):
+            plot_cube(batch[0])
+            print("Checking size of last batch")
+            assert (batch.shape[0] == iterator.nb_examples() % iterator.batch_size)
+            print(i, batch.shape, np.mean(ys))
+            break

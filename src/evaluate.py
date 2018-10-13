@@ -1,16 +1,17 @@
 import argparse
+import logging
 
-import pandas as pd
 import numpy as np
-import seaborn as sn
+import os
 from keras.models import load_model
-
-from sklearn.metrics import f1_score, precision_score, accuracy_score, recall_score, confusion_matrix
-
-from matplotlib import pyplot as plt
+import keras.backend as K
 
 from ExamplesIterator import ExamplesIterator
-from settings import testing_examples_folder, nb_workers, nb_neg_ex_per_pos
+from settings import testing_examples_folder, nb_workers, nb_neg_ex_per_pos, metrics_for_evaluation, results_folder
+
+
+def mean_pred(y_pred,y_true):
+    return K.mean(y_pred)
 
 
 def evaluate(serialized_model_path, nb_neg, max_examples, verbose=1, preprocess=False):
@@ -25,38 +26,56 @@ def evaluate(serialized_model_path, nb_neg, max_examples, verbose=1, preprocess=
     :return:
     """
 
-    print("In evaluate: ", serialized_model_path)
+    # Formatting fixtures
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.DEBUG)
+    logfile = f"evaluate.log"
 
-    # TODO
-    # model = load_model(serialized_model_path)
-    #
-    # test_examples_iterator = ExamplesIterator(examples_folder=testing_examples_folder,
-    #                                           shuffle_after_completion=False)
-    # test_loss = model.evaluate_generator(test_examples_iterator, workers=nb_workers)
-    #
-    # print(f"Test loss: {test_loss}")
-    #
-    # ys = test_examples_iterator.get_labels()
-    #
-    # y_preds = model.predict_generator(test_examples_iterator)
-    #
-    # # Rounding the prediction : using the second one
-    # y_rounded = np.array([1 if y > 0.5 else 0 for y in y_preds])
-    #
-    # conf_matrix = confusion_matrix(ys, y_rounded)
-    #
-    # df_cm = pd.DataFrame(conf_matrix, index=["Neg", "Pos"],
-    #                      columns=["Neg", "Pos"])
-    # plt.figure(figsize=(10, 7))
-    # sn.heatmap(df_cm, annot=True)
-    #
-    # print(f"F1 score : {f1_score(ys,y_rounded)}")
-    # print(f"Accuracy score : {accuracy_score(ys,y_rounded)}")
-    # print(f"Precision score : {precision_score(ys,y_rounded)}")
-    # print(f"Recall score : {recall_score(ys,y_rounded)}")
-    #
-    # # Counting positive predictions
-    # print(len(list(filter(lambda y: y != 0, y_preds))))
+    # Making a folder for the job to save log, model, history in it.
+    id = serialized_model_path.split(os.sep)[-2]
+    job_folder = os.path.join(results_folder, id)
+    if not (os.path.exists(results_folder)):
+        print(f"The {results_folder} does not exist. Creating it.")
+        os.makedirs(results_folder)
+
+    # Creating the folder for the job
+    os.makedirs(job_folder)
+
+    fh = logging.FileHandler(os.path.join(job_folder, logfile))
+    fh.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    fh.setFormatter(formatter)
+    logger.addHandler(fh)
+
+    logger.debug("In evaluate: ", serialized_model_path)
+
+    model = load_model(serialized_model_path, custom_objects={"mean_pred": mean_pred})
+
+    test_examples_iterator = ExamplesIterator(examples_folder=testing_examples_folder,
+                                              max_examples=max_examples,
+                                              shuffle_after_completion=False)
+
+    logger.debug(f"Evaluating on {test_examples_iterator.nb_examples()} examples")
+    test_loss = model.evaluate_generator(test_examples_iterator, workers=nb_workers)
+
+    logger.debug(f"Average Testing loss: {np.mean(test_loss)}")
+
+    ys = test_examples_iterator.get_labels()
+
+    y_preds = model.predict_generator(test_examples_iterator)
+
+    # Rounding the prediction : using the second one
+    y_rounded = np.array([1 if y > 0.5 else 0 for y in y_preds])
+
+    logger.debug("Computing metrics")
+    res = dict(map(lambda metric: (metric.__name__, metric(ys, y_rounded)), metrics_for_evaluation))
+
+    res["serialized_model_path"] = serialized_model_path
+
+    logger.debug(res)
+
+    # Counting positive predictions
+    logger.debug(len(list(filter(lambda y: y != 0, y_rounded))))
 
 
 if __name__ == "__main__":

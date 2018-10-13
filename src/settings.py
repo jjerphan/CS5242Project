@@ -3,6 +3,8 @@ import numpy as np
 
 # Folders
 # Global folder for data and logs
+from sklearn.metrics import f1_score, recall_score, precision_score, accuracy_score
+
 absolute_path = os.path.abspath(os.path.join(os.path.realpath(__file__), "..", ".."))
 
 job_submissions_folder = os.path.join(absolute_path, "job_submissions")
@@ -38,7 +40,6 @@ parameters_file_name = "parameters.txt"
 serialized_model_file_name = "model.h5"
 history_file_name = "history.pickle"
 
-
 # Some settings for number and persisting tensors
 float_type = np.float32
 formatter = "%.16f"
@@ -73,6 +74,7 @@ nb_neg_ex_per_pos = 10
 
 # To scale protein-ligands system in a cube of shape (resolution_cube,resolution_cube,resolution_cube)
 resolution_cube = 20
+shape_cube = (resolution_cube, resolution_cube, resolution_cube,2)
 
 # Obtained with values_range on the complete original dataset : to be rerun again
 hydrophobic_types = {"C"}
@@ -86,6 +88,9 @@ nb_epochs_default = 1
 batch_size_default = 32
 n_gpu_default = 1
 optimizer_default = "rmsprop"
+
+# Evaluation parameters
+metrics_for_evaluation = [accuracy_score, precision_score, recall_score, f1_score]
 
 # Pre-processing settings
 nb_workers = 6

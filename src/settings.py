@@ -1,14 +1,10 @@
 import os
 import numpy as np
-import progressbar
-
-import datetime
 
 # Folders
 # Global folder for data and logs
-absolute_path = os.path.abspath("..")
+absolute_path = os.path.abspath(os.path.join(os.path.realpath(__file__), "..", ".."))
 
-logs_folder = os.path.join(absolute_path, "logs")
 job_submissions_folder = os.path.join(absolute_path, "job_submissions")
 
 # Data given (not modified)
@@ -36,8 +32,12 @@ predict_examples_folder = os.path.join(predict_folder, "predict_examples")
 extracted_protein_suffix = "_pro_cg.csv"
 extracted_ligand_suffix = "_lig_cg.csv"
 
-# Persisted models
-models_folders = os.path.join("..", "models")
+# Results
+results_folder = os.path.join(absolute_path, "results")
+parameters_file_name = "parameters.txt"
+serialized_model_file_name = "model.h5"
+history_file_name = "history.pickle"
+
 
 # Some settings for number and persisting tensors
 float_type = np.float32
@@ -79,50 +79,14 @@ polar_types = {'P', 'O', 'TE', 'F', 'N', 'AS', 'O1-', 'MO',
                'S', 'FE', 'ZN', 'CU', 'SI', 'V', 'I', 'N+1',
                'N1+', 'CO', 'W', }
 
-x_min = -244.401
-x_max = 310.935
-
-y_min = -186.407
-y_max = 432.956
-
-z_mix = -177.028
-z_max = 432.956
-##
-
-# Misc.
-widgets_progressbar = [
-    ' [', progressbar.Timer(), '] ',
-    progressbar.Bar("░", fill="⋅"),
-    ' (', progressbar.ETA(), ') ',
-]
-
 # Training parameters
 nb_epochs_default = 1
 batch_size_default = 32
 n_gpu_default = 1
 optimizer_default = "rmsprop"
 
-# Preprocessing settings
+# Pre-processing settings
 nb_workers = 6
+name_env = "CS5242_gpu"
 
 
-def progress(iterable):
-    """
-    Custom progress bar
-    :param iterable: the iterable to wrap
-    :return:
-    """
-    return progressbar.progressbar(iterable, widgets=widgets_progressbar, redirect_stdout=True)
-
-
-def extract_id(file_name):
-    """
-    "xxxx_pro_cg.pdb" to "xxxx"
-    """
-    return file_name.replace(extracted_protein_suffix, "").replace(extracted_ligand_suffix, "")
-
-
-def get_current_timestamp():
-    utc_dt = datetime.datetime.now(datetime.timezone.utc)
-    local_time_dt = utc_dt.astimezone()
-    return f"{local_time_dt}".replace(" ", "_")

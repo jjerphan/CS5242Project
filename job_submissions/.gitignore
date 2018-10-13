@@ -1,0 +1,3 @@
+*.pbs
+!training.pbs
+!helloworld.pbs

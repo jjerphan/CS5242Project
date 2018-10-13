@@ -34,7 +34,6 @@ def pafnucy_like():
     x = Conv3D(kernel_size=kernel_size, filters=128)(x)
     x = Conv3D(kernel_size=kernel_size, filters=256)(x)
     x = Conv3D(kernel_size=kernel_size, filters=512)(x)
-    # x = Conv3D(kernel_size=kernel_size, filters=1024)(x)
 
     x = Flatten()(x)
     x = Dense(1000)(x)

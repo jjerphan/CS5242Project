@@ -3,6 +3,7 @@ import re
 import numpy as np
 import logging
 from concurrent import futures
+from random import Random
 
 from settings import original_data_folder, extracted_data_folder, hydrophobic_types, float_type, \
     formatter, nb_features, extracted_data_train_folder, extracted_data_test_folder, \
@@ -80,9 +81,8 @@ def extract_molecule(x_list: list, y_list: list, z_list: list, atom_type_list: l
     return formated_molecule
 
 
-def save_data(pdb_original_file, split_training):
+def save_data(pdb_original_file, split_validation_testing, group_indices=[]):
     pdb_original_file_path = os.path.join(original_data_folder, pdb_original_file)
-
     # Extract features from pdb files.
     x_list, y_list, z_list, atom_type_list = read_pdb(pdb_original_file_path)
 
@@ -92,33 +92,52 @@ def save_data(pdb_original_file, split_training):
 
     # Saving the data is a csv file with the same name
     # Choosing the appropriate folder using the split index
-    molecule_index = int(re.match("\d+", pdb_original_file).group())
+    molecule_index = re.match("\d{4}", pdb_original_file).group()
 
-    if not split_training:
+    if not split_validation_testing:
         extracted_file_path = os.path.join(extracted_predict_folder, pdb_original_file.replace(".pdb", ".csv"))
     else:
-        if molecule_index in train_indices:
+        assert len(group_indices) > 0
+        if molecule_index in group_indices[0]:
             extracted_file_path = os.path.join(extracted_data_train_folder, pdb_original_file.replace(".pdb", ".csv"))
-        else:
+        elif molecule_index in group_indices[1]:
             extracted_file_path = os.path.join(extracted_data_test_folder, pdb_original_file.replace(".pdb", ".csv"))
+        elif molecule_index in group_indices[2]:
+            extracted_file_path = os.path.join(extracted_predict_folder, pdb_original_file.replace(".pdb", ".csv"))
+        else:
+            logger.debug("Not inside indices. Something went wrong")
+            raise()
 
     np.savetxt(fname=extracted_file_path, X=molecule, fmt=formatter)
 
-def extract_data(pdb_folder, split_training=True):
+def extract_data(pdb_folder, split_validation_testing=True):
     for folder in [extracted_data_folder, extracted_data_test_folder, extracted_data_train_folder, extracted_predict_folder]:
         if not(os.path.exists(folder)):
             logger.debug('The %s folder does not exist. Creating it.', folder)
             os.makedirs(folder)
+
+
+    if split_validation_testing:
+        logger.debug('Spliting datases into 80% training, 10% valication, 10% testing.')
+        indices = sorted(set(map(lambda x: x.split('_')[0], os.listdir(pdb_folder))))
+        Random(48).shuffle(indices)
+
+        total = len(indices)
+        training_indices = indices[:int(total * 0.8)]
+        validation_indices = indices[int(total * 0.8):int(total * 0.9)]
+        test_indices = indices[int(total * 0.9):]
+
+        group_indices = [training_indices, validation_indices, test_indices]
 
     logger.debug('Read orginal pdb files from %s.', pdb_folder)
     logger.debug('Total files are %d', len(os.listdir(pdb_folder)))
 
     with futures.ProcessPoolExecutor(max_workers=6) as executor:
         for pdb_original_file in sorted(os.listdir(pdb_folder)):
-            executor.submit(save_data, pdb_original_file, split_training)
+            executor.submit(save_data, pdb_original_file, split_validation_testing, group_indices)
 
     logger.debug('Molecules saved into folders in csv format.')
 
 if __name__ == "__main__":
-    extract_data(original_data_folder, split_training=True)
-    extract_data(original_predict_folder, split_training=False)
+    extract_data(original_data_folder, split_validation_testing=True)
+    extract_data(original_predict_folder, split_validation_testing=False)

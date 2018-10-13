@@ -5,10 +5,11 @@ import argparse
 
 from datetime import datetime
 
-from pipeline_fixtures import ExamplesIterator, LogEpochBatchCallback
-from architectures import architectures_available, architectures_available_names
+from pipeline_fixtures import LogEpochBatchCallback, get_current_timestamp
+from ExamplesIterator import ExamplesIterator
+from models import models_available, models_available_names
 from settings import training_examples_folder, testing_examples_folder, logs_folder, nb_neg_ex_per_pos, \
-    optimizer_default, batch_size_default, nb_epochs_default, get_current_timestamp, original_data_folder, \
+    optimizer_default, batch_size_default, nb_epochs_default, original_data_folder, \
     extracted_data_train_folder, extracted_data_test_folder, serialized_model_file_name, history_fie_name, parameters_file_name
 from extraction_data import extract_data
 from create_examples import create_examples
@@ -65,14 +66,14 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess,
     preprocessing_checkpoint = datetime.now()
 
     logger.debug('Creating network model')
-    model = architectures_available[model_index]
+    model = models_available[model_index]
     logger.debug(f"Model {model.name} chosen")
     logger.debug(model.summary())
 
     model.compile(optimizer=optimizer, loss=MSE, metrics=['accuracy'])
 
     logger.debug(f'{os.path.basename(__file__)} : Training the model with the following parameters')
-    logger.debug(f'architecture = {model.name}')
+    logger.debug(f'model = {model.name}')
     logger.debug(f'nb_epochs   = {nb_epochs}')
     logger.debug(f'max_examples   = {max_examples}')
     logger.debug(f'batch_size  = {batch_size}')
@@ -82,7 +83,7 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess,
     logger.debug(f'optimizer   = {optimizer}')
 
     with open(os.path.join(job_folder, parameters_file_name), "w") as f:
-        f.write(f'architecture={model.name}')
+        f.write(f'model={model.name}')
         f.write(f'nb_epochs={nb_epochs}')
         f.write(f'max_examples={max_examples}')
         f.write(f'batch_size={batch_size}')
@@ -121,7 +122,7 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess,
 
     logger.debug(f"Evaluation Loss: {loss}, Accuracy: {acc}, mean_pred: {mean_prediction}")
 
-    # Saving models and history
+    # Saving models.py and history
     model_file = os.path.join(job_folder, serialized_model_file_name)
     history_file = os.path.join(job_folder, history_fie_name)
 
@@ -147,7 +148,7 @@ if __name__ == "__main__":
 
     parser.add_argument('--model_index', metavar='model_index',
                         type=int, default=0,
-                        help=f'the index of the model to use in the list {architectures_available_names}')
+                        help=f'the index of the model to use in the list {models_available_names}')
 
     parser.add_argument('--nb_epochs', metavar='nb_epochs',
                         type=int, default=nb_epochs_default,
@@ -177,7 +178,7 @@ if __name__ == "__main__":
 
     print("Argument parsed : ", args)
 
-    assert (args.model_index < len(architectures_available_names))
+    assert (args.model_index < len(models_available_names))
     assert (args.nb_epochs > 0)
     assert (args.nb_neg > 0)
 

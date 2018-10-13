@@ -76,7 +76,7 @@ The final score is proportional to the total number of match for proteins.
 - Where is the data coming from? What are the other features present in the files?
   - It should be coming from the popular [PDBBind](http://www.pdbbind.org.cn/) data base.
 - For now, we have $n=3000$ examples (pair of protein and ligens). But if we see the problem as a classification problem from a couple protein/ligen to a prediction fit / not fit, we can construct loads of differents examples. More expecially, we can for each example construct $n-1$ other examples. Those examples won't represent a protein-ligand system, but can be used as example for the "not-fit" class. Hence we could have in total $3000 \times 2999 = 8\ 997\ 000$ examples
-- **Bigest problem for now:** the number of atoms is extremely variant for the molecules. See [`info`](./info) .
+- **Bigest problem for now:** the number of atoms is extremely variant for the molecules. See [`info`](exploration) .
 
 ```
 # Number of atoms for proteins and ligands
@@ -89,7 +89,7 @@ The final score is proportional to the total number of match for proteins.
  Max.   :14102   Max.   :300.000 
 ```
 
-![Density estimation](./info/density.png)
+![Density estimation](exploration/density.png)
 
 We need to find a way to resolve this problem. There are [several approaches](https://ai.stackexchange.com/questions/2008/how-can-neural-networks-deal-with-varying-input-sizes):
 

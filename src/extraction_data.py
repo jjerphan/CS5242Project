@@ -6,7 +6,8 @@ from concurrent import futures
 
 from settings import original_data_folder, extracted_data_folder, hydrophobic_types, float_type, \
     formatter, nb_features, extracted_data_train_folder, extracted_data_test_folder, \
-    train_indices, original_predict_folder, extracted_predict_folder, nb_workers, extract_id
+    train_indices, original_predict_folder, extracted_predict_folder, nb_workers
+from pipeline_fixtures import extract_id
 
 logger = logging.getLogger('__main__.extract_data')
 logger.addHandler(logging.NullHandler())

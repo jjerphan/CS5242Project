@@ -1,72 +1,19 @@
 import os
 import textwrap
-from architectures import architectures_available, architectures_available_names
-from settings import job_submissions_folder, nb_neg_ex_per_pos, nb_epochs_default, batch_size_default, n_gpu_default, \
-    parameters_file_name, serialized_model_file_name, history_fie_name
-from collections import defaultdict
-
-name_env = "CS5242_gpu"
-
-
-class ModelInspector:
-    """
-    To iterate and access content of models sub-folders.
-
-    """
-    def __init__(self, models_folders):
-        self.general_folder = models_folders
-        self.sub_folders = list(map(lambda f: os.path.join(models_folders, f), os.listdir(models_folders)))
-        serialized_models = defaultdict(str)
-        histories = defaultdict(str)
-
-        def str_default_dict(): return defaultdict(str)
-
-        sets_parameters = defaultdict(str_default_dict)
-
-        for folder in self.sub_folders:
-            for file in os.listdir(folder):
-                if file == history_fie_name:
-                    histories[folder] = file
-
-                if file == serialized_model_file_name:
-                    serialized_models[folder] = file
-
-                if file == parameters_file_name:
-                    with open(os.path.join(models_folders, folder, file), "r") as f:
-                        lines = f.readlines()
-                        for line in lines:
-                            words = line.split("=")
-                            key = words[0]
-                            value = words[1]
-                            sets_parameters[folder][key] = value
-
-                    sets_parameters[folder] = file
-
-        self.sets_parameters = sets_parameters
-        self.serialized_models = serialized_models
-        self.histories = histories
-
-    def __join_path(self, index, attribut):
-        return os.path.join(self.general_folder, self.sub_folders[index], attribut[index])
-
-    def get_serialized_model(self, index):
-        return self.__join_path(index,self.serialized_models)
-
-    def get_sets_parameters(self, index):
-        return self.__join_path(index, self.sets_parameters)
-
-    def get_history(self, index):
-        return self.__join_path(index, self.histories)
-
-    def __len__(self):
-        return len(self.sub_folders)
-
-    def __getitem__(self, index):
-        folder = self.sub_folders[index]
-        return folder, self.get_sets_parameters(folder), self.get_serialized_model(folder), self.get_history(folder)
+from models import models_available, models_available_names
+from settings import job_submissions_folder, nb_neg_ex_per_pos, nb_epochs_default, batch_size_default, n_gpu_default
 
 
 def save_job_file(stub, file_name):
+    """
+    Save a submission file.
+
+    The stub is inserted in the given file.
+
+    :param stub: the string that will be used as the contain of the file
+    :param file_name: the name of the file to use
+    :return:
+    """
     print("Stub inferred :")
     print(stub)
 
@@ -88,21 +35,26 @@ def save_job_file(stub, file_name):
 
 def create_train_job():
     """
+    Ask for parameters incrementally to create a job to train a given network.
 
-    :return:
+    The file gets saved in `job_submissions`.
+
+    The name of the file is made using the parameters given.
+    This way we have a collection of file to submit that is easy to inspect.
+
     """
     script_name = "train_cnn.py"
 
-    nb_architecture_available = len(architectures_available_names)
+    nb_models_available = len(models_available_names)
 
-    # Choice of architecture
-    architecture_index = -1
-    while architecture_index not in range(nb_architecture_available):
-        print(f"{nb_architecture_available} Architecture available:")
-        for i, architecture in enumerate(architectures_available):
-            print(f"  # {i}: {architecture.name}")
+    # Asking for the different parameters
+    model_index = -1
+    while model_index not in range(nb_models_available):
+        print(f"{nb_models_available} Models available:")
+        for i, model in enumerate(models_available):
+            print(f"  # {i}: {model.name}")
 
-        architecture_index = int(input("Your choice : # "))
+        model_index = int(input("Your choice : # "))
 
     nb_epochs = input(f"Number of epochs (default = {nb_epochs_default}) : ")
     nb_epochs = nb_epochs_default if nb_epochs == "" else int(nb_epochs)
@@ -119,15 +71,15 @@ def create_train_job():
     verbose = 1 * (input(f"Keras verbose output during training? [y (default)/n] : ").lower() != "n")
     preprocess = 1 * (input(f"Extract data and create training examples? [y/n (default)] :").lower() == "y")
 
-    # Choice
     n_gpu = input(f"Choose number of GPU (leave blank for default = {n_gpu_default}) : ")
     n_gpu = n_gpu_default if n_gpu == "" else int(n_gpu)
 
     assert (n_gpu > 0)
 
+    # TODO : fix this hack to add the option
     option_max = f"\n                                                     --max_examples {max_examples} \\"
 
-    name_job = f'train_{architectures_available_names[architecture_index]}_{nb_epochs}epochs_{batch_size}batch_{nb_neg}neg'
+    name_job = f'train_{models_available_names[model_index]}_{nb_epochs}epochs_{batch_size}batch_{nb_neg}neg'
     name_job += f"_{max_examples}max" if max_examples else ""
     name_job += "_preprocess" if preprocess else ""
 
@@ -141,13 +93,14 @@ def create_train_job():
                 #PBS -N {name_job}
                 cd $PBS_O_WORKDIR/src/
                 source activate {name_env}
-                python $PBS_O_WORKDIR/src/{script_name}  --architecture_index {architecture_index} \\
+                python $PBS_O_WORKDIR/src/{script_name}  --model_index {model_index} \\
                                                          --nb_epochs {nb_epochs} \\
                                                          --batch_size {batch_size} \\
                                                          --nb_neg {nb_neg} \\
                                                          --verbose {verbose} \\{option_max if max_examples is not None else ''}
                                                          --preprocess {preprocess}
                 """
+    # We remove the first return in the string
     stub = stub[1:]
 
     file_name = os.path.join(job_submissions_folder, f"{name_job}.pbs")

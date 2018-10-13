@@ -3,7 +3,7 @@ from settings import original_predict_folder, extracted_predict_folder, predict_
 
 from extraction_data import extract_data
 from create_examples import create_examples
-from pipeline_fixtures import ExamplesIterator
+from ExamplesIterator import ExamplesIterator
 
 
 def predict(serialized_model, nb_neg, max_examples, verbose=1, preprocess=False):
@@ -39,4 +39,4 @@ def predict(serialized_model, nb_neg, max_examples, verbose=1, preprocess=False)
 
 
 if __name__ == '__main__':
-    predict('../models/model2018-10-07_17:35:11.438784+08:00first_simple_model.h5')
+    predict('../models.py/model2018-10-07_17:35:11.438784+08:00first_simple_model.h5')

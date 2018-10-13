@@ -7,8 +7,8 @@ from sklearn.metrics import f1_score, precision_score, accuracy_score, recall_sc
 
 from matplotlib import pyplot as plt
 
-from create_job_sub import ModelInspector
-from pipeline_fixtures import ExamplesIterator
+from ExamplesIterator import ExamplesIterator
+from ModelsInspector import ModelsInspector
 from settings import testing_examples_folder, nb_workers, models_folders
 
 
@@ -22,14 +22,16 @@ def evaluate_model(serialized_model):
 
     test_examples_iterator = ExamplesIterator(examples_folder=testing_examples_folder,
                                               shuffle_after_completion=False)
-    model.evaluate_generator(test_examples_iterator, workers=nb_workers)
+    test_loss = model.evaluate_generator(test_examples_iterator, workers=nb_workers)
+
+    print(f"Test loss: {test_loss}")
 
     ys = test_examples_iterator.get_labels()
 
     y_preds = model.predict_generator(test_examples_iterator)
 
     # Rounding the prediction : using the second one
-    y_rounded = np.array([1 if y != 0 else 0 for y in y_preds])
+    y_rounded = np.array([1 if y > 0.5 else 0 for y in y_preds])
 
     conf_matrix = confusion_matrix(ys, y_rounded)
 
@@ -43,13 +45,13 @@ def evaluate_model(serialized_model):
     print(f"Precision score : {precision_score(ys,y_rounded)}")
     print(f"Recall score : {recall_score(ys,y_rounded)}")
 
-    # Counting non negative predictions
-    len(list(filter(lambda x: x != 0, y_preds)))
+    # Counting positive predictions
+    print(len(list(filter(lambda y: y != 0, y_preds))))
 
 
 if __name__ == "__main__":
 
-    model_inspector = ModelInspector(models_folders=models_folders)
+    model_inspector = ModelsInspector(models_folders=models_folders)
     model_index = -1
     while model_index not in range(len(model_inspector)):
         print("Choose the model to evaluate")

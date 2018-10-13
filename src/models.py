@@ -34,7 +34,6 @@ def pafnucy_like():
     x = Conv3D(kernel_size=kernel_size, filters=128)(x)
     x = Conv3D(kernel_size=kernel_size, filters=256)(x)
     x = Conv3D(kernel_size=kernel_size, filters=512)(x)
-    # x = Conv3D(kernel_size=kernel_size, filters=1024)(x)
 
     x = Flatten()(x)
     x = Dense(1000)(x)
@@ -47,11 +46,11 @@ def pafnucy_like():
     return model
 
 
-architectures_available = [first_model(), pafnucy_like()]
-architectures_available_names = list(map(lambda model: model.name, architectures_available))
+models_available = [first_model(), pafnucy_like()]
+models_available_names = list(map(lambda model: model.name, models_available))
 
 if __name__ == "__main__":
-    print(f"{len(architectures_available_names)} Models availables: \n\n")
-    for i, model in enumerate(architectures_available):
+    print(f"{len(models_available_names)} Models availables: \n\n")
+    for i, model in enumerate(models_available):
         print(f"#{i}: {model.name}")
         model.summary()

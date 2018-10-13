@@ -1,7 +1,8 @@
 from sklearn import preprocessing
 
 from settings import extracted_data_train_folder, extracted_data_test_folder, normalized_data_train_folder, \
-    normalized_data_test_folder, normalized_data_folder, progress, data_folder
+    normalized_data_test_folder, normalized_data_folder, data_folder
+from pipeline_fixtures import show_progress
 import os, logging
 from pandas import DataFrame
 from discretization import load_nparray
@@ -27,7 +28,7 @@ def get_data_scaler(folder: str = extracted_data_train_folder):
     except:
         logger.debug("Creating the scaler")
         data_for_scaling = DataFrame()
-        for file in progress(os.listdir(folder)):
+        for file in show_progress(os.listdir(folder)):
             data = load_nparray(os.path.join(folder, file))
             data_for_scaling.append(DataFrame(data[:, 0:3]))
 
@@ -52,7 +53,7 @@ def normalize_data(scaler, extracted_data_folder, normalized_data_folder):
     logger.debug('Generating normalized test data.')
 
     files = sorted(os.listdir(extracted_data_folder))
-    for file in progress(files):
+    for file in show_progress(files):
         data = load_nparray(os.path.join(extracted_data_folder, file))
         new_data = np.append(scaler.transform(data[:, :3]), data[:, 3:], axis=1)
         file_name = os.path.join(normalized_data_folder, file)

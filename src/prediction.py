@@ -10,8 +10,9 @@ from train_cnn import mean_pred
 def predict(model):
     # Preprocessing - 1. Extract data from original pdb file and create as molecues.
     #                 2. Mix each protein with all ligand bindings for prediction
-    extract_data(original_predict_folder, split_training=False)
-    create_examples(extracted_predict_folder, predict_examples_folder)
+    def pre_processing():
+        extract_data(original_predict_folder, False)
+        create_examples(extracted_predict_folder, predict_examples_folder)
 
     # Load pre-trained good model
     my_model = load_model(model, custom_objects={'mean_pred': mean_pred})

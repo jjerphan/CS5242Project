@@ -89,6 +89,7 @@ def create_train_job():
 
     stub = f"""
                 #! /bin/bash
+                #PBS -P Personal
                 #PBS -q gpu
                 #PBS -j oe
                 #PBS -l select=1:ngpus={n_gpu}
@@ -139,6 +140,7 @@ def create_job_with_on_serialized_model(script_name, name_job):
 
     stub = f"""
                     #! /bin/bash
+                    #PBS -P Personal
                     #PBS -q gpu
                     #PBS -j oe
                     #PBS -l select=1:ngpus={n_gpu}

@@ -3,7 +3,7 @@ import numpy as np
 
 # Folders
 # Global folder for data and logs
-from sklearn.metrics import f1_score, recall_score, precision_score, accuracy_score
+from sklearn.metrics import f1_score, recall_score, precision_score, accuracy_score, auc
 
 absolute_path = os.path.abspath(os.path.join(os.path.realpath(__file__), "..", ".."))
 

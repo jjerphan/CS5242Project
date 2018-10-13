@@ -38,16 +38,13 @@ def evaluate(serialized_model_path, nb_neg, max_examples, verbose=1, preprocess=
         print(f"The {results_folder} does not exist. Creating it.")
         os.makedirs(results_folder)
 
-    # Creating the folder for the job
-    os.makedirs(job_folder)
-
     fh = logging.FileHandler(os.path.join(job_folder, logfile))
     fh.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     fh.setFormatter(formatter)
     logger.addHandler(fh)
 
-    logger.debug("In evaluate: ", serialized_model_path)
+    logger.debug(f"Evaluating model: {serialized_model_path}")
 
     model = load_model(serialized_model_path, custom_objects={"mean_pred": mean_pred})
 
@@ -56,23 +53,18 @@ def evaluate(serialized_model_path, nb_neg, max_examples, verbose=1, preprocess=
                                               shuffle_after_completion=False)
 
     logger.debug(f"Evaluating on {test_examples_iterator.nb_examples()} examples")
-    test_loss = model.evaluate_generator(test_examples_iterator, workers=nb_workers)
-
-    logger.debug(f"Average Testing loss: {np.mean(test_loss)}")
 
     ys = test_examples_iterator.get_labels()
-
     y_preds = model.predict_generator(test_examples_iterator)
-
     # Rounding the prediction : using the second one
     y_rounded = np.array([1 if y > 0.5 else 0 for y in y_preds])
 
     logger.debug("Computing metrics")
-    res = dict(map(lambda metric: (metric.__name__, metric(ys, y_rounded)), metrics_for_evaluation))
+    metrics_results = dict(map(lambda metric: (metric.__name__, metric(ys, y_rounded)), metrics_for_evaluation))
 
-    res["serialized_model_path"] = serialized_model_path
+    metrics_results["serialized_model_path"] = serialized_model_path
 
-    logger.debug(res)
+    logger.debug(metrics_results)
 
     # Counting positive predictions
     logger.debug(len(list(filter(lambda y: y != 0, y_rounded))))

@@ -13,8 +13,13 @@ class ModelsInspector:
 
     def __init__(self, results_folder):
         self._general_folder = results_folder
-        self._sub_folders = list(map(lambda sub_folder: os.path.join(results_folder, sub_folder),
+        sub_folders = list(map(lambda sub_folder: os.path.join(results_folder, sub_folder),
                                      os.listdir(results_folder)))
+
+        # It is possible that there exist sub-folders with no serialized model
+        # (if the model is being trained for example) so, we chose here to
+        # only keep sub folders that contains one.
+        self._sub_folders = list(filter(lambda folder: serialized_model_file_name in os.listdir(folder), sub_folders))
         serialized_models_file_names = defaultdict(str)
         histories_file_names = defaultdict(str)
 
@@ -24,7 +29,9 @@ class ModelsInspector:
         sets_parameters = defaultdict(str_default_dict)
 
         for folder in self._sub_folders:
-            for file in os.listdir(folder):
+            files_present = os.listdir(folder)
+
+            for file in files_present:
                 if file == history_file_name:
                     histories_file_names[folder] = file
 
@@ -41,7 +48,7 @@ class ModelsInspector:
                             sets_parameters[folder][key] = value
 
         # Each of those are default dict from folders to values
-        # Histories are serialized model
+        # note that sets_parameters is a dictionary of dictionaries
         self._sets_parameters = sets_parameters
         self._serialized_models_file_names = serialized_models_file_names
         self._histories_file_names = histories_file_names
@@ -63,7 +70,10 @@ class ModelsInspector:
 
     def __getitem__(self, index):
         sub_folder = self._sub_folders[index]
-        return sub_folder, self.get_sets_parameters(sub_folder), self.get_serialized_model_file_name(sub_folder), self.get_history_file_name(sub_folder)
+        set_parameters = self.get_sets_parameters(sub_folder)
+        serialized_model_file_name = self.get_serialized_model_file_name(sub_folder)
+        history_file_name = self.get_history_file_name(sub_folder)
+        return sub_folder, set_parameters, serialized_model_file_name, history_file_name
 
     def choose_model(self):
         """
@@ -95,4 +105,4 @@ class ModelsInspector:
 if __name__ == "__main__":
     model_inspector = ModelsInspector(results_folder=results_folder)
 
-    print(model_inspector.choose_model())
+    print(model_inspector[0])

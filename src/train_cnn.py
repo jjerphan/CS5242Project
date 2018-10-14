@@ -118,10 +118,10 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess,
     logger.debug('Done training !')
     train_checkpoint = datetime.now()
 
-    loss, acc, mean_prediction = model.evaluate_generator(generator=test_examples_iterator, verbose=verbose)
+    loss, acc = model.evaluate_generator(generator=test_examples_iterator, verbose=verbose)
     evaluate_checkpoint = datetime.now()
 
-    logger.debug(f"Evaluation Loss: {loss}, Accuracy: {acc}, mean_pred: {mean_prediction}")
+    logger.debug(f"Evaluation Loss: {loss}, Accuracy: {acc}.")
 
     # Saving models.py and history
     model_file = os.path.join(job_folder, serialized_model_file_name)

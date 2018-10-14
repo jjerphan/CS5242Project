@@ -7,7 +7,7 @@ from random import Random
 
 from settings import original_data_folder, extracted_data_folder, hydrophobic_types, float_type, \
     formatter, nb_features, extracted_data_train_folder, extracted_data_test_folder, \
-    train_indices, original_predict_folder, extracted_predict_folder, nb_workers
+    percent_train, percent_test, original_predict_folder, extracted_predict_folder, nb_workers
 from pipeline_fixtures import extract_id
 
 logger = logging.getLogger('__main__.extract_data')
@@ -98,16 +98,18 @@ def save_data(pdb_original_file, split_validation_testing, group_indices=[]):
     # Choosing the appropriate folder using the split index
     molecule_index = re.match("\d{4}", pdb_original_file).group()
 
+    pdb_file_csv = pdb_original_file.replace(".pdb", ".csv")
+
     if not split_validation_testing:
-        extracted_file_path = os.path.join(extracted_predict_folder, pdb_original_file.replace(".pdb", ".csv"))
+        extracted_file_path = os.path.join(extracted_predict_folder, pdb_file_csv)
     else:
         assert len(group_indices) > 0
         if molecule_index in group_indices[0]:
-            extracted_file_path = os.path.join(extracted_data_train_folder, pdb_original_file.replace(".pdb", ".csv"))
+            extracted_file_path = os.path.join(extracted_data_train_folder, pdb_file_csv)
         elif molecule_index in group_indices[1]:
-            extracted_file_path = os.path.join(extracted_data_test_folder, pdb_original_file.replace(".pdb", ".csv"))
+            extracted_file_path = os.path.join(extracted_data_test_folder, pdb_file_csv)
         elif molecule_index in group_indices[2]:
-            extracted_file_path = os.path.join(extracted_predict_folder, pdb_original_file.replace(".pdb", ".csv"))
+            extracted_file_path = os.path.join(extracted_predict_folder, pdb_file_csv)
         else:
             logger.debug("Not inside indices. Something went wrong")
             raise()
@@ -127,9 +129,12 @@ def extract_data(pdb_folder, split_validation_testing=True):
         Random(48).shuffle(indices)
 
         total = len(indices)
-        training_indices = indices[:int(total * 0.8)]
-        validation_indices = indices[int(total * 0.8):int(total * 0.9)]
-        test_indices = indices[int(total * 0.9):]
+
+        test_split_index = int(total * percent_train)
+        pred_split_index = int(total * (percent_test + percent_train))
+        training_indices = indices[:test_split_index]
+        validation_indices = indices[test_split_index:pred_split_index]
+        test_indices = indices[pred_split_index:]
 
         group_indices = [training_indices, validation_indices, test_indices]
 

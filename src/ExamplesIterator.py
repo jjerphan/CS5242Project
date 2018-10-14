@@ -90,7 +90,7 @@ class ExamplesIterator(keras.utils.Sequence):
 
         :return:
         """
-        return int(np.ceil(len(self.examples_files) / self.batch_size))
+        return int(np.ceil(len(self.indexes) / self.batch_size))
 
     def __getitem__(self, index):
         """

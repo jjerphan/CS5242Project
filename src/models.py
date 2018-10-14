@@ -46,7 +46,27 @@ def pafnucy_like():
     return model
 
 
-models_available = [first_model(), pafnucy_like()]
+def ProtNet():
+    kernel_size = 5
+    inputs = Input(shape=input_shape)
+
+    x = Conv3D(kernel_size=kernel_size, filters=64)(inputs)
+    x = Conv3D(kernel_size=kernel_size, filters=128)(x)
+    x = Conv3D(kernel_size=kernel_size, filters=256)(x)
+    x = Conv3D(kernel_size=kernel_size, filters=512)(x)
+
+    x = Flatten()(x)
+    x = Dense(1000)(x)
+    x = Dense(500)(x)
+    x = Dense(200)(x)
+    x = Dense(1)(x)
+    outputs = Activation('sigmoid')(x)
+
+    model = Model(inputs=inputs, outputs=outputs, name="ProtNet")
+    return model
+
+
+models_available = [first_model(), ProtNet()]
 models_available_names = list(map(lambda model: model.name, models_available))
 
 if __name__ == "__main__":

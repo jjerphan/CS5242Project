@@ -1,3 +1,4 @@
 *.pbs
 !training.pbs
 !helloworld.pbs
+!evaluate_all.pbs

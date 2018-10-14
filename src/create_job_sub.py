@@ -110,7 +110,7 @@ def create_train_job():
     save_job_file(stub, name_job)
 
 
-def create_job_with_on_serialized_model(script_name, name_job):
+def create_job_with_for_one_serialized_model(script_name, name_job):
     """
     The file gets saved in `job_submissions`.
     """
@@ -160,13 +160,23 @@ def create_job_with_on_serialized_model(script_name, name_job):
 
 
 def create_evaluation_job():
-    create_job_with_on_serialized_model(script_name="evaluate.py",
-                                        name_job="evaluate")
+    """
+    Prompt to create a submission file to evaluate a given model.
+
+    :return:
+    """
+    create_job_with_for_one_serialized_model(script_name="evaluate.py",
+                                             name_job="evaluate")
 
 
 def create_prediction_job():
-    create_job_with_on_serialized_model(script_name="predict.py",
-                                        name_job="predict")
+    """
+    Prompt to create a submission file to predict using a given model.
+
+    :return:
+    """
+    create_job_with_for_one_serialized_model(script_name="predict.py",
+                                             name_job="predict")
 
 
 if __name__ == "__main__":

@@ -8,6 +8,16 @@ class ModelsInspector:
     """
     To iterate and access content of results sub-folders.
 
+    This class exposes a way to get:
+        - the path to the folder
+        - the set of parameters used as a dict (parameters are extracted from `parameters.txt`.
+        - the path of serialized models `model.h5`
+        - the path of the history of training `history.pickle`
+
+    Only results folders that have a serialized model in it are shown.
+    This is because we are interested to study model that have been created only.
+    We call those folder "inspectable".
+
 
     """
 
@@ -54,26 +64,54 @@ class ModelsInspector:
         self._histories_file_names = histories_file_names
 
     def __join_path(self, folder, attribut):
+        """
+        Fixture to return the absolute path to of an attribute of a given folder
+        :return:
+        """
         return os.path.join(self._general_folder, folder, attribut[folder])
 
-    def get_serialized_model_file_name(self, folder):
+    def get_serialized_model_path(self, folder):
+        """
+        :return: the absolute path of the serialized model
+        """
         return self.__join_path(folder, self._serialized_models_file_names)
 
     def get_sets_parameters(self, folder):
+        """
+        :return: the sets of parameters for one model
+        """
         return self._sets_parameters[folder]
 
-    def get_history_file_name(self, folder):
+    def get_history_path(self, folder):
+        """
+        :return: the absolute path of the history
+        """
         return self.__join_path(folder, self._histories_file_names)
 
     def __len__(self):
+        """
+        :return: the number of folders that are inspectable.
+        """
         return len(self._sub_folders)
 
     def __getitem__(self, index):
+        """
+        Used for iterations.
+
+        For one index, get the associated folder and return all the info, that are:
+            - this folder path
+            - the set of parameters
+            - the absolute path of the serialized model
+            - the absolute path of the history
+
+        :param index:
+        :return:
+        """
         sub_folder = self._sub_folders[index]
         set_parameters = self.get_sets_parameters(sub_folder)
-        serialized_model_file_name = self.get_serialized_model_file_name(sub_folder)
-        history_file_name = self.get_history_file_name(sub_folder)
-        return sub_folder, set_parameters, serialized_model_file_name, history_file_name
+        serialized_model_path = self.get_serialized_model_path(sub_folder)
+        history_file_path = self.get_history_path(sub_folder)
+        return sub_folder, set_parameters, serialized_model_path, history_file_path
 
     def choose_model(self):
         """

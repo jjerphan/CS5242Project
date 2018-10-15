@@ -1,10 +1,10 @@
 from keras import Sequential, Input, Model
 from keras.layers import Dense, Flatten, Conv3D, Activation
 
-from settings import resolution_cube, nb_channels
+from settings import length_cube_side, nb_channels
 
 # Configurations of the shape of data
-input_shape = (resolution_cube, resolution_cube, resolution_cube, nb_channels)
+input_shape = (length_cube_side, length_cube_side, length_cube_side, nb_channels)
 data_format = "channels_last"
 
 
@@ -17,9 +17,9 @@ def first_model():
         data_format=data_format
     ))
     model.add(Flatten())
-    model.add(Dense(3 * resolution_cube))
-    model.add(Dense(2 * resolution_cube))
-    model.add(Dense(1 * resolution_cube))
+    model.add(Dense(3 * length_cube_side))
+    model.add(Dense(2 * length_cube_side))
+    model.add(Dense(1 * length_cube_side))
     model.add(Dense(1, activation='sigmoid'))
     model.build()
 

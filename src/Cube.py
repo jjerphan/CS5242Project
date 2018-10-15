@@ -5,7 +5,7 @@ import logging
 from mpl_toolkits.mplot3d import Axes3D  # needed by the 3D plotter
 
 from discretization import load_nparray
-from settings import float_type, comment_delimiter, training_examples_folder, resolution_cube, nb_features
+from settings import float_type, comment_delimiter, training_examples_folder, length_cube_side, nb_features
 
 logger = logging.getLogger('cnn.discretization')
 logger.addHandler(logging.NullHandler())
@@ -62,9 +62,9 @@ class Cube:
 
         ax.scatter(self.x, self.y, self.z, c=origin, marker="o")
 
-        ax.set_xlim((0, resolution_cube))
-        ax.set_ylim((0, resolution_cube))
-        ax.set_zlim((0, resolution_cube))
+        ax.set_xlim((0, length_cube_side))
+        ax.set_ylim((0, length_cube_side))
+        ax.set_zlim((0, length_cube_side))
 
         ax.set_xlabel('X Label')
         ax.set_ylabel('Y Label')
@@ -80,7 +80,7 @@ if __name__ == "__main__":
         file_name = os.path.join(training_examples_folder, ex_file)
         example = load_nparray(os.path.join(training_examples_folder, ex_file))
 
-        cube = Cube(example, resolution_cube)
+        cube = Cube(example, length_cube_side)
         cube.make_cube()
         cube.plot_cube()
 

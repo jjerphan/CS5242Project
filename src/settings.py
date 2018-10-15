@@ -67,8 +67,8 @@ n_training_examples = 2700
 nb_neg_ex_per_pos = 10
 
 # To scale protein-ligands system in a cube of shape (resolution_cube,resolution_cube,resolution_cube)
-resolution_cube = 20
-shape_cube = (resolution_cube, resolution_cube, resolution_cube,2)
+length_cube_side = 20
+shape_cube = (length_cube_side, length_cube_side, length_cube_side, 2)
 
 # Obtained with values_range on the complete original dataset : to be rerun again
 hydrophobic_types = {"C"}

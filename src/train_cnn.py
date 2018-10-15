@@ -84,14 +84,14 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess,
     logger.debug(f'optimizer   = {optimizer}')
 
     with open(os.path.join(job_folder, parameters_file_name), "w") as f:
-        f.write(f'model={model.name}')
-        f.write(f'nb_epochs={nb_epochs}')
-        f.write(f'max_examples={max_examples}')
-        f.write(f'batch_size={batch_size}')
-        f.write(f'nb_neg={nb_neg}')
-        f.write(f'verbose={verbose}')
-        f.write(f'preprocess={preprocess}')
-        f.write(f'optimizer={optimizer}')
+        f.write(f'model={model.name}\n')
+        f.write(f'nb_epochs={nb_epochs}\n')
+        f.write(f'max_examples={max_examples}\n')
+        f.write(f'batch_size={batch_size}\n')
+        f.write(f'nb_neg={nb_neg}\n')
+        f.write(f'verbose={verbose}\n')
+        f.write(f'preprocess={preprocess}\n')
+        f.write(f'optimizer={optimizer}\n')
 
     logger.debug(f'model, log and history to be saved in {job_folder}')
 

@@ -60,7 +60,7 @@ def extract_id(file_name):
     :param file_name: the name of the file
     :return ID of the file as a string
     """
-    return file_name.replace(extracted_protein_suffix, "").replace(extracted_ligand_suffix, "")
+    return file_name.split("_")[0]
 
 
 def get_current_timestamp():

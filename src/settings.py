@@ -5,7 +5,7 @@ import numpy as np
 # Global folder for data and logs
 from sklearn.metrics import f1_score, recall_score, precision_score, accuracy_score, auc
 
-absolute_path = os.path.abspath(os.path.join(os.path.realpath(__file__), "..", ".."))
+absolute_path = os.path.abspath(os.path.join(os.path.realpath(__file__), os.pardir, os.pardir))
 
 job_submissions_folder = os.path.join(absolute_path, "job_submissions")
 
@@ -35,6 +35,7 @@ extracted_protein_suffix = "_pro_cg.csv"
 extracted_ligand_suffix = "_lig_cg.csv"
 
 # Results
+training_logfile = f"train_cnn.log"
 results_folder = os.path.join(absolute_path, "results")
 parameters_file_name = "parameters.txt"
 serialized_model_file_name = "model.h5"

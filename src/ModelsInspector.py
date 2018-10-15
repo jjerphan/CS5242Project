@@ -23,8 +23,8 @@ class ModelsInspector:
 
     def __init__(self, results_folder):
         self._general_folder = results_folder
-        sub_folders = list(map(lambda sub_folder: os.path.join(results_folder, sub_folder),
-                                     os.listdir(results_folder)))
+        sub_folders = list(map(lambda sub_folder: os.path.join(self._general_folder, sub_folder),
+                                     os.listdir(self._general_folder)))
 
         # It is possible that there exist sub-folders with no serialized model
         # (if the model is being trained for example) so, we chose here to
@@ -49,7 +49,7 @@ class ModelsInspector:
                     serialized_models_file_names[folder] = file
 
                 if file == parameters_file_name:
-                    with open(os.path.join(results_folder, folder, file), "r") as f:
+                    with open(os.path.join(self._general_folder, folder, file), "r") as f:
                         lines = f.readlines()
                         for line in lines:
                             words = line.replace("\n","").split("=")

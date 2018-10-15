@@ -51,8 +51,8 @@ def read_pdb(file_name) -> (list, list, list, list):
     return x_list, y_list, z_list, atom_type_list
 
 
-def extract_molecule(x_list: list, y_list: list, z_list: list, atom_type_list: list,
-                     molecule_is_protein: bool) -> np.array:
+def build_molecule_features(x_list: list, y_list: list, z_list: list, atom_type_list: list,
+                            molecule_is_protein: bool) -> np.array:
     """
     Convert the data extract from file into a np.ndarray.
     The information of one atom is represented as a line in the array.
@@ -92,11 +92,11 @@ def save_data(pdb_original_file, split_validation_testing, group_indices=[]):
 
     is_protein = "pro" in pdb_original_file
 
-    molecule = extract_molecule(x_list, y_list, z_list, atom_type_list, is_protein)
+    molecule = build_molecule_features(x_list, y_list, z_list, atom_type_list, is_protein)
 
     # Saving the data is a csv file with the same name
     # Choosing the appropriate folder using the split index
-    molecule_index = re.match("\d{4}", pdb_original_file).group()
+    molecule_index = pdb_original_file.split("_")[0]
 
     pdb_file_csv = pdb_original_file.replace(".pdb", ".csv")
 

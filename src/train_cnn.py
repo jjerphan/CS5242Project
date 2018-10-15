@@ -11,14 +11,14 @@ from models import models_available, models_available_names
 from settings import training_examples_folder, testing_examples_folder, results_folder, nb_neg_ex_per_pos, \
     optimizer_default, batch_size_default, nb_epochs_default, original_data_folder, \
     extracted_data_train_folder, extracted_data_test_folder, serialized_model_file_name, history_file_name,\
-    parameters_file_name
+    parameters_file_name, training_logfile
 from extraction_data import extract_data
 from create_examples import create_examples
 from keras.losses import MSE
 
 
 def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess, batch_size,
-              optimizer=optimizer_default):
+              optimizer=optimizer_default, results_folder=results_folder):
     """
     Train a given CNN.
 
@@ -30,13 +30,13 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess,
     :param preprocess: if != 0, extract the data and create the training examples
     :param batch_size: the number of examples to use per batch
     :param optimizer: the optimizer to use to train (default = "rmsprop"
+    :param results_folder: where to save results
     :return:
     """
     # Formatting fixtures
     current_timestamp = get_current_timestamp()
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.DEBUG)
-    logfile = f"train_cnn.log"
 
     # Making a folder for the job to save log, model, history in it.
     job_folder = os.path.join(results_folder, current_timestamp)
@@ -47,7 +47,7 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess,
     # Creating the folder for the job
     os.makedirs(job_folder)
 
-    fh = logging.FileHandler(os.path.join(job_folder, logfile))
+    fh = logging.FileHandler(os.path.join(job_folder, training_logfile))
     fh.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     fh.setFormatter(formatter)

@@ -49,7 +49,8 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess,
         os.makedirs(results_folder)
 
     # Creating the folder for the job
-    os.makedirs(job_folder)
+    if not (os.path.exists(job_folder)):
+        os.makedirs(job_folder)
 
     fh = logging.FileHandler(os.path.join(job_folder, training_logfile))
     fh.setLevel(logging.DEBUG)

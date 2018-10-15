@@ -1,7 +1,7 @@
 from keras import Sequential, Input, Model
-from keras.layers import Dense, Flatten, Conv3D, Activation
+from keras.layers import Dense, Flatten, Conv3D, Activation, MaxPooling3D, Dropout
 
-from .settings import length_cube_side, nb_channels
+from settings import length_cube_side, nb_channels
 
 # Configurations of the shape of data
 input_shape = (length_cube_side, length_cube_side, length_cube_side, nb_channels)
@@ -47,18 +47,28 @@ def pafnucy_like():
 
 
 def ProtNet():
-    kernel_size = 5
+    pool_size = (2, 2, 2)
+    dropout_rate = 0.5
+
     inputs = Input(shape=input_shape)
+    x = Conv3D(kernel_size=(5, 5, 5), activation="relu", filters=64)(inputs)
+    x = MaxPooling3D(pool_size=pool_size)(x)
 
-    x = Conv3D(kernel_size=kernel_size, filters=64)(inputs)
-    x = Conv3D(kernel_size=kernel_size, filters=128)(x)
-    x = Conv3D(kernel_size=kernel_size, filters=256)(x)
-    x = Conv3D(kernel_size=kernel_size, filters=512)(x)
+    x = Conv3D(kernel_size=(3, 3, 3), activation="relu", filters=128)(x)
+    x = MaxPooling3D(pool_size=pool_size)(x)
 
+    x = Conv3D(kernel_size=(3, 3, 3), activation="relu", filters=256)(x)
     x = Flatten()(x)
-    x = Dense(1000)(x)
-    x = Dense(500)(x)
-    x = Dense(200)(x)
+
+    x = Dense(1000, activation="relu")(x)
+    x = Dropout(rate=dropout_rate)(x)
+
+    x = Dense(500, activation="relu")(x)
+    x = Dropout(rate=dropout_rate)(x)
+
+    x = Dense(200, activation="relu")(x)
+    x = Dropout(rate=dropout_rate)(x)
+
     x = Dense(1)(x)
     outputs = Activation('sigmoid')(x)
 

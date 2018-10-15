@@ -1,9 +1,9 @@
 import os
 import textwrap
 
-from .models_inspector import ModelsInspector
-from .models import models_available, models_available_names
-from .settings import job_submissions_folder, nb_neg_ex_per_pos, nb_epochs_default, batch_size_default, n_gpu_default, \
+from models_inspector import ModelsInspector
+from models import models_available, models_available_names
+from settings import job_submissions_folder, nb_neg_ex_per_pos, nb_epochs_default, batch_size_default, n_gpu_default, \
     results_folder, name_env
 
 

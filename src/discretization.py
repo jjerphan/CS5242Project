@@ -5,7 +5,7 @@ import logging
 from mpl_toolkits.mplot3d import Axes3D
 
 
-from .settings import float_type, comment_delimiter, training_examples_folder, length_cube_side, nb_features, \
+from settings import float_type, comment_delimiter, training_examples_folder, length_cube_side, nb_features, \
     indices_features
 
 

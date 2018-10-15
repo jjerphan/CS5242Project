@@ -6,8 +6,8 @@ import os
 from keras.models import load_model
 import keras.backend as K
 
-from .examples_iterator import ExamplesIterator
-from .settings import testing_examples_folder, nb_neg_ex_per_pos, metrics_for_evaluation, results_folder
+from examples_iterator import ExamplesIterator
+from settings import testing_examples_folder, nb_neg_ex_per_pos, metrics_for_evaluation, results_folder
 
 
 def mean_pred(y_pred,y_true):

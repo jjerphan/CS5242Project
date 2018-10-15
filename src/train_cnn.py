@@ -4,17 +4,17 @@ import os
 import argparse
 
 from datetime import datetime
+from keras.losses import MSE
 
-from pipeline_fixtures import LogEpochBatchCallback, get_current_timestamp
-from ExamplesIterator import ExamplesIterator
-from models import models_available, models_available_names
-from settings import training_examples_folder, testing_examples_folder, results_folder, nb_neg_ex_per_pos, \
+from .pipeline_fixtures import LogEpochBatchCallback, get_current_timestamp
+from .examples_iterator import ExamplesIterator
+from .models import models_available, models_available_names
+from .settings import training_examples_folder, testing_examples_folder, results_folder, nb_neg_ex_per_pos, \
     optimizer_default, batch_size_default, nb_epochs_default, original_data_folder, \
     extracted_data_train_folder, extracted_data_test_folder, serialized_model_file_name, history_file_name,\
     parameters_file_name, training_logfile
-from extraction_data import extract_data
-from create_examples import create_examples
-from keras.losses import MSE
+from .extraction_data import extract_data
+from .create_examples import create_examples
 
 
 def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess, batch_size,

@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 import logging
 from mpl_toolkits.mplot3d import Axes3D  # needed by the 3D plotter
 
-from discretization import load_nparray
-from settings import float_type, comment_delimiter, training_examples_folder, length_cube_side, nb_features
+from .discretization import load_nparray
+from .settings import float_type, comment_delimiter, training_examples_folder, length_cube_side, nb_features
 
 logger = logging.getLogger('cnn.discretization')
 logger.addHandler(logging.NullHandler())

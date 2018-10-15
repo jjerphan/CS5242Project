@@ -2,11 +2,12 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 import logging
+from mpl_toolkits.mplot3d import Axes3D
 
-from settings import float_type, comment_delimiter, training_examples_folder, length_cube_side, nb_features, \
+
+from .settings import float_type, comment_delimiter, training_examples_folder, length_cube_side, nb_features, \
     indices_features
 
-from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 unused import
 
 logger = logging.getLogger('cnn.discretization')
 logger.addHandler(logging.NullHandler())
@@ -311,5 +312,5 @@ if __name__ == "__main__":
     for ex_file in examples_files[:3]:
         plt.close('all')
         compare_relative_cube_discretization(ex_file)
-        compare_absolute_cube_discretization(ex_file, res_cube=5.0)
+        compare_absolute_cube_discretization(ex_file, res_cube=3.0)
         input("Show next [Press Enter]")

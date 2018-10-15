@@ -2,9 +2,9 @@ import numpy as np
 import os
 import shutil
 import logging
-from discretization import load_nparray
 from concurrent import futures
-from settings import extracted_data_train_folder, extracted_data_test_folder, extracted_protein_suffix, \
+from .discretization import load_nparray
+from .settings import extracted_data_train_folder, extracted_data_test_folder, extracted_protein_suffix, \
     extracted_ligand_suffix, comment_delimiter, nb_neg_ex_per_pos, features_names, training_examples_folder, \
     testing_examples_folder, nb_workers
 

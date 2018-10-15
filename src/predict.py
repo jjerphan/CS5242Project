@@ -5,12 +5,12 @@ import csv
 
 from collections import defaultdict
 from keras.models import load_model
-from settings import original_predict_folder, extracted_predict_folder, predict_examples_folder, results_folder, \
+from .settings import original_predict_folder, extracted_predict_folder, predict_examples_folder, results_folder, \
     nb_neg_ex_per_pos
 
-from extraction_data import extract_data
-from create_examples import create_examples
-from PredictGenerator import PredictGenerator
+from .extraction_data import extract_data
+from .create_examples import create_examples
+from .predict_generator import PredictGenerator
 
 
 def predict(serialized_model_path, nb_neg, max_examples, verbose=1, preprocess=False):

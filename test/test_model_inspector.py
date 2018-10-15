@@ -1,9 +1,10 @@
 import unittest
 import os
 import warnings
+
 warnings.simplefilter("ignore")
 
-from ModelsInspector import ModelsInspector
+from src.models_inspector import ModelsInspector
 
 
 class ModelInspectorTest(unittest.TestCase):
@@ -41,5 +42,4 @@ class ModelInspectorTest(unittest.TestCase):
             "preprocess": "False",
             "optimizer": "rmsprop"
         }
-        self.assertEqual(true_set_parameters,set_parameters)
-
+        self.assertEqual(true_set_parameters, set_parameters)

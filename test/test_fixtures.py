@@ -2,7 +2,7 @@ import unittest
 import warnings
 warnings.simplefilter("ignore")
 
-from pipeline_fixtures import is_positive, is_negative, extract_id
+from src.pipeline_fixtures import is_positive, is_negative, extract_id
 
 
 class TestFixtures(unittest.TestCase):

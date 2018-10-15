@@ -4,9 +4,9 @@ from collections import defaultdict
 import keras
 import numpy as np
 
-from discretization import load_nparray, make_cube, plot_cube
-from pipeline_fixtures import is_positive, is_negative
-from settings import nb_neg_ex_per_pos, length_cube_side, training_examples_folder, shape_cube, testing_examples_folder
+from .discretization import load_nparray, make_cube, plot_cube
+from .pipeline_fixtures import is_positive, is_negative
+from .settings import nb_neg_ex_per_pos, length_cube_side, training_examples_folder, shape_cube, testing_examples_folder
 
 from mpl_toolkits.mplot3d import Axes3D
 

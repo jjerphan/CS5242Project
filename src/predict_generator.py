@@ -1,8 +1,7 @@
 import os
-from discretization import load_nparray, make_cube
-from settings import length_cube_side
+from .discretization import load_nparray, make_cube
+from .settings import length_cube_side
 import numpy as np
-
 
 
 def PredictGenerator(examples_folder):

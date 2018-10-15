@@ -3,7 +3,7 @@ import numpy as np
 import warnings
 warnings.simplefilter("ignore")
 
-from extraction_data import build_molecule_features
+from src.extraction_data import build_molecule_features
 
 
 class TestMolecule(unittest.TestCase):

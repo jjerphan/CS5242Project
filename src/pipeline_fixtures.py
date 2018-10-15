@@ -3,8 +3,6 @@ import datetime
 import keras
 import progressbar
 
-from settings import extracted_protein_suffix, extracted_ligand_suffix
-
 widgets_progressbar = [
     ' [', progressbar.Timer(), '] ',
     progressbar.Bar("░", fill="⋅"),

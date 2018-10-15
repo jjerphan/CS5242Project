@@ -1,7 +1,7 @@
 import os
 from collections import defaultdict
 
-from settings import history_file_name, serialized_model_file_name, parameters_file_name, results_folder
+from .settings import history_file_name, serialized_model_file_name, parameters_file_name, results_folder
 
 
 class ModelsInspector:

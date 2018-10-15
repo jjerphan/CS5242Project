@@ -1,7 +1,7 @@
 from keras import Sequential, Input, Model
 from keras.layers import Dense, Flatten, Conv3D, Activation
 
-from settings import length_cube_side, nb_channels
+from .settings import length_cube_side, nb_channels
 
 # Configurations of the shape of data
 input_shape = (length_cube_side, length_cube_side, length_cube_side, nb_channels)
@@ -66,7 +66,7 @@ def ProtNet():
     return model
 
 
-models_available = [first_model(), ProtNet()]
+models_available = [first_model(), pafnucy_like(), ProtNet()]
 models_available_names = list(map(lambda model: model.name, models_available))
 
 if __name__ == "__main__":

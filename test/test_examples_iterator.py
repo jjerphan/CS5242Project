@@ -3,9 +3,9 @@ import numpy as np
 import warnings
 warnings.simplefilter("ignore")
 
-from ExamplesIterator import ExamplesIterator
-from pipeline_fixtures import is_positive
-from settings import training_examples_folder
+from src.examples_iterator import ExamplesIterator
+from src.pipeline_fixtures import is_positive
+from src.settings import training_examples_folder
 
 
 class ExamplesIteratorTest(unittest.TestCase):

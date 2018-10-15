@@ -181,7 +181,7 @@ if __name__ == "__main__":
                         help='if !=0 triggers the pre-processing of the data')
 
     parser.add_argument('--job_folder', metavar='job_folder',
-                        type=int, default=True,
+                        type=str, default=True,
                         help='the folder where results are to be saved')
 
     args = parser.parse_args()

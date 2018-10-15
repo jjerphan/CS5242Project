@@ -5,8 +5,9 @@ import argparse
 
 from datetime import datetime
 
+import keras
 from keras.callbacks import EarlyStopping
-from keras.losses import MSE
+from keras.losses import binary_crossentropy
 
 from pipeline_fixtures import LogEpochBatchCallback, get_current_timestamp
 from examples_iterator import ExamplesIterator
@@ -20,7 +21,7 @@ from create_examples import create_examples
 
 
 def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess, batch_size,
-              optimizer=optimizer_default, results_folder=results_folder):
+              optimizer=optimizer_default, results_folder=results_folder, job_folder=None):
     """
     Train a given CNN.
 
@@ -41,7 +42,8 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess,
     logger.setLevel(logging.DEBUG)
 
     # Making a folder for the job to save log, model, history in it.
-    job_folder = os.path.join(results_folder, current_timestamp)
+    if job_folder is None:
+        job_folder = os.path.join(results_folder, current_timestamp)
     if not (os.path.exists(results_folder)):
         print(f"The {results_folder} does not exist. Creating it.")
         os.makedirs(results_folder)
@@ -71,9 +73,9 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess,
     logger.debug('Creating network model')
     model = models_available[model_index]
     logger.debug(f"Model {model.name} chosen")
-    logger.debug(model.summary())
+    keras.utils.print_summary(model, print_fn=logger.debug)
 
-    model.compile(optimizer=optimizer, loss=MSE, metrics=['accuracy'])
+    model.compile(optimizer=optimizer, loss=binary_crossentropy, metrics=['accuracy'])
 
     logger.debug(f'{os.path.basename(__file__)} : Training the model with the following parameters')
     logger.debug(f'model = {model.name}')
@@ -178,6 +180,10 @@ if __name__ == "__main__":
                         type=int, default=True,
                         help='if !=0 triggers the pre-processing of the data')
 
+    parser.add_argument('--job_folder', metavar='job_folder',
+                        type=int, default=True,
+                        help='the folder where results are to be saved')
+
     args = parser.parse_args()
 
     print("Argument parsed : ", args)
@@ -192,4 +198,5 @@ if __name__ == "__main__":
               max_examples=args.max_examples,
               verbose=args.verbose,
               batch_size=args.batch_size,
-              preprocess=args.preprocess)
+              preprocess=args.preprocess,
+              job_folder=args.job_folder)

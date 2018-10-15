@@ -1,5 +1,6 @@
 import os
 import numpy as np
+from keras.optimizers import Adam
 from sklearn.metrics import f1_score, recall_score, precision_score, accuracy_score
 
 # Folders
@@ -80,7 +81,7 @@ polar_types = {'P', 'O', 'TE', 'F', 'N', 'AS', 'O1-', 'MO',
 nb_epochs_default = 1
 batch_size_default = 32
 n_gpu_default = 1
-optimizer_default = "rmsprop"
+optimizer_default = Adam()
 
 # Evaluation parameters
 metrics_for_evaluation = [accuracy_score, precision_score, recall_score, f1_score]

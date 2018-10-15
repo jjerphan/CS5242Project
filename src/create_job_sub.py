@@ -91,10 +91,12 @@ def create_train_job():
                 #! /bin/bash
                 #PBS -P Personal
                 #PBS -q gpu
-                #PBS -j oe
+                #PBS -o {results_folder}/$PBS_JOBID/out.o
+                #PBS -e {results_folder}/$PBS_JOBID/errors.e
                 #PBS -l select=1:ngpus={n_gpu}
                 #PBS -l walltime=23:00:00
                 #PBS -N {name_job}
+                mkdir -p {results_folder}/$PBS_JOBID/
                 cd $PBS_O_WORKDIR/src/
                 source activate {name_env}
                 python $PBS_O_WORKDIR/src/{script_name}  --model_index {model_index} \\
@@ -102,7 +104,8 @@ def create_train_job():
                                                          --batch_size {batch_size} \\
                                                          --nb_neg {nb_neg} \\
                                                          --verbose {verbose} \\{option_max if max_examples is not None else ''}
-                                                         --preprocess {preprocess}
+                                                         --preprocess {preprocess} \\
+                                                         --job_folder {results_folder}/$PBS_JOBID/
                 """
     # We remove the first return in the string
     stub = stub[1:]
@@ -142,7 +145,8 @@ def create_job_with_for_one_serialized_model(script_name, name_job):
                     #! /bin/bash
                     #PBS -P Personal
                     #PBS -q gpu
-                    #PBS -j oe
+                    #PBS -o {results_folder}/$PBS_JOBID/out.o
+                    #PBS -e {results_folder}/$PBS_JOBID/errors.e
                     #PBS -l select=1:ngpus={n_gpu}
                     #PBS -l walltime=23:00:00
                     #PBS -N {name_job}

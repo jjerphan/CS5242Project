@@ -1,10 +1,10 @@
 from keras import Sequential, Input, Model
-from keras.layers import Dense, Flatten, Conv3D, Activation
+from keras.layers import Dense, Flatten, Conv3D, Activation, MaxPooling3D, Dropout
 
-from settings import resolution_cube, nb_channels
+from settings import length_cube_side, nb_channels
 
 # Configurations of the shape of data
-input_shape = (resolution_cube, resolution_cube, resolution_cube, nb_channels)
+input_shape = (length_cube_side, length_cube_side, length_cube_side, nb_channels)
 data_format = "channels_last"
 
 
@@ -17,9 +17,9 @@ def first_model():
         data_format=data_format
     ))
     model.add(Flatten())
-    model.add(Dense(3 * resolution_cube))
-    model.add(Dense(2 * resolution_cube))
-    model.add(Dense(1 * resolution_cube))
+    model.add(Dense(3 * length_cube_side))
+    model.add(Dense(2 * length_cube_side))
+    model.add(Dense(1 * length_cube_side))
     model.add(Dense(1, activation='sigmoid'))
     model.build()
 
@@ -46,7 +46,37 @@ def pafnucy_like():
     return model
 
 
-models_available = [first_model(), pafnucy_like()]
+def ProtNet():
+    pool_size = (2, 2, 2)
+    dropout_rate = 0.5
+
+    inputs = Input(shape=input_shape)
+    x = Conv3D(kernel_size=(5, 5, 5), activation="relu", filters=64)(inputs)
+    x = MaxPooling3D(pool_size=pool_size)(x)
+
+    x = Conv3D(kernel_size=(3, 3, 3), activation="relu", filters=128)(x)
+    x = MaxPooling3D(pool_size=pool_size)(x)
+
+    x = Conv3D(kernel_size=(3, 3, 3), activation="relu", filters=256)(x)
+    x = Flatten()(x)
+
+    x = Dense(1000, activation="relu")(x)
+    x = Dropout(rate=dropout_rate)(x)
+
+    x = Dense(500, activation="relu")(x)
+    x = Dropout(rate=dropout_rate)(x)
+
+    x = Dense(200, activation="relu")(x)
+    x = Dropout(rate=dropout_rate)(x)
+
+    x = Dense(1)(x)
+    outputs = Activation('sigmoid')(x)
+
+    model = Model(inputs=inputs, outputs=outputs, name="ProtNet")
+    return model
+
+
+models_available = [first_model(), pafnucy_like(), ProtNet()]
 models_available_names = list(map(lambda model: model.name, models_available))
 
 if __name__ == "__main__":

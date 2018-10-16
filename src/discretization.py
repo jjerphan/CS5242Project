@@ -2,9 +2,12 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 import logging
+from mpl_toolkits.mplot3d import Axes3D
 
-from settings import float_type, comment_delimiter, training_examples_folder, resolution_cube, nb_features, \
+
+from settings import float_type, comment_delimiter, training_examples_folder, length_cube_side, nb_features, \
     indices_features
+
 
 logger = logging.getLogger('cnn.discretization')
 logger.addHandler(logging.NullHandler())
@@ -52,7 +55,7 @@ def representation_invariance(original_coords, is_from_protein_indices, verbose=
     return new_coords
 
 
-def make_cube(system: np.ndarray, resolution, use_rotation_invariance=True, keep_proportions=True,
+def make_cube(system: np.ndarray, length_cube_side, use_rotation_invariance=True, keep_proportions=True,
               verbose=False) -> np.ndarray:
     """
     Creating a cube from a system.
@@ -60,7 +63,7 @@ def make_cube(system: np.ndarray, resolution, use_rotation_invariance=True, keep
     Using a rotation invariance representation and keeping the proportions gives better results normaly.
 
     :param system: the protein-ligand system
-    :param resolution: resolution for the discretization
+    :param length_cube_side: length of the side of the cube to create
     :param use_rotation_invariance: perform the canonical rotation of the PCA on the given points
     :param keep_proportions: should keep the proportion
     :param verbose: outputs info about transformation
@@ -70,10 +73,9 @@ def make_cube(system: np.ndarray, resolution, use_rotation_invariance=True, keep
     # Spatial coordinates of atoms
     original_coords = system[:, 0:3]
 
-    is_from_protein_column = indices_features["is_from_protein"]
-    is_from_protein_indices = np.where(system[:, is_from_protein_column] == 1.)
-
     if use_rotation_invariance:
+        is_from_protein_column = indices_features["is_from_protein"]
+        is_from_protein_indices = np.where(system[:, is_from_protein_column] == 1.)
         coords = representation_invariance(original_coords, is_from_protein_indices, verbose=verbose)
     else:
         coords = original_coords
@@ -99,17 +101,69 @@ def make_cube(system: np.ndarray, resolution, use_rotation_invariance=True, keep
         z_range = max_range
 
     # Scaling coordinates to be in the cube [0,res]^3 then flooring
+
     scaled_coords = (coords * 0).astype(int)
     eps = 10e-4  # To be sure to round down on exact position
-    scaled_coords[:, 0] = np.floor((coords[:, 0] - x_min) / (x_range + eps) * resolution).astype(int)
-    scaled_coords[:, 1] = np.floor((coords[:, 1] - y_min) / (y_range + eps) * resolution).astype(int)
-    scaled_coords[:, 2] = np.floor((coords[:, 2] - z_min) / (z_range + eps) * resolution).astype(int)
+    scaled_coords[:, 0] = np.floor((coords[:, 0] - x_min) / (x_range + eps) * length_cube_side).astype(int)
+    scaled_coords[:, 1] = np.floor((coords[:, 1] - y_min) / (y_range + eps) * length_cube_side).astype(int)
+    scaled_coords[:, 2] = np.floor((coords[:, 2] - z_min) / (z_range + eps) * length_cube_side).astype(int)
 
-    cube = np.zeros((resolution, resolution, resolution, nb_feat))
+    cube = np.zeros((length_cube_side, length_cube_side, length_cube_side, nb_feat))
     logger.debug("Cube size is %s", str(cube.shape))
 
     # Filling the cube with the features
-    cube[scaled_coords[:, 0], scaled_coords[:, 1], scaled_coords[:, 2]] = atom_features
+    for (x, y, z), f in zip(scaled_coords, atom_features):
+        cube[x, y, z] += f
+
+    return cube
+
+
+def make_absolute_cube(system, length_cube_side, res_cube=1.0, use_rotation_invariance=False, verbose=False):
+    """
+    Convert atom coordinates and features represented as 2D arrays into a
+    fixed-sized 3D box.
+
+    :param system: the protein-ligand system
+    :param length_cube_side: length of the side of the cube to create
+    :param res_cube: the resolution used for the cube (1 Å)
+    :param use_rotation_invariance: perform the canonical rotation of the PCA on the given points
+    :param verbose: outputs info about transformation
+    :return:
+    """
+
+    # Spatial coordinates of atoms
+    original_coords = system[:, 0:3]
+
+    if use_rotation_invariance:
+        is_from_protein_column = indices_features["is_from_protein"]
+        is_from_protein_indices = np.where(system[:, is_from_protein_column] == 1.)
+        coords = representation_invariance(original_coords, is_from_protein_indices, verbose=verbose)
+    else:
+        coords = original_coords
+
+    atom_features = system[:, 3:]
+    nb_feat = atom_features.shape[1]
+
+    assert nb_feat + coords.shape[1] == nb_features
+
+    length_cube_side_int = int(length_cube_side)
+    length_cube_side_float = float(length_cube_side)
+    res_cube = float(res_cube)
+
+    center = np.mean(coords, axis=0)
+
+    centered_coords = coords - center
+
+    translation_distance = length_cube_side_float / 2 * res_cube
+
+    scaled_coords = (centered_coords + translation_distance) / res_cube
+    scaled_coords = scaled_coords.round().astype(int)
+
+    # Just keeping atom that are in the box
+    in_box = ((scaled_coords >= 0) & (scaled_coords < length_cube_side)).all(axis=1)
+    cube = np.zeros((length_cube_side_int, length_cube_side_int, length_cube_side_int, nb_feat), dtype=np.float32)
+    for (x, y, z), f in zip(scaled_coords[in_box], atom_features[in_box]):
+        cube[x, y, z] += f
 
     return cube
 
@@ -144,9 +198,9 @@ def plot_cube(cube):
     ys = []
     zs = []
     cs = []
-    for x in range(resolution_cube):
-        for y in range(resolution_cube):
-            for z in range(resolution_cube):
+    for x in range(length_cube_side):
+        for y in range(length_cube_side):
+            for z in range(length_cube_side):
                 is_from_protein_pos = indices_features["is_from_protein"] - 3
                 is_atom_in_voxel = cube[x, y, z, is_from_protein_pos] != 0
                 if is_atom_in_voxel:
@@ -159,9 +213,9 @@ def plot_cube(cube):
 
     ax.scatter(xs, ys, zs, c=cs, marker="o")
 
-    ax.set_xlim((0, resolution_cube))
-    ax.set_ylim((0, resolution_cube))
-    ax.set_zlim((0, resolution_cube))
+    ax.set_xlim((0, length_cube_side))
+    ax.set_ylim((0, length_cube_side))
+    ax.set_zlim((0, length_cube_side))
 
     ax.set_xlabel('X Label')
     ax.set_ylabel('Y Label')
@@ -186,46 +240,77 @@ def load_nparray(file_name: str):
     return example
 
 
-if __name__ == "__main__":
+def compare_relative_cube_discretization(example_file):
+    print(f"System {example_file}")
+    file_name = os.path.join(training_examples_folder, example_file)
+    example = load_nparray(file_name)
 
+    print("Relative Compressed Representation")
+    cube = make_cube(example, length_cube_side,
+                     use_rotation_invariance=False,
+                     keep_proportions=False,
+                     verbose=True)
+    plot_cube(cube)
+    mngr = plt.get_current_fig_manager()
+    mngr.window.setGeometry(0, 100, 640, 545)
+    plt.pause(0.003)
+
+    print("Relative Properly Scaled Representation")
+    cube = make_cube(example, length_cube_side=length_cube_side,
+                     use_rotation_invariance=False,
+                     keep_proportions=True,
+                     verbose=True)
+    plot_cube(cube)
+    mngr = plt.get_current_fig_manager()
+    mngr.window.setGeometry(640, 100, 640, 545)
+    plt.pause(1)
+
+    print("Relative Properly Scaled Rotation Invariant Representation")
+    cube = make_cube(example, length_cube_side=length_cube_side,
+                     use_rotation_invariance=True,
+                     keep_proportions=True,
+                     verbose=True)
+
+    plot_cube(cube)
+    mngr = plt.get_current_fig_manager()
+    mngr.window.setGeometry(2 * 640, 100, 640, 545)
+    plt.pause(2)
+
+
+def compare_absolute_cube_discretization(example_file, res_cube=1.0):
+    print(f"System {example_file}")
+    file_name = os.path.join(training_examples_folder, example_file)
+    example = load_nparray(file_name)
+
+    print("Absolute Representation")
+    cube = make_absolute_cube(example, length_cube_side=length_cube_side,
+                              res_cube=res_cube,
+                              use_rotation_invariance=False,
+                              verbose=True)
+    plot_cube(cube)
+    mngr = plt.get_current_fig_manager()
+    mngr.window.setGeometry(0, 100, 640, 545)
+    plt.pause(0.003)
+
+    print("Absolute Rotation Invariant Representation")
+    cube = make_absolute_cube(example, length_cube_side=length_cube_side,
+                              res_cube=res_cube,
+                              use_rotation_invariance=True,
+                              verbose=True)
+
+    plot_cube(cube)
+    mngr = plt.get_current_fig_manager()
+    mngr.window.setGeometry(640, 100, 640, 545)
+    plt.pause(2)
+
+
+if __name__ == "__main__":
     # Just to test
     examples_files = sorted(os.listdir(training_examples_folder))
     plt.ion()
     plt.show()
-    for ex_file in examples_files:
+    for ex_file in examples_files[:3]:
         plt.close('all')
-        print(f"System {ex_file}")
-        file_name = os.path.join(training_examples_folder, ex_file)
-        example = load_nparray(os.path.join(training_examples_folder, ex_file))
-
-        print("Compressed Representation")
-        cube = make_cube(example, resolution_cube,
-                         use_rotation_invariance=False,
-                         keep_proportions=False,
-                         verbose=True)
-        plot_cube(cube)
-        mngr = plt.get_current_fig_manager()
-        mngr.window.setGeometry(0, 100, 640, 545)
-        plt.pause(0.003)
-
-        print("Properly Scaled Representation")
-        cube = make_cube(example, resolution_cube,
-                         use_rotation_invariance=False,
-                         keep_proportions=True,
-                         verbose=True)
-        plot_cube(cube)
-        mngr = plt.get_current_fig_manager()
-        mngr.window.setGeometry(640, 100, 640, 545)
-        plt.pause(1)
-
-        print("Properly Scaled Rotation Invariant Representation")
-        cube = make_cube(example, resolution_cube,
-                         use_rotation_invariance=True,
-                         keep_proportions=True,
-                         verbose=True)
-
-        plot_cube(cube)
-        mngr = plt.get_current_fig_manager()
-        mngr.window.setGeometry(2 * 640, 100, 640, 545)
-        plt.pause(2)
-        input()
+        compare_relative_cube_discretization(ex_file)
+        compare_absolute_cube_discretization(ex_file, res_cube=3.0)
+        input("Show next [Press Enter]")

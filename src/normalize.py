@@ -1,13 +1,13 @@
+import os, logging
+import pickle
+import numpy as np
 from sklearn import preprocessing
+from pandas import DataFrame
 
 from settings import extracted_data_train_folder, extracted_data_test_folder, normalized_data_train_folder, \
     normalized_data_test_folder, normalized_data_folder, data_folder
 from pipeline_fixtures import show_progress
-import os, logging
-from pandas import DataFrame
 from discretization import load_nparray
-import pickle
-import numpy as np
 
 logger = logging.getLogger('cnn.Normalizing')
 logger.addHandler(logging.NullHandler())

@@ -3,8 +3,6 @@ import datetime
 import keras
 import progressbar
 
-from settings import extracted_protein_suffix, extracted_ligand_suffix
-
 widgets_progressbar = [
     ' [', progressbar.Timer(), '] ',
     progressbar.Bar("░", fill="⋅"),
@@ -60,7 +58,7 @@ def extract_id(file_name):
     :param file_name: the name of the file
     :return ID of the file as a string
     """
-    return file_name.replace(extracted_protein_suffix, "").replace(extracted_ligand_suffix, "")
+    return file_name.split("_")[0]
 
 
 def get_current_timestamp():

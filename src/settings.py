@@ -1,9 +1,11 @@
 import os
 import numpy as np
+from keras.optimizers import Adam
+from sklearn.metrics import f1_score, recall_score, precision_score, accuracy_score, confusion_matrix
 
 # Folders
 # Global folder for data and logs
-absolute_path = os.path.abspath(os.path.join(os.path.realpath(__file__), "..", ".."))
+absolute_path = os.path.abspath(os.path.join(os.path.realpath(__file__), os.pardir, os.pardir))
 
 job_submissions_folder = os.path.join(absolute_path, "job_submissions")
 
@@ -33,11 +35,11 @@ extracted_protein_suffix = "_pro_cg.csv"
 extracted_ligand_suffix = "_lig_cg.csv"
 
 # Results
+training_logfile = f"train_cnn.log"
 results_folder = os.path.join(absolute_path, "results")
 parameters_file_name = "parameters.txt"
 serialized_model_file_name = "model.h5"
 history_file_name = "history.pickle"
-
 
 # Some settings for number and persisting tensors
 float_type = np.float32
@@ -58,13 +60,6 @@ indices_features = dict(zip(features_names, list(range(nb_features))))
 percent_train = 0.8
 percent_test = 0.1
 n_training_examples = 2700
-train_indices = list(map(int, open(os.path.join(data_folder, "train_indices")).readlines()))
-test_indices = list(map(int, open(os.path.join(data_folder, "test_indices")).readlines()))
-
-# Test the consistency : no overlap and all the files are used on the two sets
-assert (len(set(train_indices).intersection(set(test_indices))) == 0)
-# assert (len(test_indices) + len(train_indices) == nb_systems)
-assert (len(train_indices) == n_training_examples)
 
 # All the other will be used to construct examples on the go
 
@@ -72,7 +67,8 @@ assert (len(train_indices) == n_training_examples)
 nb_neg_ex_per_pos = 10
 
 # To scale protein-ligands system in a cube of shape (resolution_cube,resolution_cube,resolution_cube)
-resolution_cube = 20
+length_cube_side = 20
+shape_cube = (length_cube_side, length_cube_side, length_cube_side, 2)
 
 # Obtained with values_range on the complete original dataset : to be rerun again
 hydrophobic_types = {"C"}
@@ -85,7 +81,10 @@ polar_types = {'P', 'O', 'TE', 'F', 'N', 'AS', 'O1-', 'MO',
 nb_epochs_default = 1
 batch_size_default = 32
 n_gpu_default = 1
-optimizer_default = "rmsprop"
+optimizer_default = Adam()
+
+# Evaluation parameters
+metrics_for_evaluation = [accuracy_score, precision_score, recall_score, f1_score, confusion_matrix]
 
 # Pre-processing settings
 nb_workers = 6

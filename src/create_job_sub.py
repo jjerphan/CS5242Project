@@ -1,7 +1,7 @@
 import os
 import textwrap
 
-from ModelsInspector import ModelsInspector
+from models_inspector import ModelsInspector
 from models import models_available, models_available_names
 from settings import job_submissions_folder, nb_neg_ex_per_pos, nb_epochs_default, batch_size_default, n_gpu_default, \
     results_folder, name_env
@@ -89,11 +89,13 @@ def create_train_job():
 
     stub = f"""
                 #! /bin/bash
+                #PBS -P Personal
                 #PBS -q gpu
                 #PBS -j oe
                 #PBS -l select=1:ngpus={n_gpu}
                 #PBS -l walltime=23:00:00
                 #PBS -N {name_job}
+                mkdir -p {results_folder}/$PBS_JOBID/
                 cd $PBS_O_WORKDIR/src/
                 source activate {name_env}
                 python $PBS_O_WORKDIR/src/{script_name}  --model_index {model_index} \\
@@ -101,7 +103,8 @@ def create_train_job():
                                                          --batch_size {batch_size} \\
                                                          --nb_neg {nb_neg} \\
                                                          --verbose {verbose} \\{option_max if max_examples is not None else ''}
-                                                         --preprocess {preprocess}
+                                                         --preprocess {preprocess} \\
+                                                         --job_folder {results_folder}/$PBS_JOBID/
                 """
     # We remove the first return in the string
     stub = stub[1:]
@@ -109,7 +112,7 @@ def create_train_job():
     save_job_file(stub, name_job)
 
 
-def create_job_with_on_serialized_model(script_name, name_job):
+def create_job_with_for_one_serialized_model(script_name, name_job):
     """
     The file gets saved in `job_submissions`.
     """
@@ -139,6 +142,7 @@ def create_job_with_on_serialized_model(script_name, name_job):
 
     stub = f"""
                     #! /bin/bash
+                    #PBS -P Personal
                     #PBS -q gpu
                     #PBS -j oe
                     #PBS -l select=1:ngpus={n_gpu}
@@ -158,13 +162,23 @@ def create_job_with_on_serialized_model(script_name, name_job):
 
 
 def create_evaluation_job():
-    create_job_with_on_serialized_model(script_name="evaluate.py",
-                                        name_job="evaluate")
+    """
+    Prompt to create a submission file to evaluate a given model.
+
+    :return:
+    """
+    create_job_with_for_one_serialized_model(script_name="evaluate.py",
+                                             name_job="evaluate")
 
 
 def create_prediction_job():
-    create_job_with_on_serialized_model(script_name="predict.py",
-                                        name_job="predict")
+    """
+    Prompt to create a submission file to predict using a given model.
+
+    :return:
+    """
+    create_job_with_for_one_serialized_model(script_name="predict.py",
+                                             name_job="predict")
 
 
 if __name__ == "__main__":

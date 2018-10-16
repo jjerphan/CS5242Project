@@ -5,20 +5,23 @@ import argparse
 
 from datetime import datetime
 
+import keras
+from keras.callbacks import EarlyStopping
+from keras.losses import binary_crossentropy
+
 from pipeline_fixtures import LogEpochBatchCallback, get_current_timestamp
-from ExamplesIterator import ExamplesIterator
+from examples_iterator import ExamplesIterator
 from models import models_available, models_available_names
 from settings import training_examples_folder, testing_examples_folder, results_folder, nb_neg_ex_per_pos, \
     optimizer_default, batch_size_default, nb_epochs_default, original_data_folder, \
     extracted_data_train_folder, extracted_data_test_folder, serialized_model_file_name, history_file_name,\
-    parameters_file_name
+    parameters_file_name, training_logfile
 from extraction_data import extract_data
 from create_examples import create_examples
-from keras.losses import MSE
 
 
 def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess, batch_size,
-              optimizer=optimizer_default):
+              optimizer=optimizer_default, results_folder=results_folder, job_folder=None):
     """
     Train a given CNN.
 
@@ -30,24 +33,26 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess,
     :param preprocess: if != 0, extract the data and create the training examples
     :param batch_size: the number of examples to use per batch
     :param optimizer: the optimizer to use to train (default = "rmsprop"
+    :param results_folder: where to save results
     :return:
     """
     # Formatting fixtures
     current_timestamp = get_current_timestamp()
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.DEBUG)
-    logfile = f"train_cnn.log"
 
     # Making a folder for the job to save log, model, history in it.
-    job_folder = os.path.join(results_folder, current_timestamp)
+    if job_folder is None:
+        job_folder = os.path.join(results_folder, current_timestamp)
     if not (os.path.exists(results_folder)):
         print(f"The {results_folder} does not exist. Creating it.")
         os.makedirs(results_folder)
 
     # Creating the folder for the job
-    os.makedirs(job_folder)
+    if not (os.path.exists(job_folder)):
+        os.makedirs(job_folder)
 
-    fh = logging.FileHandler(os.path.join(job_folder, logfile))
+    fh = logging.FileHandler(os.path.join(job_folder, training_logfile))
     fh.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     fh.setFormatter(formatter)
@@ -69,9 +74,9 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess,
     logger.debug('Creating network model')
     model = models_available[model_index]
     logger.debug(f"Model {model.name} chosen")
-    logger.debug(model.summary())
+    keras.utils.print_summary(model, print_fn=logger.debug)
 
-    model.compile(optimizer=optimizer, loss=MSE, metrics=['accuracy'])
+    model.compile(optimizer=optimizer, loss=binary_crossentropy, metrics=['accuracy'])
 
     logger.debug(f'{os.path.basename(__file__)} : Training the model with the following parameters')
     logger.debug(f'model = {model.name}')
@@ -84,14 +89,14 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess,
     logger.debug(f'optimizer   = {optimizer}')
 
     with open(os.path.join(job_folder, parameters_file_name), "w") as f:
-        f.write(f'model={model.name}')
-        f.write(f'nb_epochs={nb_epochs}')
-        f.write(f'max_examples={max_examples}')
-        f.write(f'batch_size={batch_size}')
-        f.write(f'nb_neg={nb_neg}')
-        f.write(f'verbose={verbose}')
-        f.write(f'preprocess={preprocess}')
-        f.write(f'optimizer={optimizer}')
+        f.write(f'model={model.name}\n')
+        f.write(f'nb_epochs={nb_epochs}\n')
+        f.write(f'max_examples={max_examples}\n')
+        f.write(f'batch_size={batch_size}\n')
+        f.write(f'nb_neg={nb_neg}\n')
+        f.write(f'verbose={verbose}\n')
+        f.write(f'preprocess={preprocess}\n')
+        f.write(f'optimizer={optimizer}\n')
 
     logger.debug(f'model, log and history to be saved in {job_folder}')
 
@@ -108,20 +113,26 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess,
 
     # To log batches and epoch
     epoch_batch_callback = LogEpochBatchCallback(logger)
+    # earlystopping = EarlyStopping(patience=1)
+
+    # To prevent having
+    class_weight = {
+                     0: 1,
+                     1: nb_neg
+                     }
+
+    logger.debug(f'Training with class_weight: {class_weight}')
 
     # Here we go !
     history = model.fit_generator(generator=train_examples_iterator,
                                   epochs=nb_epochs,
                                   verbose=verbose,
-                                  callbacks=[epoch_batch_callback])
+                                  validation_data=test_examples_iterator,
+                                  callbacks=[epoch_batch_callback],
+                                  class_weight=class_weight)
 
     logger.debug('Done training !')
     train_checkpoint = datetime.now()
-
-    loss, acc = model.evaluate_generator(generator=test_examples_iterator, verbose=verbose)
-    evaluate_checkpoint = datetime.now()
-
-    logger.debug(f"Evaluation Loss: {loss}, Accuracy: {acc}.")
 
     # Saving models.py and history
     model_file = os.path.join(job_folder, serialized_model_file_name)
@@ -136,7 +147,6 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess,
     logger.debug(f"Done !")
     logger.debug(f"Preprocessing done in : {preprocessing_checkpoint - start_time}")
     logger.debug(f"Training done in      : {train_checkpoint - preprocessing_checkpoint}")
-    logger.debug(f"Evaluation done in    : {evaluate_checkpoint - train_checkpoint}")
 
 
 if __name__ == "__main__":
@@ -171,6 +181,10 @@ if __name__ == "__main__":
                         type=int, default=True,
                         help='if !=0 triggers the pre-processing of the data')
 
+    parser.add_argument('--job_folder', metavar='job_folder',
+                        type=str, default=True,
+                        help='the folder where results are to be saved')
+
     args = parser.parse_args()
 
     print("Argument parsed : ", args)
@@ -185,4 +199,5 @@ if __name__ == "__main__":
               max_examples=args.max_examples,
               verbose=args.verbose,
               batch_size=args.batch_size,
-              preprocess=args.preprocess)
+              preprocess=args.preprocess,
+              job_folder=args.job_folder)

@@ -4,9 +4,11 @@ from collections import defaultdict
 import keras
 import numpy as np
 
-from discretization import load_nparray, make_cube
+from discretization import load_nparray, make_cube, plot_cube
 from pipeline_fixtures import is_positive, is_negative
-from settings import nb_neg_ex_per_pos, resolution_cube, training_examples_folder
+from settings import nb_neg_ex_per_pos, length_cube_side, training_examples_folder, shape_cube, testing_examples_folder
+
+from mpl_toolkits.mplot3d import Axes3D
 
 
 class ExamplesIterator(keras.utils.Sequence):
@@ -31,7 +33,7 @@ class ExamplesIterator(keras.utils.Sequence):
         """
 
         :param examples_folder: the folder containing the examples
-        :param batch_size: the batch size to use to train
+        :param batch_size: the batch size to use
         :param nb_neg: the number of positive example (this controls the number of examples
         :param shuffle_after_completion: to shuffle the data or not after each epoch
         :param max_examples: if specified, just use the number of examples given
@@ -39,7 +41,7 @@ class ExamplesIterator(keras.utils.Sequence):
 
         self.batch_size = batch_size
         self.examples_folder = examples_folder
-        self.shuffle = shuffle_after_completion
+        self.shuffle_after_completion = shuffle_after_completion
 
         if nb_neg > nb_neg_ex_per_pos:
             print(f"The number of negative example requested (={nb_neg}) is larger"
@@ -49,7 +51,7 @@ class ExamplesIterator(keras.utils.Sequence):
         pos_files = list(filter(is_positive, all_files))
         neg_files = list(filter(is_negative, all_files))
 
-        # Doing some pre processing to ensure that we take the first nb_neg
+        # Doing some selection over files to ensure that we take the first nb_neg
         # negatives examples for a protein
         grouped_files = defaultdict(list)
         for neg_file in neg_files:
@@ -65,12 +67,12 @@ class ExamplesIterator(keras.utils.Sequence):
         assert len(self.labels) == len(self.examples_files)
         self.indexes = np.arange(len(self.examples_files))
 
-        # Taking you some examples if not
+        # We shuffle the data at least once
+        self.shuffle()
+
+        # Taking you some examples if asked
         if isinstance(max_examples, int) and max_examples < len(self.examples_files):
             self.indexes = self.indexes[0:max_examples]
-
-        # We shuffle the data at least once
-        np.random.shuffle(self.indexes)
 
     def nb_examples(self):
         """
@@ -83,6 +85,19 @@ class ExamplesIterator(keras.utils.Sequence):
         :return:
         """
         return self.labels[self.indexes]
+
+    def get_examples_files(self):
+        """
+        :return:
+        """
+        return [self.examples_files[index] for index in self.indexes]
+
+    def shuffle(self):
+        """
+        Shuffle the examples
+        :return:
+        """
+        np.random.shuffle(self.indexes)
 
     def __len__(self):
         """
@@ -122,7 +137,7 @@ class ExamplesIterator(keras.utils.Sequence):
 
         :return:
         """
-        if self.shuffle:
+        if self.shuffle_after_completion:
             np.random.shuffle(self.indexes)
 
     def __data_generation(self, files_to_use):
@@ -139,7 +154,7 @@ class ExamplesIterator(keras.utils.Sequence):
             file_name = os.path.join(self.examples_folder, ex_file)
             example = load_nparray(file_name)
 
-            cube = make_cube(example, resolution_cube)
+            cube = make_cube(example, length_cube_side)
             y = 1 * is_positive(ex_file)
 
             cubes.append(cube)
@@ -148,18 +163,23 @@ class ExamplesIterator(keras.utils.Sequence):
         # Conversion to np.ndarrays with the first axes used for examples
         cubes = np.array(cubes)
         ys = np.array(ys)
+
+        # Checking consistency here
         assert (ys.shape[0] == len(files_to_use))
         assert (cubes.shape[0] == len(files_to_use))
-
+        # Dimensions
+        assert (cubes.shape[1:] == shape_cube)
         return cubes, ys
 
 
 if __name__ == "__main__":
-    iterator = ExamplesIterator(training_examples_folder)
+    for folder in [training_examples_folder, testing_examples_folder]:
+        iterator = ExamplesIterator(folder)
 
-    # Reverse iterator
-    for i, (batch, ys) in enumerate(reversed(iterator)):
-        print("Checking size of last batch")
-        assert (batch.shape[0] == iterator.nb_examples() % iterator.batch_size)
-        print(i, batch.shape, np.mean(ys))
-        break
+        # Reverse iterator
+        for i, (batch, ys) in enumerate(reversed(iterator)):
+            plot_cube(batch[0])
+            print("Checking size of last batch")
+            assert (batch.shape[0] == iterator.nb_examples() % iterator.batch_size)
+            print(i, batch.shape, np.mean(ys))
+            break

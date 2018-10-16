@@ -1,0 +1,8 @@
+model_name=pafnucy_like
+nb_epochs=20
+max_examples=None
+batch_size=32
+nb_neg=10
+verbose=True
+preprocess=False
+optimizer=rmsprop

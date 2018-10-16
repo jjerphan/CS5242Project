@@ -1,7 +1,7 @@
 import os
 import numpy as np
 from keras.optimizers import Adam
-from sklearn.metrics import f1_score, recall_score, precision_score, accuracy_score
+from sklearn.metrics import f1_score, recall_score, precision_score, accuracy_score, confusion_matrix
 
 # Folders
 # Global folder for data and logs
@@ -84,7 +84,7 @@ n_gpu_default = 1
 optimizer_default = Adam()
 
 # Evaluation parameters
-metrics_for_evaluation = [accuracy_score, precision_score, recall_score, f1_score]
+metrics_for_evaluation = [accuracy_score, precision_score, recall_score, f1_score, confusion_matrix]
 
 # Pre-processing settings
 nb_workers = 6

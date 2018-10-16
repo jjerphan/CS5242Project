@@ -1,9 +1,0 @@
-#! /bin/bash
-#PBS -q gpu
-#PBS -j oe
-#PBS -l select=1:ngpus=1
-#PBS -l walltime=23:00:00
-#PBS -N CS5242_Hello
-cd ${PBS_O_WORKDIR}
-source activate CS5242
-python -c "import keras; print('if you see no errors, it\'s good to go.')"

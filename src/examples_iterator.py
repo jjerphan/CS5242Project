@@ -4,7 +4,7 @@ from collections import defaultdict
 import keras
 import numpy as np
 
-from discretization import load_nparray, make_cube, plot_cube
+from discretization import load_nparray, make_relative_cube, plot_cube
 from pipeline_fixtures import is_positive, is_negative
 from settings import max_nb_neg_per_pos, length_cube_side, training_examples_folder, shape_cube, validation_examples_folder
 
@@ -160,7 +160,7 @@ class ExamplesIterator(keras.utils.Sequence):
             file_name = os.path.join(self.examples_folder, ex_file)
             example = load_nparray(file_name)
 
-            cube = make_cube(example, length_cube_side)
+            cube = make_relative_cube(example, length_cube_side)
             y = 1 * is_positive(ex_file)
 
             cubes.append(cube)

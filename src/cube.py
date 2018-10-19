@@ -70,18 +70,3 @@ class Cube:
         ax.set_ylabel('Y Label')
         ax.set_zlabel('Z Label')
         fig.show()
-
-
-if __name__ == "__main__":
-
-    # Just to test
-    examples_files = sorted(os.listdir(training_examples_folder))
-    for ex_file in examples_files:
-        file_name = os.path.join(training_examples_folder, ex_file)
-        example = load_nparray(os.path.join(training_examples_folder, ex_file))
-
-        cube = Cube(example, length_cube_side)
-        cube.make_cube()
-        cube.plot_cube()
-
-        input()

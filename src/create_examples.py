@@ -7,7 +7,7 @@ from discretization import load_nparray
 from settings import extracted_data_train_folder, extracted_data_test_folder, extracted_protein_suffix, \
     extracted_ligand_suffix, comment_delimiter, nb_neg_ex_per_pos, features_names, training_examples_folder, \
     validation_examples_folder, testing_examples_folder, extracted_predict_folder, predict_examples_folder, \
-    nb_workers
+    nb_workers, extracted_data_validate_folder
 
 logger = logging.getLogger('__main__.create_example')
 logger.addHandler(logging.NullHandler())
@@ -172,6 +172,6 @@ def create_examples(extracted_data_folder, examples_folder, nb_neg: int=-1):
 
 if __name__ == "__main__":
     create_examples(extracted_data_train_folder, training_examples_folder, nb_neg_ex_per_pos)
-    create_examples(extracted_data_test_folder, validation_examples_folder, nb_neg_ex_per_pos)
+    create_examples(extracted_data_validate_folder, validation_examples_folder, nb_neg_ex_per_pos)
     create_examples(extracted_data_test_folder, testing_examples_folder, nb_neg_ex_per_pos)
     create_examples(extracted_predict_folder, predict_examples_folder)

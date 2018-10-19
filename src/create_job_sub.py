@@ -72,9 +72,6 @@ def create_train_job():
     max_examples = input(f"Number of maximum examples to use (leave empty to use all examples) : ")
     max_examples = None if max_examples == "" else int(max_examples)
 
-    verbose = 1 * (input(f"Keras verbose output during training? [y (default)/n] : ").lower() != "n")
-    preprocess = 1 * (input(f"Extract data and create training examples? [y/n (default)] :").lower() == "y")
-
     n_gpu = input(f"Choose number of GPU (leave blank for default = {n_gpu_default}) : ")
     n_gpu = n_gpu_default if n_gpu == "" else int(n_gpu)
 
@@ -85,7 +82,6 @@ def create_train_job():
 
     name_job = f'train_{models_available_names[model_index]}_{nb_epochs}epochs_{batch_size}batch_{nb_neg}neg'
     name_job += f"_{max_examples}max" if max_examples else ""
-    name_job += "_preprocess" if preprocess else ""
 
     stub = f"""
                 #! /bin/bash
@@ -101,9 +97,7 @@ def create_train_job():
                 python $PBS_O_WORKDIR/src/{script_name}  --model_index {model_index} \\
                                                          --nb_epochs {nb_epochs} \\
                                                          --batch_size {batch_size} \\
-                                                         --nb_neg {nb_neg} \\
-                                                         --verbose {verbose} \\{option_max if max_examples is not None else ''}
-                                                         --preprocess {preprocess} \\
+                                                         --nb_neg {nb_neg} \\{option_max if max_examples is not None else ''}
                                                          --job_folder {results_folder}/$PBS_JOBID/
                 """
     # We remove the first return in the string
@@ -121,14 +115,8 @@ def create_job_with_for_one_serialized_model(script_name, name_job):
     model_inspector = ModelsInspector(results_folder=results_folder)
     id_model, serialized_model_path = model_inspector.choose_model()
 
-    nb_neg = input(f"Number of negatives examples to use (leave empty for default = {nb_neg_ex_per_pos}) : ")
-    nb_neg = nb_neg_ex_per_pos if nb_neg == "" else int(nb_neg)
-
     max_examples = input(f"Number of maximum examples to use (leave empty to use all examples) : ")
     max_examples = None if max_examples == "" else int(max_examples)
-
-    verbose = 1 * (input(f"Keras verbose output during training? [y (default)/n] : ").lower() != "n")
-    preprocess = 1 * (input(f"Extract data and create training examples? [y/n (default)] :").lower() == "y")
 
     n_gpu = input(f"Choose number of GPU (leave blank for default = {n_gpu_default}) : ")
     n_gpu = n_gpu_default if n_gpu == "" else int(n_gpu)
@@ -150,10 +138,7 @@ def create_job_with_for_one_serialized_model(script_name, name_job):
                     #PBS -N {name_job}
                     cd $PBS_O_WORKDIR/src/
                     source activate {name_env}
-                    python $PBS_O_WORKDIR/src/{script_name}  --model_path {serialized_model_path} \\
-                                                             --nb_neg {nb_neg} \\
-                                                             --verbose {verbose} \\{option_max if max_examples is not None else ''}
-                                                             --preprocess {preprocess}
+                    python $PBS_O_WORKDIR/src/{script_name}  --model_path {serialized_model_path} \\ {option_max if max_examples is not None else ''}
                     """
     # We remove the first return in the string
     stub = stub[1:]

@@ -4,10 +4,13 @@ import shutil
 import logging
 from concurrent import futures
 from discretization import load_nparray
-from settings import extracted_data_train_folder, extracted_data_test_folder, extracted_protein_suffix, \
-    extracted_ligand_suffix, comment_delimiter, nb_neg_ex_per_pos, features_names, training_examples_folder, \
-    validation_examples_folder, testing_examples_folder, extracted_predict_folder, predict_examples_folder, \
-    nb_workers, extracted_data_validate_folder
+
+from settings import extracted_given_data_train_folder, extracted_given_data_validation_folder, \
+    extracted_protein_suffix, \
+    extracted_ligand_suffix, comment_delimiter, features_names, training_examples_folder, \
+    validation_examples_folder, nb_workers, max_nb_neg_per_pos, testing_examples_folder, extracted_predict_data_folder, \
+    predict_examples_folder, extracted_given_data_test_folder
+
 
 logger = logging.getLogger('__main__.create_example')
 logger.addHandler(logging.NullHandler())
@@ -117,7 +120,7 @@ def save_system_examples(system, list_systems, nb_neg, extracted_data_folder, ex
             raise RuntimeError()
 
 
-def create_examples(extracted_data_folder, examples_folder, nb_neg: int=-1):
+def create_examples(from_folder, to_folder, nb_neg: int = -1):
     """
     Create examples using data present in `data_folder` and saves them in files in the `example_folder` folder.
 
@@ -135,43 +138,57 @@ def create_examples(extracted_data_folder, examples_folder, nb_neg: int=-1):
 
     Hence this procedure creates `n_systems` * (1 + `nb_neg`) examples, that is at max `nb_systems^2` examples.
 
-    :param extracted_data_folder:
-    :param examples_folder:
+    :param from_folder:
+    :param to_folder:
     :param nb_neg: the number of negative example to create per positive example. Default -1 means maximum.
     :return:
     """
     # Getting all the systems
     extract_id = lambda x: x.split("_")[0]
 
-    list_systems = set(list(map(extract_id, os.listdir(extracted_data_folder))))
-    logger.debug(f'Get systems ids from {extracted_data_folder}')
+    list_systems = set(list(map(extract_id, os.listdir(from_folder))))
+    logger.debug(f'Get systems ids from {from_folder}')
 
     nb_systems = len(list_systems)
 
     if nb_neg > nb_systems:
         raise RuntimeError(f"Cannot create more than {nb_systems-1} negatives examples per positive examples (actual "
                            f"value = {nb_neg}")
+
+    # We create all the associated negative examples
     elif nb_neg == -1:
         nb_neg = nb_systems - 1
 
     # Deleting the folders of examples and recreating it
-    if os.path.exists(examples_folder):
-        logger.debug(f'Delete {examples_folder} examples folder.')
-        shutil.rmtree(examples_folder)
-    os.makedirs(examples_folder)
-    logger.debug(f'Create new {examples_folder} examples folder.')
+    if os.path.exists(to_folder):
+        logger.debug(f'Delete {to_folder} examples folder.')
+        shutil.rmtree(to_folder)
+    os.makedirs(to_folder)
+    logger.debug(f'Create new {to_folder} examples folder.')
 
     # For each system, we create the associated positive example and we generate some negative examples
     logger.debug('Create 1 positive binding and %d random negative protein-ligand bindings.', nb_neg)
     with futures.ProcessPoolExecutor(max_workers=nb_workers) as executor:
         for system in sorted(list_systems):
-            executor.submit(save_system_examples, system, list_systems, nb_neg, extracted_data_folder, examples_folder)
+            executor.submit(save_system_examples, system, list_systems, nb_neg, from_folder, to_folder)
 
-    logger.debug(f'Create {examples_folder} examples done.')
+    logger.debug(f'Create {to_folder} examples done.')
 
 
 if __name__ == "__main__":
-    create_examples(extracted_data_train_folder, training_examples_folder, nb_neg_ex_per_pos)
-    create_examples(extracted_data_validate_folder, validation_examples_folder, nb_neg_ex_per_pos)
-    create_examples(extracted_data_test_folder, testing_examples_folder, nb_neg_ex_per_pos)
-    create_examples(extracted_predict_folder, predict_examples_folder)
+    print(f"Creating training examples with {max_nb_neg_per_pos} negatives examples per positive examples")
+    create_examples(from_folder=extracted_given_data_train_folder,
+                    to_folder=training_examples_folder,
+                    nb_neg=max_nb_neg_per_pos)
+
+    print("Creating validation examples")
+    create_examples(from_folder=extracted_given_data_validation_folder,
+                    to_folder=validation_examples_folder)
+
+    print("Creating testing examples")
+    create_examples(from_folder=extracted_given_data_test_folder,
+                    to_folder=testing_examples_folder)
+
+    print("Creating examples for final prediction")
+    create_examples(from_folder=extracted_predict_data_folder,
+                    to_folder=predict_examples_folder)

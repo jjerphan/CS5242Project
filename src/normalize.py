@@ -4,8 +4,8 @@ import numpy as np
 from sklearn import preprocessing
 from pandas import DataFrame
 
-from settings import extracted_data_train_folder, extracted_data_test_folder, normalized_data_train_folder, \
-    normalized_data_test_folder, normalized_data_folder, data_folder
+from settings import extracted_given_data_train_folder, extracted_given_data_validation_folder, normalized_data_train_folder, \
+    normalized_data_test_folder, normalized_data_folder, given_data_folder
 from pipeline_fixtures import show_progress
 from discretization import load_nparray
 
@@ -13,7 +13,7 @@ logger = logging.getLogger('cnn.Normalizing')
 logger.addHandler(logging.NullHandler())
 
 
-def get_data_scaler(folder: str = extracted_data_train_folder):
+def get_data_scaler(folder: str = extracted_given_data_train_folder):
     """
     Return the scaler of data.
 
@@ -22,7 +22,7 @@ def get_data_scaler(folder: str = extracted_data_train_folder):
     :param folder: the folder to use to create the scaler.
     :return:
     """
-    serialized_scaler_file = os.path.join(data_folder, "scaler.pickle")
+    serialized_scaler_file = os.path.join(given_data_folder, "scaler.pickle")
     try:
         scaler = pickle.load(open(serialized_scaler_file, "rb"))
     except:
@@ -70,7 +70,7 @@ if __name__ == "__main__":
         os.makedirs(normalized_data_train_folder)
         os.makedirs(normalized_data_test_folder)
 
-    scaler_on_training_data = get_data_scaler(extracted_data_train_folder)
+    scaler_on_training_data = get_data_scaler(extracted_given_data_train_folder)
 
-    normalize_data(scaler_on_training_data, extracted_data_train_folder, normalized_data_train_folder)
-    normalize_data(scaler_on_training_data, extracted_data_test_folder, normalized_data_test_folder)
+    normalize_data(scaler_on_training_data, extracted_given_data_train_folder, normalized_data_train_folder)
+    normalize_data(scaler_on_training_data, extracted_given_data_validation_folder, normalized_data_test_folder)

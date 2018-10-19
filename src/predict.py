@@ -1,33 +1,22 @@
 import argparse
+import csv
 import os
 import pickle
-import csv
-
 from collections import defaultdict
+
 from keras.models import load_model
-from settings import original_predict_folder, extracted_predict_folder, predict_examples_folder, results_folder, \
-    nb_neg_ex_per_pos
 
-from extraction_data import extract_data
-from create_examples import create_examples
 from predict_generator import PredictGenerator
+from settings import predict_examples_folder, results_folder
 
 
-def predict(serialized_model_path, nb_neg, max_examples, verbose=1, preprocess=False):
+def predict(serialized_model_path, max_examples=None):
     """
-    Preprocessing - 1. Extract data from original pdb file and create as molecues.
-                    2. Mix each protein with all ligand bindings for prediction
 
     :param serialized_model_path: where the serialized_model is
-    :param nb_neg: the number of negative examples to use per positive examples
     :param max_examples: the maximum number of examples to use
-    :param verbose: to have verbose outputs
-    :param preprocess: should we do some pre-processing
     :return:
     """
-    if preprocess:
-        extract_data(original_predict_folder, split_validation_testing=False)
-        create_examples(extracted_predict_folder, predict_examples_folder)
 
     # Load pre-trained good model
     my_model = load_model(serialized_model_path)
@@ -76,21 +65,9 @@ if __name__ == "__main__":
                         type=str, required=True,
                         help=f'where the serialized file of the model (.h5) is.')
 
-    parser.add_argument('--nb_neg', metavar='nb_neg',
-                        type=int, default=nb_neg_ex_per_pos,
-                        help='the number of negatives examples to use per positive example')
-
     parser.add_argument('--max_examples', metavar='max_examples',
                         type=int, default=None,
                         help='the number of total examples to use in total')
-
-    parser.add_argument('--verbose', metavar='verbose',
-                        type=int, default=True,
-                        help='the number of total examples to use in total')
-
-    parser.add_argument('--preprocess', metavar='preprocess',
-                        type=int, default=True,
-                        help='if !=0 triggers the pre-processing of the data')
 
     args = parser.parse_args()
 
@@ -100,8 +77,5 @@ if __name__ == "__main__":
     assert (args.nb_neg > 0)
 
     predict(serialized_model_path=args.model_path,
-            nb_neg=args.nb_neg,
-            max_examples=args.max_examples,
-            verbose=args.verbose,
-            preprocess=args.preprocess)
+            max_examples=args.max_examples)
 

@@ -38,6 +38,36 @@ def save_job_file(stub, name_job):
         print(f"Saved in {file_name}")
 
 
+def get_train_stub(model_index, name_job, nb_epochs, batch_size, nb_neg, max_examples, n_gpu):
+    # TODO : fix this hack to add the option
+    script_name = "train_cnn.py"
+
+    option_max = f"\n                                                     --max_examples {max_examples} \\"
+
+
+    stub = f"""
+                #! /bin/bash
+                #PBS -P Personal
+                #PBS -q gpu
+                #PBS -j oe
+                #PBS -l select=1:ngpus={n_gpu}
+                #PBS -l walltime=23:00:00
+                #PBS -N {name_job}
+                mkdir -p {results_folder}/$PBS_JOBID/
+                cd $PBS_O_WORKDIR/src/
+                source activate {name_env}
+                python $PBS_O_WORKDIR/src/{script_name}  --model_index {model_index} \\
+                                                         --nb_epochs {nb_epochs} \\
+                                                         --batch_size {batch_size} \\
+                                                         --nb_neg {nb_neg} \\{option_max if max_examples is not None else ''}
+                                                         --job_folder {results_folder}/$PBS_JOBID/
+                """
+    # We remove the first return in the string
+    stub = stub[1:]
+
+    return stub
+
+
 def create_train_job():
     """
     Ask for parameters incrementally to create a job to train a given network.
@@ -47,7 +77,6 @@ def create_train_job():
     The name of the file is made using the parameters given.
     This way we have a collection of file to submit that is easy to inspect.
     """
-    script_name = "train_cnn.py"
 
     nb_models_available = len(models_available_names)
 
@@ -77,31 +106,10 @@ def create_train_job():
 
     assert (n_gpu > 0)
 
-    # TODO : fix this hack to add the option
-    option_max = f"\n                                                     --max_examples {max_examples} \\"
-
     name_job = f'train_{models_available_names[model_index]}_{nb_epochs}epochs_{batch_size}batch_{nb_neg}neg'
     name_job += f"_{max_examples}max" if max_examples else ""
 
-    stub = f"""
-                #! /bin/bash
-                #PBS -P Personal
-                #PBS -q gpu
-                #PBS -j oe
-                #PBS -l select=1:ngpus={n_gpu}
-                #PBS -l walltime=23:00:00
-                #PBS -N {name_job}
-                mkdir -p {results_folder}/$PBS_JOBID/
-                cd $PBS_O_WORKDIR/src/
-                source activate {name_env}
-                python $PBS_O_WORKDIR/src/{script_name}  --model_index {model_index} \\
-                                                         --nb_epochs {nb_epochs} \\
-                                                         --batch_size {batch_size} \\
-                                                         --nb_neg {nb_neg} \\{option_max if max_examples is not None else ''}
-                                                         --job_folder {results_folder}/$PBS_JOBID/
-                """
-    # We remove the first return in the string
-    stub = stub[1:]
+    stub = get_train_stub(model_index, name_job, nb_epochs, batch_size, nb_neg, max_examples, n_gpu)
 
     save_job_file(stub, name_job)
 
@@ -146,6 +154,41 @@ def create_job_with_for_one_serialized_model(script_name, name_job):
     save_job_file(stub, name_job)
 
 
+def create_multiple_train_jobs(batch_size=32, max_examples=None, n_gpu=1):
+    """
+
+    :return:
+    """
+    nb_models_available = len(models_available_names)
+
+    # Asking for the different parameters
+    model_index = -1
+    while model_index not in range(nb_models_available):
+        print(f"{nb_models_available} Models available:")
+        for i, model in enumerate(models_available):
+            print(f"  # {i}: {model.name}")
+
+        model_index = int(input("Your choice : # "))
+
+    list_nb_epochs = list(map(int, input(f"Number of epochs to use (separate with spaces then enter) : ").split()))
+
+    list_nb_neg = list(map(int, input(f"Number of negatives examples to use (separate with spaces then enter) : ").split()))
+
+    for nb_epochs in list_nb_epochs:
+        for nb_neg in list_nb_neg:
+            name_job = f'train_{models_available_names[model_index]}_{nb_epochs}epochs_{batch_size}batch_{nb_neg}neg'
+            name_job += f"_{max_examples}max" if max_examples else ""
+
+            stub = get_train_stub(model_index=model_index,
+                                  name_job=name_job,
+                                  nb_epochs=nb_epochs,
+                                  batch_size=batch_size,
+                                  nb_neg=nb_neg,
+                                  max_examples=max_examples,
+                                  n_gpu=n_gpu)
+
+            save_job_file(stub,name_job)
+
 def create_evaluation_job():
     """
     Prompt to create a submission file to evaluate a given model.
@@ -169,7 +212,7 @@ def create_prediction_job():
 if __name__ == "__main__":
     # Choosing the time of job to create
     choice = -1
-    jobs = [create_train_job, create_evaluation_job, create_prediction_job]
+    jobs = [create_train_job, create_multiple_train_jobs, create_evaluation_job, create_prediction_job]
     while choice not in range(len(jobs)):
         for i, job in enumerate(jobs):
             print(i, job.__name__)

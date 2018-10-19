@@ -45,14 +45,14 @@ def evaluate(serialized_model_path, max_examples=None):
 
     model = load_model(serialized_model_path, custom_objects={"mean_pred": mean_pred})
 
-    test_examples_iterator = ExamplesIterator(examples_folder=validation_examples_folder,
+    validation_examples_iterator = ExamplesIterator(examples_folder=validation_examples_folder,
                                               max_examples=max_examples,
                                               shuffle_after_completion=False)
 
-    logger.debug(f"Evaluating on {test_examples_iterator.nb_examples()} examples")
+    logger.debug(f"Evaluating on {validation_examples_iterator.nb_examples()} examples")
 
-    ys = test_examples_iterator.get_labels()
-    y_preds = model.predict_generator(test_examples_iterator)
+    ys = validation_examples_iterator.get_labels()
+    y_preds = model.predict_generator(validation_examples_iterator)
     # Rounding the prediction : using the second one
     y_rounded = np.array([1 if y > 0.5 else 0 for y in y_preds])
 

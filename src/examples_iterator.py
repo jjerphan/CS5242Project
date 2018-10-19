@@ -25,11 +25,11 @@ class ExamplesIterator(keras.utils.Sequence):
     """
 
     def __init__(self,
-                 examples_folder,
-                 batch_size=32,
-                 nb_neg=max_nb_neg_per_pos,
-                 shuffle_after_completion=True,
-                 max_examples: int = None):
+                 examples_folder: object,
+                 batch_size: object = 32,
+                 nb_neg: object = None,
+                 shuffle_after_completion: object = True,
+                 max_examples: object = None) -> object:
         """
 
         :param examples_folder: the folder containing the examples
@@ -54,7 +54,7 @@ class ExamplesIterator(keras.utils.Sequence):
 
         if nb_neg > nb_neg_files_per_pos_file:
             print(f"The number of negative example requested (={nb_neg}) is larger"
-                  f" than the current one available : (={max_nb_neg_per_pos})")
+                  f" than the current ones available : (={nb_neg_files_per_pos_file})")
             nb_neg = nb_neg_files_per_pos_file
 
         # Doing some selection over files to ensure that we take the first nb_neg

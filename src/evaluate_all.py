@@ -13,7 +13,7 @@ from pipeline_fixtures import get_current_timestamp
 from settings import validation_examples_folder, metrics_for_evaluation, results_folder
 
 
-def mean_pred(y_pred,y_true):
+def mean_pred(y_pred, y_true):
     return K.mean(y_pred)
 
 
@@ -52,13 +52,13 @@ def evaluate_all(max_examples=None):
 
     logger.debug(f"Evaluating {len(models_inspector)} models")
 
-    test_examples_iterator = ExamplesIterator(examples_folder=validation_examples_folder,
-                                              max_examples=max_examples,
-                                              shuffle_after_completion=False)
+    validation_examples_iterator = ExamplesIterator(examples_folder=validation_examples_folder,
+                                                    max_examples=max_examples,
+                                                    shuffle_after_completion=False)
 
-    ys = test_examples_iterator.get_labels()
+    ys = validation_examples_iterator.get_labels()
 
-    logger.debug(f"Evaluating on {test_examples_iterator.nb_examples()} examples")
+    logger.debug(f"Evaluating on {validation_examples_iterator.nb_examples()} examples")
 
     # Constructing the header : we are saving the results of the evaluation with for each models
     # the parameters that have been used to train
@@ -80,7 +80,7 @@ def evaluate_all(max_examples=None):
 
             model = load_model(serialized_model_path, custom_objects={"mean_pred": mean_pred})
 
-            y_preds = model.predict_generator(test_examples_iterator)
+            y_preds = model.predict_generator(validation_examples_iterator)
             # Rounding the prediction : using the second one
             y_rounded = np.array([1 if y > 0.5 else 0 for y in y_preds])
 
@@ -102,7 +102,7 @@ def evaluate_all(max_examples=None):
 
             logger.debug(log)
             logger.debug("Results")
-            for k,v in log.items():
+            for k, v in log.items():
                 logger.debug(f" {k}: {v}")
 
             logger.debug(f"Write results in {results_csv_file}")

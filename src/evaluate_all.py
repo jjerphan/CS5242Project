@@ -5,6 +5,7 @@ import numpy as np
 import os
 from keras.models import load_model
 import keras.backend as K
+from collections import defaultdict
 
 from models_inspector import ModelsInspector
 from examples_iterator import ExamplesIterator
@@ -62,8 +63,13 @@ def evaluate_all(nb_neg, max_examples, verbose=1, preprocess=False):
 
     logger.debug(f"Evaluating on {test_examples_iterator.nb_examples()} examples")
 
+    # Constructing the header : we are saving the results of the evaluation with for each models
+    # the parameters that have been used to train
     metrics_name = list(map(lambda m: m.__name__, metrics_for_evaluation))
-    headers = ["id", *metrics_name, "positives_prediction","negatives_prediction"]
+    parameters_name = ["nb_epochs", "nb_neg", "max_examples", "batch_size", "optimizer"]
+
+    headers = ["id", "model", *metrics_name, "positives_prediction",
+               "negatives_prediction", *parameters_name]
 
     with open(os.path.join(evaluation_logs_folder, results_csv_file), "w+") as csv_fh:
         writer = csv.DictWriter(csv_fh, fieldnames=headers)
@@ -72,7 +78,7 @@ def evaluate_all(nb_neg, max_examples, verbose=1, preprocess=False):
 
             logger.debug(f"Evaluating {subfolder}")
             logger.debug(f"Parameters")
-            for k,v in set_parameters.items():
+            for k, v in set_parameters.items():
                 logger.debug(f" {k}: {v}")
 
             model = load_model(serialized_model_path, custom_objects={"mean_pred": mean_pred})
@@ -83,19 +89,30 @@ def evaluate_all(nb_neg, max_examples, verbose=1, preprocess=False):
 
             logger.debug("Computing metrics")
             metrics_results = dict(map(lambda metric: (metric.__name__, metric(ys, y_rounded)), metrics_for_evaluation))
+            log = defaultdict(str, metrics_results)
 
-            metrics_results["positives_prediction"] = len(list(filter(lambda y: y != 0, y_rounded)))
-            metrics_results["negatives_prediction"] = len(list(filter(lambda y: y == 0, y_rounded)))
+            # Gathering all the info together
+            try:
+                for param in parameters_name:
+                    log[param] = set_parameters[param]
+            except Exception as e:
+                logger.debug(f"WARNING {e}")
 
-            metrics_results["id"] = subfolder.split(os.sep)[-1]
+                log["positives_prediction"] = len(list(filter(lambda y: y != 0, y_rounded)))
+                log["negatives_prediction"] = len(list(filter(lambda y: y == 0, y_rounded)))
 
-            logger.debug(metrics_results)
+                log["id"] = subfolder.split(os.sep)[-1]
+
+            logger.debug(log)
             logger.debug("Results")
-            for k,v in metrics_results.items():
+            for k,v in log.items():
                 logger.debug(f" {k}: {v}")
 
             logger.debug(f"Write results in {results_csv_file}")
-            writer.writerow(metrics_results)
+            try:
+                writer.writerow(log)
+            except Exception as e:
+                logger.debug(f"WARNING {e}")
 
 
 if __name__ == "__main__":

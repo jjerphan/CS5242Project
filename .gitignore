@@ -7,6 +7,10 @@ training_data/testing_examples/
 predict_data/
 results/
 
+# Exported results
+*_exported_results.tar.gz
+
+
 *.idea
 models/
 logs/

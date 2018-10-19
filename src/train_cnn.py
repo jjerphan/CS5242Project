@@ -18,6 +18,38 @@ from settings import training_examples_folder, testing_examples_folder, results_
     extracted_data_validate_folder, validation_examples_folder
 from extraction_data import extract_data
 from create_examples import create_examples
+from keras import backend as K
+
+
+def f1(y_true, y_pred):
+    def recall(y_true, y_pred):
+        """Recall metric.
+
+        Only computes a batch-wise average of recall.
+
+        Computes the recall, a metric for multi-label classification of
+        how many relevant items are selected.
+        """
+        true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+        possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
+        recall = true_positives / (possible_positives + K.epsilon())
+        return recall
+
+    def precision(y_true, y_pred):
+        """Precision metric.
+
+        Only computes a batch-wise average of precision.
+
+        Computes the precision, a metric for multi-label classification of
+        how many selected items are relevant.
+        """
+        true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+        predicted_positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
+        precision = true_positives / (predicted_positives + K.epsilon())
+        return precision
+    precision = precision(y_true, y_pred)
+    recall = recall(y_true, y_pred)
+    return 2*((precision*recall)/(precision+recall+K.epsilon()))
 
 
 def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess, batch_size,
@@ -78,7 +110,7 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess,
     logger.debug(f"Model {model.name} chosen")
     keras.utils.print_summary(model, print_fn=logger.debug)
 
-    model.compile(optimizer=optimizer, loss=binary_crossentropy, metrics=['accuracy'])
+    model.compile(optimizer=optimizer, loss=binary_crossentropy, metrics=['accuracy', f1])
 
     logger.debug(f'{os.path.basename(__file__)} : Training the model with the following parameters')
     logger.debug(f'model = {model.name}')
@@ -113,14 +145,9 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess,
                                               batch_size=batch_size,
                                               max_examples=max_examples)
 
-    test_examples_iterator = ExamplesIterator(examples_folder=testing_examples_folder,
-                                              nb_neg=nb_neg,
-                                              batch_size=batch_size,
-                                              max_examples=max_examples)
-
     # To log batches and epoch
     epoch_batch_callback = LogEpochBatchCallback(logger)
-    # earlystopping = EarlyStopping(patience=1)
+    EarlyStopping(monitor='f1', mode='max', patience=10, restore_best_weights=True)
 
     # To prevent having
     class_weight = {
@@ -134,7 +161,7 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess,
     history = model.fit_generator(generator=train_examples_iterator,
                                   epochs=nb_epochs,
                                   verbose=verbose,
-                                  validation_data=validation_examples_folder,
+                                  validation_data=validation_examples_iterator,
                                   callbacks=[epoch_batch_callback],
                                   class_weight=class_weight)
 
@@ -185,11 +212,11 @@ if __name__ == "__main__":
                         help='the number of total examples to use in total')
 
     parser.add_argument('--preprocess', metavar='preprocess',
-                        type=int, default=True,
+                        type=int, default=1,
                         help='if !=0 triggers the pre-processing of the data')
 
     parser.add_argument('--job_folder', metavar='job_folder',
-                        type=str, default=True,
+                        type=str, default='./results/local/',
                         help='the folder where results are to be saved')
 
     args = parser.parse_args()

@@ -12,12 +12,9 @@ from keras.losses import binary_crossentropy
 from pipeline_fixtures import LogEpochBatchCallback, get_current_timestamp
 from examples_iterator import ExamplesIterator
 from models import models_available, models_available_names
-from settings import training_examples_folder, testing_examples_folder, results_folder, nb_neg_ex_per_pos, \
-    optimizer_default, batch_size_default, nb_epochs_default, original_data_folder, extracted_data_train_folder, \
-    extracted_data_test_folder, serialized_model_file_name, history_file_name, parameters_file_name, training_logfile, \
-    extracted_data_validate_folder, validation_examples_folder
-from extraction_data import extract_data
-from create_examples import create_examples
+from settings import training_examples_folder, results_folder, nb_neg_ex_per_pos, optimizer_default, batch_size_default, \
+    nb_epochs_default, serialized_model_file_name, history_file_name, parameters_file_name, training_logfile, \
+    validation_examples_folder
 from keras import backend as K
 
 
@@ -91,19 +88,6 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess,
     logger.addHandler(fh)
 
     start_time = datetime.now()
-
-    # Eventual pre-processing
-    if preprocess:
-        logger.debug('Extracting data.')
-        extract_data(original_data_folder)
-        print('Creating training examples')
-        create_examples(extracted_data_train_folder, training_examples_folder, nb_neg_ex_per_pos)
-        print('Creating validation examples')
-        create_examples(extracted_data_validate_folder, validation_examples_folder, nb_neg_ex_per_pos)
-        print('Creating testing examples')
-        create_examples(extracted_data_test_folder, testing_examples_folder, nb_neg_ex_per_pos)
-
-    preprocessing_checkpoint = datetime.now()
 
     logger.debug('Creating network model')
     model = models_available[model_index]
@@ -211,10 +195,6 @@ if __name__ == "__main__":
                         type=int, default=True,
                         help='the number of total examples to use in total')
 
-    parser.add_argument('--preprocess', metavar='preprocess',
-                        type=int, default=1,
-                        help='if !=0 triggers the pre-processing of the data')
-
     parser.add_argument('--job_folder', metavar='job_folder',
                         type=str, default='./results/local/',
                         help='the folder where results are to be saved')
@@ -233,5 +213,4 @@ if __name__ == "__main__":
               max_examples=args.max_examples,
               verbose=args.verbose,
               batch_size=args.batch_size,
-              preprocess=args.preprocess,
               job_folder=args.job_folder)

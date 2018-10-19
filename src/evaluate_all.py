@@ -66,9 +66,9 @@ def evaluate_all(nb_neg, max_examples, verbose=1, preprocess=False):
     # Constructing the header : we are saving the results of the evaluation with for each models
     # the parameters that have been used to train
     metrics_name = list(map(lambda m: m.__name__, metrics_for_evaluation))
-    parameters_name = ["nb_epochs", "nb_neg", "max_examples", "batch_size", "optimizer"]
+    parameters_name = ["model", "nb_epochs", "nb_neg", "max_examples", "batch_size", "optimizer"]
 
-    headers = ["id", "model", *metrics_name, "positives_prediction",
+    headers = ["id", *metrics_name, "positives_prediction",
                "negatives_prediction", *parameters_name]
 
     with open(os.path.join(evaluation_logs_folder, results_csv_file), "w+") as csv_fh:
@@ -98,10 +98,10 @@ def evaluate_all(nb_neg, max_examples, verbose=1, preprocess=False):
             except Exception as e:
                 logger.debug(f"WARNING {e}")
 
-                log["positives_prediction"] = len(list(filter(lambda y: y != 0, y_rounded)))
-                log["negatives_prediction"] = len(list(filter(lambda y: y == 0, y_rounded)))
+            log["positives_prediction"] = len(list(filter(lambda y: y != 0, y_rounded)))
+            log["negatives_prediction"] = len(list(filter(lambda y: y == 0, y_rounded)))
 
-                log["id"] = subfolder.split(os.sep)[-1]
+            log["id"] = subfolder.split(os.sep)[-1]
 
             logger.debug(log)
             logger.debug("Results")

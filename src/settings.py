@@ -16,9 +16,11 @@ original_data_folder = os.path.join(data_folder, "original")
 # First extraction of data
 extracted_data_folder = os.path.join(data_folder, "extracted")
 extracted_data_train_folder = os.path.join(extracted_data_folder, "train")
+extracted_data_validate_folder = os.path.join(extracted_data_folder, "validate")
 extracted_data_test_folder = os.path.join(extracted_data_folder, "test")
 normalized_data_folder = os.path.join(data_folder, "normalized")
 normalized_data_train_folder = os.path.join(normalized_data_folder, "train")
+normalized_data_validate_folder = os.path.join(normalized_data_folder, "validate")
 normalized_data_test_folder = os.path.join(normalized_data_folder, "test")
 
 predict_folder = os.path.join(absolute_path, "predict_data")
@@ -27,6 +29,7 @@ extracted_predict_folder = os.path.join(predict_folder, "extracted")
 
 # Conversion to examples
 training_examples_folder = os.path.join(data_folder, "training_examples")
+validation_examples_folder = os.path.join(data_folder, "validation_examples")
 testing_examples_folder = os.path.join(data_folder, "testing_examples")
 predict_examples_folder = os.path.join(predict_folder, "predict_examples")
 

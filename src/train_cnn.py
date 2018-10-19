@@ -13,9 +13,9 @@ from pipeline_fixtures import LogEpochBatchCallback, get_current_timestamp
 from examples_iterator import ExamplesIterator
 from models import models_available, models_available_names
 from settings import training_examples_folder, testing_examples_folder, results_folder, nb_neg_ex_per_pos, \
-    optimizer_default, batch_size_default, nb_epochs_default, original_data_folder, \
-    extracted_data_train_folder, extracted_data_test_folder, serialized_model_file_name, history_file_name,\
-    parameters_file_name, training_logfile
+    optimizer_default, batch_size_default, nb_epochs_default, original_data_folder, extracted_data_train_folder, \
+    extracted_data_test_folder, serialized_model_file_name, history_file_name, parameters_file_name, training_logfile, \
+    extracted_data_validate_folder, validation_examples_folder
 from extraction_data import extract_data
 from create_examples import create_examples
 
@@ -66,6 +66,8 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess,
         extract_data(original_data_folder)
         print('Creating training examples')
         create_examples(extracted_data_train_folder, training_examples_folder, nb_neg_ex_per_pos)
+        print('Creating validation examples')
+        create_examples(extracted_data_validate_folder, validation_examples_folder, nb_neg_ex_per_pos)
         print('Creating testing examples')
         create_examples(extracted_data_test_folder, testing_examples_folder, nb_neg_ex_per_pos)
 
@@ -106,6 +108,11 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess,
                                                batch_size=batch_size,
                                                max_examples=max_examples)
 
+    validation_examples_iterator = ExamplesIterator(examples_folder=validation_examples_folder,
+                                              nb_neg=nb_neg,
+                                              batch_size=batch_size,
+                                              max_examples=max_examples)
+
     test_examples_iterator = ExamplesIterator(examples_folder=testing_examples_folder,
                                               nb_neg=nb_neg,
                                               batch_size=batch_size,
@@ -127,7 +134,7 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess,
     history = model.fit_generator(generator=train_examples_iterator,
                                   epochs=nb_epochs,
                                   verbose=verbose,
-                                  validation_data=test_examples_iterator,
+                                  validation_data=validation_examples_folder,
                                   callbacks=[epoch_batch_callback],
                                   class_weight=class_weight)
 

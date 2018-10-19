@@ -6,7 +6,7 @@ import numpy as np
 
 from discretization import load_nparray, make_cube, plot_cube
 from pipeline_fixtures import is_positive, is_negative
-from settings import nb_neg_ex_per_pos, length_cube_side, training_examples_folder, shape_cube, testing_examples_folder
+from settings import max_nb_neg_per_pos, length_cube_side, training_examples_folder, shape_cube, validation_examples_folder
 
 from mpl_toolkits.mplot3d import Axes3D
 
@@ -27,7 +27,7 @@ class ExamplesIterator(keras.utils.Sequence):
     def __init__(self,
                  examples_folder,
                  batch_size=32,
-                 nb_neg=nb_neg_ex_per_pos,
+                 nb_neg=max_nb_neg_per_pos,
                  shuffle_after_completion=True,
                  max_examples: int = None):
         """
@@ -43,13 +43,19 @@ class ExamplesIterator(keras.utils.Sequence):
         self.examples_folder = examples_folder
         self.shuffle_after_completion = shuffle_after_completion
 
-        if nb_neg > nb_neg_ex_per_pos:
-            print(f"The number of negative example requested (={nb_neg}) is larger"
-                  f" than the current one available : (={nb_neg_ex_per_pos})")
-
         all_files = sorted(os.listdir(examples_folder))
         pos_files = list(filter(is_positive, all_files))
         neg_files = list(filter(is_negative, all_files))
+
+        nb_neg_files_per_pos_file = int(len(neg_files) / len(pos_files))
+
+        if nb_neg is None:
+            nb_neg = nb_neg_files_per_pos_file
+
+        if nb_neg > nb_neg_files_per_pos_file:
+            print(f"The number of negative example requested (={nb_neg}) is larger"
+                  f" than the current one available : (={max_nb_neg_per_pos})")
+            nb_neg = nb_neg_files_per_pos_file
 
         # Doing some selection over files to ensure that we take the first nb_neg
         # negatives examples for a protein
@@ -173,7 +179,7 @@ class ExamplesIterator(keras.utils.Sequence):
 
 
 if __name__ == "__main__":
-    for folder in [training_examples_folder, testing_examples_folder]:
+    for folder in [training_examples_folder, validation_examples_folder]:
         iterator = ExamplesIterator(folder)
 
         # Reverse iterator

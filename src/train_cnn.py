@@ -1,21 +1,22 @@
-import pickle
+import argparse
 import logging
 import os
-import argparse
-
+import pickle
 from datetime import datetime
 
 import keras
-from keras.callbacks import EarlyStopping
+from keras import backend as K
 from keras.losses import binary_crossentropy
 
-from pipeline_fixtures import LogEpochBatchCallback, get_current_timestamp
 from examples_iterator import ExamplesIterator
 from models import models_available, models_available_names
+from pipeline_fixtures import LogEpochBatchCallback
+from pipeline_fixtures import get_current_timestamp
+from settings import history_file_name, serialized_model_file_name
+from settings import max_nb_neg_per_pos
 from settings import training_examples_folder, results_folder, nb_neg_ex_per_pos, optimizer_default, batch_size_default, \
-    nb_epochs_default, serialized_model_file_name, history_file_name, parameters_file_name, training_logfile, \
+    nb_epochs_default, parameters_file_name, training_logfile, \
     validation_examples_folder
-from keras import backend as K
 
 
 def f1(y_true, y_pred):
@@ -44,12 +45,13 @@ def f1(y_true, y_pred):
         predicted_positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
         precision = true_positives / (predicted_positives + K.epsilon())
         return precision
+
     precision = precision(y_true, y_pred)
     recall = recall(y_true, y_pred)
-    return 2*((precision*recall)/(precision+recall+K.epsilon()))
+    return 2 * ((precision * recall) / (precision + recall + K.epsilon()))
 
 
-def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess, batch_size,
+def train_cnn(model_index, nb_epochs, nb_neg, max_examples, batch_size,
               optimizer=optimizer_default, results_folder=results_folder, job_folder=None):
     """
     Train a given CNN.
@@ -58,8 +60,6 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess,
     :param nb_epochs: the number of epochs to use
     :param nb_neg: the number of training examples to use to train the network
     :param max_examples: the maximum number of examples to choose
-    :param verbose: if != 0, make the output verbose
-    :param preprocess: if != 0, extract the data and create the training examples
     :param batch_size: the number of examples to use per batch
     :param optimizer: the optimizer to use to train (default = "rmsprop"
     :param results_folder: where to save results
@@ -102,8 +102,6 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess,
     logger.debug(f'max_examples   = {max_examples}')
     logger.debug(f'batch_size  = {batch_size}')
     logger.debug(f'nb_neg      = {nb_neg}')
-    logger.debug(f'verbose     = {verbose}')
-    logger.debug(f'preprocess  = {preprocess}')
     logger.debug(f'optimizer   = {optimizer}')
 
     with open(os.path.join(job_folder, parameters_file_name), "w") as f:
@@ -112,8 +110,6 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess,
         f.write(f'max_examples={max_examples}\n')
         f.write(f'batch_size={batch_size}\n')
         f.write(f'nb_neg={nb_neg}\n')
-        f.write(f'verbose={verbose}\n')
-        f.write(f'preprocess={preprocess}\n')
         f.write(f'optimizer={optimizer}\n')
 
     logger.debug(f'model, log and history to be saved in {job_folder}')
@@ -125,26 +121,25 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess,
                                                max_examples=max_examples)
 
     validation_examples_iterator = ExamplesIterator(examples_folder=validation_examples_folder,
-                                              nb_neg=nb_neg,
-                                              batch_size=batch_size,
-                                              max_examples=max_examples)
+                                                    nb_neg=nb_neg,
+                                                    batch_size=batch_size,
+                                                    max_examples=max_examples)
 
     # To log batches and epoch
     epoch_batch_callback = LogEpochBatchCallback(logger)
-    EarlyStopping(monitor='f1', mode='max', patience=10, restore_best_weights=True)
+    # earlystopping_callback = EarlyStopping(monitor='f1', mode='max', patience=1, min_delta=)
 
     # To prevent having
     class_weight = {
-                     0: 1,
-                     1: nb_neg
-                     }
+        0: 1,
+        1: min(nb_neg, max_nb_neg_per_pos)
+    }
 
     logger.debug(f'Training with class_weight: {class_weight}')
 
     # Here we go !
     history = model.fit_generator(generator=train_examples_iterator,
                                   epochs=nb_epochs,
-                                  verbose=verbose,
                                   validation_data=validation_examples_iterator,
                                   callbacks=[epoch_batch_callback],
                                   class_weight=class_weight)
@@ -163,8 +158,7 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, preprocess,
 
     logger.debug(f"History saved in {model_file}")
     logger.debug(f"Done !")
-    logger.debug(f"Preprocessing done in : {preprocessing_checkpoint - start_time}")
-    logger.debug(f"Training done in      : {train_checkpoint - preprocessing_checkpoint}")
+    logger.debug(f"Training done in      : {train_checkpoint - start_time}")
 
 
 if __name__ == "__main__":
@@ -191,10 +185,6 @@ if __name__ == "__main__":
                         type=int, default=None,
                         help='the number of total examples to use in total')
 
-    parser.add_argument('--verbose', metavar='verbose',
-                        type=int, default=True,
-                        help='the number of total examples to use in total')
-
     parser.add_argument('--job_folder', metavar='job_folder',
                         type=str, default='./results/local/',
                         help='the folder where results are to be saved')
@@ -211,6 +201,5 @@ if __name__ == "__main__":
               nb_epochs=args.nb_epochs,
               nb_neg=args.nb_neg,
               max_examples=args.max_examples,
-              verbose=args.verbose,
               batch_size=args.batch_size,
               job_folder=args.job_folder)

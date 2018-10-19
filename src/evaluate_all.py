@@ -10,21 +10,18 @@ from collections import defaultdict
 from models_inspector import ModelsInspector
 from examples_iterator import ExamplesIterator
 from pipeline_fixtures import get_current_timestamp
-from settings import testing_examples_folder, nb_neg_ex_per_pos, metrics_for_evaluation, results_folder
+from settings import validation_examples_folder, metrics_for_evaluation, results_folder
 
 
 def mean_pred(y_pred,y_true):
     return K.mean(y_pred)
 
 
-def evaluate_all(nb_neg, max_examples, verbose=1, preprocess=False):
+def evaluate_all(max_examples=None):
     """
     Evaluate a given model using custom metrics.
 
-    :param nb_neg: the number of negative examples to use per positive examples
     :param max_examples: the maximum number of examples to use
-    :param verbose: to have verbose outputs
-    :param preprocess: should we do some pre-processing
     :return:
     """
 
@@ -55,7 +52,7 @@ def evaluate_all(nb_neg, max_examples, verbose=1, preprocess=False):
 
     logger.debug(f"Evaluating {len(models_inspector)} models")
 
-    test_examples_iterator = ExamplesIterator(examples_folder=testing_examples_folder,
+    test_examples_iterator = ExamplesIterator(examples_folder=validation_examples_folder,
                                               max_examples=max_examples,
                                               shuffle_after_completion=False)
 
@@ -116,4 +113,4 @@ def evaluate_all(nb_neg, max_examples, verbose=1, preprocess=False):
 
 
 if __name__ == "__main__":
-    evaluate_all(nb_neg=nb_neg_ex_per_pos, max_examples=None)
+    evaluate_all(max_examples=None)

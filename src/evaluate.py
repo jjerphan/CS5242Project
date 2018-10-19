@@ -7,22 +7,19 @@ from keras.models import load_model
 import keras.backend as K
 
 from examples_iterator import ExamplesIterator
-from settings import testing_examples_folder, nb_neg_ex_per_pos, metrics_for_evaluation, results_folder
+from settings import validation_examples_folder, metrics_for_evaluation, results_folder
 
 
 def mean_pred(y_pred,y_true):
     return K.mean(y_pred)
 
 
-def evaluate(serialized_model_path, nb_neg, max_examples, verbose=1, preprocess=False):
+def evaluate(serialized_model_path, max_examples=None):
     """
     Evaluate a given model using custom metrics.
 
     :param serialized_model_path: where the serialized_model is
-    :param nb_neg: the number of negative examples to use per positive examples
     :param max_examples: the maximum number of examples to use
-    :param verbose: to have verbose outputs
-    :param preprocess: should we do some pre-processing
     :return:
     """
 
@@ -48,7 +45,7 @@ def evaluate(serialized_model_path, nb_neg, max_examples, verbose=1, preprocess=
 
     model = load_model(serialized_model_path, custom_objects={"mean_pred": mean_pred})
 
-    test_examples_iterator = ExamplesIterator(examples_folder=testing_examples_folder,
+    test_examples_iterator = ExamplesIterator(examples_folder=validation_examples_folder,
                                               max_examples=max_examples,
                                               shuffle_after_completion=False)
 
@@ -78,21 +75,9 @@ if __name__ == "__main__":
                         type=str, required=True,
                         help=f'where the serialized file of the model (.h5) is.')
 
-    parser.add_argument('--nb_neg', metavar='nb_neg',
-                        type=int, default=nb_neg_ex_per_pos,
-                        help='the number of negatives examples to use per positive example')
-
     parser.add_argument('--max_examples', metavar='max_examples',
                         type=int, default=None,
                         help='the number of total examples to use in total')
-
-    parser.add_argument('--verbose', metavar='verbose',
-                        type=int, default=True,
-                        help='the number of total examples to use in total')
-
-    parser.add_argument('--preprocess', metavar='preprocess',
-                        type=int, default=True,
-                        help='if !=0 triggers the pre-processing of the data')
 
     args = parser.parse_args()
 
@@ -102,7 +87,4 @@ if __name__ == "__main__":
     assert (args.nb_neg > 0)
 
     evaluate(serialized_model_path=args.model_path,
-             nb_neg=args.nb_neg,
-             max_examples=args.max_examples,
-             verbose=args.verbose,
-             preprocess=args.preprocess)
+             max_examples=args.max_examples)

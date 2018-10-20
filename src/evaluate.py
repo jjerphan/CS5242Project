@@ -15,12 +15,13 @@ def mean_pred(y_pred, y_true):
     return K.mean(y_pred)
 
 
-def evaluate(serialized_model_path, max_examples=None):
+def evaluate(serialized_model_path, max_examples=None, verbose=1):
     """
     Evaluate a given model using custom metrics.
 
     :param serialized_model_path: where the serialized_model is
     :param max_examples: the maximum number of examples to use
+    :param verbose: to have verbose outputs
     :return:
     """
 
@@ -80,6 +81,11 @@ if __name__ == "__main__":
                         type=int, default=None,
                         help='the number of total examples to use in total')
 
+    parser.add_argument('--verbose', metavar='verbose',
+                        type=int, default=True,
+                        help='the number of total examples to use in total')
+
+
     args = parser.parse_args()
 
     print("Argument parsed : ", args)
@@ -88,4 +94,6 @@ if __name__ == "__main__":
     assert (args.nb_neg > 0)
 
     evaluate(serialized_model_path=args.model_path,
-             max_examples=args.max_examples)
+             nb_neg=args.nb_neg,
+             max_examples=args.max_examples,
+             verbose=args.verbose)

@@ -44,7 +44,6 @@ training_logfile = f"train_cnn.log"
 results_folder = os.path.join(absolute_path, "results")
 parameters_file_name = "parameters.txt"
 serialized_model_file_name = "model.h5"
-history_file_name = "history.pickle"
 
 # Some settings for number and persisting tensors
 float_type = np.float32

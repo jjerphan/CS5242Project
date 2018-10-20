@@ -161,10 +161,12 @@ def create_examples(from_folder, to_folder, nb_neg: int = -1):
 
     # Deleting the folders of examples and recreating it
     if os.path.exists(to_folder):
-        logger.debug(f'Delete {to_folder} examples folder.')
-        shutil.rmtree(to_folder)
-    os.makedirs(to_folder)
-    logger.debug(f'Create new {to_folder} examples folder.')
+        logger.debug(f'Delete {to_folder} examples files.')
+        for file in os.listdir(to_folder):
+            os.remove(os.path.join(to_folder, file))
+    else:
+        os.makedirs(to_folder)
+        logger.debug(f'Create new {to_folder} examples folder.')
 
     # For each system, we create the associated positive example and we generate some negative examples
     logger.debug('Create 1 positive binding and %d random negative protein-ligand bindings.', nb_neg)

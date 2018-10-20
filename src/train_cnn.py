@@ -12,11 +12,11 @@ from examples_iterator import ExamplesIterator
 from models import models_available, models_available_names
 from pipeline_fixtures import LogEpochBatchCallback
 from pipeline_fixtures import get_current_timestamp
-from settings import history_file_name, serialized_model_file_name
 from settings import max_nb_neg_per_pos
 from settings import training_examples_folder, results_folder, nb_neg_ex_per_pos, optimizer_default, batch_size_default, \
-    nb_epochs_default, parameters_file_name, training_logfile, \
-    validation_examples_folder
+    nb_epochs_default, serialized_model_file_name, parameters_file_name, training_logfile, validation_examples_folder
+from keras import backend as K
+
 
 
 def f1(y_true, y_pred):
@@ -51,7 +51,7 @@ def f1(y_true, y_pred):
     return 2 * ((precision * recall) / (precision + recall + K.epsilon()))
 
 
-def train_cnn(model_index, nb_epochs, nb_neg, max_examples, batch_size,
+def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, batch_size,
               optimizer=optimizer_default, results_folder=results_folder, job_folder=None):
     """
     Train a given CNN.
@@ -60,6 +60,7 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, batch_size,
     :param nb_epochs: the number of epochs to use
     :param nb_neg: the number of training examples to use to train the network
     :param max_examples: the maximum number of examples to choose
+    :param verbose: if != 0, make the output verbose
     :param batch_size: the number of examples to use per batch
     :param optimizer: the optimizer to use to train (default = "rmsprop"
     :param results_folder: where to save results
@@ -149,6 +150,7 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, batch_size,
 
     # Saving models.py and history
     model_file = os.path.join(job_folder, serialized_model_file_name)
+    history_file_name = job_folder.split('.')[0] + "-nb_epoches_" + str(nb_epochs) + "-nb_neg_" + str(nb_neg) + '.pickle'
     history_file = os.path.join(job_folder, history_file_name)
 
     model.save(model_file)

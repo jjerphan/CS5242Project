@@ -130,7 +130,7 @@ def create_job_with_for_one_serialized_model(script_name, name_job, evaluation=F
 
     # TODO : fix this hack to add the option
     option_max = f"\n                                                     --max_examples {max_examples} \\"
-    option_evaluation = f"                                                     --evaluation {evaluation}"
+    option_prediction = f"                                                     --evaluation {evaluation}"
 
     # We append the ID for the model to it
     name_job += "_" + id_model
@@ -147,7 +147,7 @@ def create_job_with_for_one_serialized_model(script_name, name_job, evaluation=F
                     cd $PBS_O_WORKDIR/src/
                     source activate {name_env}
                     python $PBS_O_WORKDIR/src/{script_name}  --model_path {serialized_model_path} \\ {option_max if max_examples is not None else ''} \\
-                                                             {option_evaluation if evaluation else ''}
+                                                             {option_prediction if evaluation else ''}
                     """
     # We remove the first return in the string
     stub = stub[1:]

@@ -3,6 +3,8 @@ import os
 import pickle
 import csv
 import logging
+import keras
+
 from collections import defaultdict
 
 from keras.models import load_model
@@ -26,7 +28,7 @@ def predict(serialized_model_path, nb_neg, max_examples, verbose=1, evaluation=T
     fh.setFormatter(formatter)
     logger.addHandler(fh)
 
-    model_name = serialized_model_path.split('/')[-1].split('.')[0]
+    model_name = serialized_model_path.split('/')[-1]
     matching_file_name = os.path.join(results_folder, model_name.replace("model.h5", "matching.pkl"))
     result_file_name = os.path.join(results_folder, model_name.replace("model.h5", "result.txt"))
 
@@ -38,7 +40,8 @@ def predict(serialized_model_path, nb_neg, max_examples, verbose=1, evaluation=T
 
     # Load pre-trained good model
     my_model = load_model(serialized_model_path)
-    logger.debug(f'Model loaded. Summary: \n{my_model.summary}')
+    logger.debug(f'Model loaded. Summary: ')
+    keras.utils.print_summary(my_model, print_fn=logger.debug)
 
     matching = defaultdict(list)
 

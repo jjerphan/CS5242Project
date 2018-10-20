@@ -11,6 +11,7 @@ from models_inspector import ModelsInspector
 from examples_iterator import ExamplesIterator
 from pipeline_fixtures import get_current_timestamp
 from settings import validation_examples_folder, metrics_for_evaluation, results_folder
+from train_cnn import f1
 
 
 def mean_pred(y_pred, y_true):
@@ -78,7 +79,7 @@ def evaluate_all(max_examples=None):
             for k, v in set_parameters.items():
                 logger.debug(f" {k}: {v}")
 
-            model = load_model(serialized_model_path, custom_objects={"mean_pred": mean_pred})
+            model = load_model(serialized_model_path, custom_objects={"mean_pred": mean_pred, "f1": f1})
 
             y_preds = model.predict_generator(validation_examples_iterator)
             # Rounding the prediction : using the second one

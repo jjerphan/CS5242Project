@@ -8,9 +8,10 @@ import keras.backend as K
 
 from examples_iterator import ExamplesIterator
 from settings import validation_examples_folder, metrics_for_evaluation, results_folder
+from train_cnn import f1
 
 
-def mean_pred(y_pred,y_true):
+def mean_pred(y_pred, y_true):
     return K.mean(y_pred)
 
 
@@ -43,11 +44,11 @@ def evaluate(serialized_model_path, max_examples=None):
 
     logger.debug(f"Evaluating model: {serialized_model_path}")
 
-    model = load_model(serialized_model_path, custom_objects={"mean_pred": mean_pred})
+    model = load_model(serialized_model_path, custom_objects={"mean_pred": mean_pred, "f1": f1})
 
     validation_examples_iterator = ExamplesIterator(examples_folder=validation_examples_folder,
-                                              max_examples=max_examples,
-                                              shuffle_after_completion=False)
+                                                    max_examples=max_examples,
+                                                    shuffle_after_completion=False)
 
     logger.debug(f"Evaluating on {validation_examples_iterator.nb_examples()} examples")
 

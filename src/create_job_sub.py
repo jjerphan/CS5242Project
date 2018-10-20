@@ -44,7 +44,6 @@ def get_train_stub(model_index, name_job, nb_epochs, batch_size, nb_neg, max_exa
 
     option_max = f"\n                                                     --max_examples {max_examples} \\"
 
-
     stub = f"""
                 #! /bin/bash
                 #PBS -P Personal
@@ -114,7 +113,7 @@ def create_train_job():
     save_job_file(stub, name_job)
 
 
-def create_job_with_for_one_serialized_model(script_name, name_job, prediction=False):
+def create_job_with_for_one_serialized_model(script_name, name_job, evaluation=False):
     """
     The file gets saved in `job_submissions`.
     """
@@ -130,8 +129,8 @@ def create_job_with_for_one_serialized_model(script_name, name_job, prediction=F
     n_gpu = n_gpu_default if n_gpu == "" else int(n_gpu)
 
     # TODO : fix this hack to add the option
-    option_max = f"                                                     --max_examples {max_examples} \\"
-    option_prediction = f"                                                     --evaluation {prediction}"
+    option_max = f"\n                                                     --max_examples {max_examples} \\"
+    option_evaluation = f"                                                     --evaluation {evaluation}"
 
     # We append the ID for the model to it
     name_job += "_" + id_model
@@ -147,9 +146,8 @@ def create_job_with_for_one_serialized_model(script_name, name_job, prediction=F
                     #PBS -N {name_job}
                     cd $PBS_O_WORKDIR/src/
                     source activate {name_env}
-                    python $PBS_O_WORKDIR/src/{script_name}  --model_path {serialized_model_path} \\
-                                                             {option_max if max_examples is not None else ''} \\
-                                                             {option_prediction if prediction else ''}
+                    python $PBS_O_WORKDIR/src/{script_name}  --model_path {serialized_model_path} \\ {option_max if max_examples is not None else ''} \\
+                                                             {option_evaluation if evaluation else ''}
                     """
     # We remove the first return in the string
     stub = stub[1:]
@@ -175,7 +173,8 @@ def create_multiple_train_jobs(batch_size=32, max_examples=None, n_gpu=1):
 
     list_nb_epochs = list(map(int, input(f"Number of epochs to use (separate with spaces then enter) : ").split()))
 
-    list_nb_neg = list(map(int, input(f"Number of negatives examples to use (separate with spaces then enter) : ").split()))
+    list_nb_neg = list(
+        map(int, input(f"Number of negatives examples to use (separate with spaces then enter) : ").split()))
 
     for nb_epochs in list_nb_epochs:
         for nb_neg in list_nb_neg:
@@ -190,7 +189,8 @@ def create_multiple_train_jobs(batch_size=32, max_examples=None, n_gpu=1):
                                   max_examples=max_examples,
                                   n_gpu=n_gpu)
 
-            save_job_file(stub,name_job)
+            save_job_file(stub, name_job)
+
 
 def create_evaluation_job():
     """
@@ -209,10 +209,10 @@ def create_prediction_job():
     :return:
     """
     choice = input(f"Testing? Choose 'n' for prediction. [y (default)/n] : ")
-    prediction = False if choice == "" or choice == "y" else True
+    evaluation = False if choice == "" or choice == "y" else True
     create_job_with_for_one_serialized_model(script_name="predict.py",
                                              name_job="predict",
-                                             prediction=prediction)
+                                             evaluation=evaluation)
 
 
 if __name__ == "__main__":

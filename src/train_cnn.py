@@ -13,7 +13,7 @@ from pipeline_fixtures import LogEpochBatchCallback
 from pipeline_fixtures import get_current_timestamp
 from settings import max_nb_neg_per_pos
 from settings import training_examples_folder, results_folder, nb_neg_ex_per_pos, optimizer_default, batch_size_default, \
-    nb_epochs_default, parameters_file_name, training_logfile, validation_examples_folder
+    nb_epochs_default, serialized_model_file_name, parameters_file_name, training_logfile, validation_examples_folder
 from keras import backend as K
 from keras.callbacks import EarlyStopping
 
@@ -51,7 +51,7 @@ def f1(y_true, y_pred):
     return 2 * ((precision * recall) / (precision + recall + K.epsilon()))
 
 
-def train_cnn(model_index, nb_epochs, nb_neg, max_examples, batch_size,
+def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, batch_size,
               optimizer=optimizer_default, results_folder=results_folder, job_folder=None):
     """
     Train a given CNN.

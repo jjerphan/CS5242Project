@@ -8,7 +8,10 @@ import keras
 from collections import defaultdict
 
 from keras.models import load_model
-from settings import testing_examples_folder
+
+from settings import predict_examples_folder, results_folder, nb_neg_ex_per_pos, testing_examples_folder
+
+
 from predict_generator import PredictGenerator
 from settings import predict_examples_folder, results_folder
 from train_cnn import f1
@@ -38,6 +41,7 @@ def predict(serialized_model_path, evaluation=True):
         predict_folder = predict_examples_folder
     logger.debug(f'Using example folder: {predict_folder}.')
 
+
     # Load pre-trained good model
     my_model = load_model(serialized_model_path, custom_objects={'f1': f1})
     logger.debug(f'Model loaded. Summary: ')
@@ -56,7 +60,8 @@ def predict(serialized_model_path, evaluation=True):
         logger.debug(f'Matching pickle file saved {matching_file_name}')
     
     matching_list = []
-    with open(result_file_name, 'w') as f:
+
+    with open(os.path.join(results_folder, 'result.txt'), 'w') as f:
         csvwriter = csv.writer(f)
         csvwriter.writerow('pro_id  lig1_id lig2_id lig3_id lig4_id lig5_id lig6_id lig7_id lig8_id lig9_id lig10_id')
         for pro, value in sorted(matching.items()):
@@ -100,9 +105,20 @@ if __name__ == "__main__":
                         type=bool, default=True,
                         help='if true: action on test data from training set')
 
+    parser.add_argument('--verbose', metavar='verbose',
+                        type=int, default=True,
+                        help='the number of total examples to use in total')
+
+    parser.add_argument('--evaluation', metavar='evaluation',
+                        type=bool, default=True,
+                        help='if true: action on test data from training set')
+
     args = parser.parse_args()
 
     print("Argument parsed : ", args)
 
     predict(serialized_model_path=args.model_path,
+            nb_neg=args.nb_neg,
+            max_examples=args.max_examples,
+            verbose=args.verbose,
             evaluation=args.evaluation)

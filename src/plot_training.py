@@ -3,7 +3,6 @@ import os
 import getpass
 import pickle
 import matplotlib.pyplot as plt
-from settings import results_folder
 
 
 def download_file():
@@ -32,8 +31,9 @@ def download_file():
     ftp_client.close()
 
     ssh.close()
-    
+
     return localfiles
+
 
 def plot_scores(file=''):
     with open(file, 'rb') as f:
@@ -50,6 +50,7 @@ def plot_scores(file=''):
     plt.legend()
     plt.grid()
     plt.show()
+
 
 if __name__ == '__main__':
     history_files = download_file()

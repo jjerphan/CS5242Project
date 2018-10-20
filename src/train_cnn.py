@@ -14,7 +14,7 @@ from pipeline_fixtures import LogEpochBatchCallback
 from pipeline_fixtures import get_current_timestamp
 from settings import max_nb_neg_per_pos
 from settings import training_examples_folder, results_folder, nb_neg_ex_per_pos, optimizer_default, batch_size_default, \
-    nb_epochs_default, serialized_model_file_name, parameters_file_name, training_logfile, validation_examples_folder
+    nb_epochs_default, parameters_file_name, training_logfile, validation_examples_folder
 from keras import backend as K
 
 
@@ -149,8 +149,9 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, batch_size,
     train_checkpoint = datetime.now()
 
     # Saving models.py and history
+    serialized_model_file_name = job_folder.split('.')[0] + "_nbepoches_" + str(nb_epochs) + "_nbneg_" + str(nb_neg) + 'model.h5'
     model_file = os.path.join(job_folder, serialized_model_file_name)
-    history_file_name = job_folder.split('.')[0] + "-nb_epoches_" + str(nb_epochs) + "-nb_neg_" + str(nb_neg) + '.pickle'
+    history_file_name = job_folder.split('.')[0] + "_nbepoches_" + str(nb_epochs) + "_nbneg_" + str(nb_neg) + '_history.pickle'
     history_file = os.path.join(job_folder, history_file_name)
 
     model.save(model_file)

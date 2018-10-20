@@ -114,7 +114,7 @@ def create_train_job():
     save_job_file(stub, name_job)
 
 
-def create_job_with_for_one_serialized_model(script_name, name_job, evaluation=False):
+def create_job_with_for_one_serialized_model(script_name, name_job, prediction=False):
     """
     The file gets saved in `job_submissions`.
     """
@@ -133,7 +133,7 @@ def create_job_with_for_one_serialized_model(script_name, name_job, evaluation=F
 
     # TODO : fix this hack to add the option
     option_max = f"\n                                                     --max_examples {max_examples} \\"
-    option_evaluation = f"                                                     --evaluation {evaluation}"
+    option_prediction = f"                                                     --evaluation {prediction}"
 
     # We append the ID for the model to it
     name_job += "_" + id_model
@@ -152,7 +152,7 @@ def create_job_with_for_one_serialized_model(script_name, name_job, evaluation=F
                     python $PBS_O_WORKDIR/src/{script_name}  --model_path {serialized_model_path} \\
                                                              --nb_neg {nb_neg} \\
                                                              --verbose {verbose} \\{option_max if max_examples is not None else ''} \\
-                                                             {option_evaluation if evaluation else ''}
+                                                             {option_prediction if prediction else ''}
                     """
     # We remove the first return in the string
     stub = stub[1:]
@@ -211,8 +211,11 @@ def create_prediction_job():
 
     :return:
     """
+    choice = input(f"Testing? Choose 'n' for prediction. [y (default)/n] : ")
+    prediction = False if choice == "" else True
     create_job_with_for_one_serialized_model(script_name="predict.py",
-                                             name_job="predict")
+                                             name_job="predict",
+                                             prediction=prediction)
 
 
 if __name__ == "__main__":

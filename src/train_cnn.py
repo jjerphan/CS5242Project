@@ -128,7 +128,7 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, batch_size,
 
     # To log batches and epoch
     epoch_batch_callback = LogEpochBatchCallback(logger)
-    # earlystopping_callback = EarlyStopping(monitor='f1', mode='max', patience=1, min_delta=)
+    EarlyStopping(monitor='f1', mode='max', patience=10)
 
     # To prevent having
     class_weight = {

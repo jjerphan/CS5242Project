@@ -29,8 +29,8 @@ normalized_data_validate_folder = os.path.join(normalized_data_folder, "validate
 normalized_data_test_folder = os.path.join(normalized_data_folder, "test")
 
 # Data to predict final results
-predict_data_folder = os.path.join(absolute_path, "predict_data")
-original_predict_data_folder = os.path.join(predict_data_folder, "original")
+predict_data_folder = os.path.join(absolute_path, "testing_data_release")
+original_predict_data_folder = os.path.join(predict_data_folder, "testing_data")
 extracted_predict_data_folder = os.path.join(predict_data_folder, "extracted")
 
 predict_examples_folder = os.path.join(predict_data_folder, "predict_examples")

@@ -10,8 +10,6 @@ def download_file():
     hostname = 'nus.nscc.sg'
     username = input("Input your student id: ")
     password = getpass.getpass(prompt='Enter your password: ')
-    username = 'e0319586'
-    password = 'Haha39462070*'
     basedir = '/home/users/nus/' + str(username) + '/'
     localdir = './results/historys/'
     localfiles = []

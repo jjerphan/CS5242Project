@@ -101,6 +101,7 @@ if __name__ == "__main__":
                         type=str, required=True,
                         help=f'where the serialized file of the model (.h5) is.')
 
+<<<<<<< HEAD
     parser.add_argument('--evaluation', metavar='evaluation',
                         type=bool, default=True,
                         help='if true: action on test data from training set')
@@ -109,6 +110,8 @@ if __name__ == "__main__":
                         type=int, default=True,
                         help='the number of total examples to use in total')
 
+=======
+>>>>>>> fix issues
     parser.add_argument('--evaluation', metavar='evaluation',
                         type=bool, default=True,
                         help='if true: action on test data from training set')
@@ -118,7 +121,4 @@ if __name__ == "__main__":
     print("Argument parsed : ", args)
 
     predict(serialized_model_path=args.model_path,
-            nb_neg=args.nb_neg,
-            max_examples=args.max_examples,
-            verbose=args.verbose,
             evaluation=args.evaluation)

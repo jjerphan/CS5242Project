@@ -24,7 +24,7 @@ class ModelsInspector:
     def __init__(self, results_folder):
         self._general_folder = results_folder
         sub_folders = list(map(lambda sub_folder: os.path.join(self._general_folder, sub_folder) \
-            if os.path.isdir(sub_folder) else None, os.listdir(self._general_folder)))
+            if os.path.isdir(os.path.isdir(self._general_folder, sub_folders)) else None, os.listdir(self._general_folder)))
         sub_folders.append(self._general_folder)
         sub_folders = [x for x in sub_folders if x is not None]
 

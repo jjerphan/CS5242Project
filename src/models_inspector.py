@@ -26,6 +26,7 @@ class ModelsInspector:
         sub_folders = list(map(lambda sub_folder: os.path.join(self._general_folder, sub_folder) \
             if os.path.isdir(sub_folder) else None, os.listdir(self._general_folder)))
         sub_folders.append(self._general_folder)
+        sub_folders = [x for x in sub_folders if x is not None]
 
         # It is possible that there exist sub-folders with no serialized model
         # (if the model is being trained for example) so, we chose here to

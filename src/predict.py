@@ -8,9 +8,10 @@ import keras
 from collections import defaultdict
 
 from keras.models import load_model
-from settings import predict_examples_folder, results_folder, nb_neg_ex_per_pos, testing_examples_folder
+from settings import testing_examples_folder
 from predict_generator import PredictGenerator
 from settings import predict_examples_folder, results_folder
+from train_cnn import f1
 
 
 def predict(serialized_model_path, evaluation=True):
@@ -38,7 +39,7 @@ def predict(serialized_model_path, evaluation=True):
     logger.debug(f'Using example folder: {predict_folder}.')
 
     # Load pre-trained good model
-    my_model = load_model(serialized_model_path)
+    my_model = load_model(serialized_model_path, custom_objects={'f1': f1})
     logger.debug(f'Model loaded. Summary: ')
     keras.utils.print_summary(my_model, print_fn=logger.debug)
 

@@ -1,7 +1,7 @@
 import os
 from collections import defaultdict
 
-from settings import history_file_name, serialized_model_file_name, parameters_file_name, results_folder
+from settings import parameters_file_name, results_folder
 
 
 class ModelsInspector:
@@ -29,7 +29,7 @@ class ModelsInspector:
         # It is possible that there exist sub-folders with no serialized model
         # (if the model is being trained for example) so, we chose here to
         # only keep sub folders that contains one.
-        self._sub_folders = list(filter(lambda folder: serialized_model_file_name in os.listdir(folder), sub_folders))
+        self._sub_folders = list(filter(lambda folder: ['model.h5' in file for file in os.listdir(folder)], sub_folders))
         serialized_models_file_names = defaultdict(str)
         histories_file_names = defaultdict(str)
 
@@ -42,10 +42,10 @@ class ModelsInspector:
             files_present = os.listdir(folder)
 
             for file in files_present:
-                if file == history_file_name:
+                if 'history.pickle' in file:
                     histories_file_names[folder] = file
 
-                if file == serialized_model_file_name:
+                if 'model.h5' in file:
                     serialized_models_file_names[folder] = file
 
                 if file == parameters_file_name:

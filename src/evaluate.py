@@ -21,6 +21,7 @@ def evaluate(serialized_model_path, max_examples=None):
 
     :param serialized_model_path: where the serialized_model is
     :param max_examples: the maximum number of examples to use
+    :param verbose: to have verbose outputs
     :return:
     """
 
@@ -83,9 +84,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     print("Argument parsed : ", args)
-
-    assert (args.nb_neg > 0)
-    assert (args.nb_neg > 0)
 
     evaluate(serialized_model_path=args.model_path,
              max_examples=args.max_examples)

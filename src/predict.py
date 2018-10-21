@@ -13,11 +13,10 @@ from predict_generator import PredictGenerator
 from settings import predict_examples_folder, results_folder
 
 
-def predict(serialized_model_path, nb_neg, max_examples, verbose=1, evaluation=True):
+def predict(serialized_model_path, evaluation=True):
     """
-    :param serialized_model_path: where the serialized_model is
-    :param max_examples: the maximum number of examples to use
-    :param verbose: to have verbose outputs
+    :param serialized_model_path:
+    :param evaluation:
     :return:
     """
     logger = logging.getLogger(__name__)
@@ -28,7 +27,7 @@ def predict(serialized_model_path, nb_neg, max_examples, verbose=1, evaluation=T
     fh.setFormatter(formatter)
     logger.addHandler(fh)
 
-    model_name = serialized_model_path.split('/')[-1]
+    model_name = serialized_model_path.split(os.sep)[-1]
     matching_file_name = os.path.join(results_folder, model_name.replace("model.h5", "matching.pkl"))
     result_file_name = os.path.join(results_folder, model_name.replace("model.h5", "result.txt"))
 
@@ -91,14 +90,6 @@ if __name__ == "__main__":
                         type=str, required=True,
                         help=f'where the serialized file of the model (.h5) is.')
 
-    parser.add_argument('--max_examples', metavar='max_examples',
-                        type=int, default=None,
-                        help='the number of total examples to use in total')
-
-    parser.add_argument('--verbose', metavar='verbose',
-                        type=int, default=True,
-                        help='the number of total examples to use in total')
-
     parser.add_argument('--evaluation', metavar='evaluation',
                         type=bool, default=True,
                         help='if true: action on test data from training set')
@@ -107,11 +98,5 @@ if __name__ == "__main__":
 
     print("Argument parsed : ", args)
 
-    assert (args.nb_neg > 0)
-    assert (args.nb_neg > 0)
-
     predict(serialized_model_path=args.model_path,
-            nb_neg=args.nb_neg,
-            max_examples=args.max_examples,
-            verbose=args.verbose,
             evaluation=args.evaluation)

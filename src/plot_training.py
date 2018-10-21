@@ -42,8 +42,8 @@ def plot_scores(file=''):
     epoches = [i + 1 for i in range(len(data['loss']))]
 
     plt.figure()
-    plt.plot(epoches, data['acc'], c='black', label='training')
-    plt.plot(epoches, data['val_acc'], c='blue', label='evaluation')
+    plt.plot(epoches, data['f1'], c='black', label='training')
+    plt.plot(epoches, data['val_f1'], c='blue', label='evaluation')
     plt.title('F1 scores vs Epoches')
     plt.xlabel('Epoches')
     plt.ylabel('F1 Score')

@@ -51,7 +51,7 @@ def f1(y_true, y_pred):
     return 2 * ((precision * recall) / (precision + recall + K.epsilon()))
 
 
-def train_cnn(model_index, nb_epochs, nb_neg, max_examples, verbose, batch_size,
+def train_cnn(model_index, nb_epochs, nb_neg, max_examples, batch_size,
               optimizer=optimizer_default, results_folder=results_folder, job_folder=None):
     """
     Train a given CNN.

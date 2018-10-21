@@ -212,7 +212,7 @@ def create_prediction_job():
     :return:
     """
     choice = input(f"Testing? Choose 'n' for prediction. [y (default)/n] : ")
-    prediction = False if choice == "" else True
+    prediction = False if choice == "" or choice == "y" else True
     create_job_with_for_one_serialized_model(script_name="predict.py",
                                              name_job="predict",
                                              prediction=prediction)

@@ -29,7 +29,7 @@ class ModelsInspector:
         # It is possible that there exist sub-folders with no serialized model
         # (if the model is being trained for example) so, we chose here to
         # only keep sub folders that contains one.
-        self._sub_folders = list(filter(lambda folder: ['exp' in file for file in os.listdir(folder)], sub_folders))
+        self._sub_folders = list(filter(lambda folder: ['model.h5' in file for file in os.listdir(folder)], sub_folders))
         serialized_models_file_names = defaultdict(str)
         histories_file_names = defaultdict(str)
 

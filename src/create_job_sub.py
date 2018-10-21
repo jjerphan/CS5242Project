@@ -126,13 +126,11 @@ def create_job_with_for_one_serialized_model(script_name, name_job, prediction=F
     max_examples = input(f"Number of maximum examples to use (leave empty to use all examples) : ")
     max_examples = None if max_examples == "" else int(max_examples)
 
-    verbose = 1 * (input(f"Keras verbose output during training? [y (default)/n] : ").lower() != "n")
-
     n_gpu = input(f"Choose number of GPU (leave blank for default = {n_gpu_default}) : ")
     n_gpu = n_gpu_default if n_gpu == "" else int(n_gpu)
 
     # TODO : fix this hack to add the option
-    option_max = f"\n                                                     --max_examples {max_examples} \\"
+    option_max = f"                                                     --max_examples {max_examples} \\"
     option_prediction = f"                                                     --evaluation {prediction}"
 
     # We append the ID for the model to it
@@ -150,8 +148,7 @@ def create_job_with_for_one_serialized_model(script_name, name_job, prediction=F
                     cd $PBS_O_WORKDIR/src/
                     source activate {name_env}
                     python $PBS_O_WORKDIR/src/{script_name}  --model_path {serialized_model_path} \\
-                                                             --nb_neg {nb_neg} \\
-                                                             --verbose {verbose} \\{option_max if max_examples is not None else ''} \\
+                                                             {option_max if max_examples is not None else ''} \\
                                                              {option_prediction if prediction else ''}
                     """
     # We remove the first return in the string

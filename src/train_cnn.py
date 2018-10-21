@@ -135,7 +135,7 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, batch_size,
     # To prevent having
     class_weight = {
         0: 1,
-        1: min(nb_neg, max_nb_neg_per_pos)
+        1: min(nb_neg, max_nb_neg_per_pos) //2
     }
 
     logger.debug(f'Training with class_weight: {class_weight}')

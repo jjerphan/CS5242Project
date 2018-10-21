@@ -14,8 +14,38 @@ logger.addHandler(logging.NullHandler())
 
 
 class CubeRepresentation(ABC):
+    """
+    Class that is used to return a specific cube representation of an example of
+    a protein-ligand system.
 
-    def __init__(self, length_cube_side, use_rotation_invariance, translate_ligand, verbose):
+    A cube is composed of voxels storing information about atom of the system present in it.
+    The number of voxels is here parametrised by at one parameter: the length of its sides `length_cube_side`.
+
+    `length_cube_side` represent the number of voxel on one direction.
+
+    Hence, as we are using a 3D cube, there is exactly length_cube_side^3 voxels in the representation.
+
+    The representation makes a cube using the method make_cube.
+
+    When making such a cube:
+     - the system can be arranged in a rotation invariance position (that is, if identical system that are rotated
+     initially differently oriented will be it represented identically as the end)
+     - the ligand can be centered on the molecule
+     - output of the result
+
+    This behaviour can parameterized with the booleans `use_rotation_invariance`, `translate_ligand` and `verbose`
+    respectively on the constructor.
+
+    """
+
+    def __init__(self, length_cube_side: int, use_rotation_invariance: bool, translate_ligand: bool, verbose: bool):
+        """
+
+        :param length_cube_side: the length of the cube (number of voxel on one dimension)
+        :param use_rotation_invariance: to perform the PCA rotation and get a fixed position w.r.t the protein
+        :param translate_ligand: to translated the ligand at the center of the protein
+        :param verbose: to output information about the cube created
+        """
         self._length_cube_side = length_cube_side
         self._use_rotation_invariance = use_rotation_invariance
         self._translate_ligand = translate_ligand
@@ -63,7 +93,7 @@ class CubeRepresentation(ABC):
         return new_coords
 
     @staticmethod
-    def translate_ligand_on_protein(original_coords, is_from_protein_indices):
+    def _translate_ligand_on_protein(original_coords, is_from_protein_indices):
         """
         Translate a ligand to the center of the protein.
 
@@ -125,11 +155,22 @@ class CubeRepresentation(ABC):
 
 class AbsoluteCubeRepresentation(CubeRepresentation):
     """
-    Class that construct an absolute cube representation.
+    Class that construct an absolute cube representation (see `CubeRepresentation` for an general overview of cube
+    representations).
+
+    This representation construct a box using a fixed resolution in angstrom given by the `cube_resolution`.
+    Then it represents the system by placing the center of the system in the center of the cube.
+
+    Atom that are outside of the boxes get discarded
+
+    Similarly to all the `CubeRepresentations`, the representation can be rotation invariant, the ligand can
+    be translated on the protein, constructing the cube can be verbose.
+
 
     """
 
-    def __init__(self, length_cube_side, use_rotation_invariance, translate_ligand, verbose, cube_resolution=1.0):
+    def __init__(self, length_cube_side, cube_resolution=1.0, use_rotation_invariance=True, translate_ligand=False,
+                 verbose=False):
         """
 
         :param length_cube_side: length of the side of the cube to create
@@ -138,14 +179,12 @@ class AbsoluteCubeRepresentation(CubeRepresentation):
         :param verbose: utputs info about transformation
         :param cube_resolution: the resolution used for the cube (1 Å)
         """
-        super.__init__(length_cube_side, use_rotation_invariance, translate_ligand, verbose)
-        self._cube_resolution = cube_resolution
-        self._cube_resolution = float(self._cube_resolution)
+        super().__init__(length_cube_side, use_rotation_invariance, translate_ligand, verbose)
+        self._cube_resolution = float(cube_resolution)
 
     def make_cube(self, system: np.ndarray):
         """
-        Convert atom coordinates and features represented as 2D arrays into a
-        fixed-sized 3D box.
+        Creating a cube from a system.
 
         :param system: the protein-ligand system
         :return: a cube 4D np.ndarray of size (res, res, res, nb_features)
@@ -153,6 +192,11 @@ class AbsoluteCubeRepresentation(CubeRepresentation):
 
         # Spatial coordinates of atoms
         original_coords = system[:, 0:3]
+
+        if self._translate_ligand:
+            is_from_protein_column = indices_features["is_from_protein"]
+            is_from_protein_indices = np.where(system[:, is_from_protein_column] == 1.)
+            original_coords = self._translate_ligand_on_protein(original_coords, is_from_protein_indices)
 
         if self._use_rotation_invariance:
             is_from_protein_column = indices_features["is_from_protein"]
@@ -189,16 +233,26 @@ class AbsoluteCubeRepresentation(CubeRepresentation):
 
 class RelativeCubeRepresentation(CubeRepresentation):
     """
-    Class that constructs a relative cube representation.
+    Class that construct a relative cube representation (see `CubeRepresentation` for an general overview of cube
+    representations).
 
+    This representation find the bounding boxes of the system of protein-ligand. By default it keeps the proportions
+    to represent the system in this box : this can be changed with the `keep_proportions` parameter.
+
+    Similarly to all the `CubeRepresentations`, the representation can be rotation invariant, the ligand can
+    be translated on the protein, constructing the cube can be verbose.
 
     """
-
-    def __init__(self, keep_proportions):
+    def __init__(self, length_cube_side, use_rotation_invariance=True, translate_ligand=False, verbose=False, keep_proportions=True):
         """
 
-        :param keep_proportions: should keep the proportion
+        :param length_cube_side:
+        :param use_rotation_invariance:
+        :param translate_ligand:
+        :param verbose:
+        :param keep_proportions:
         """
+        super().__init__(length_cube_side,use_rotation_invariance, translate_ligand,verbose)
         self._keep_proportions = keep_proportions
 
     @staticmethod
@@ -221,16 +275,19 @@ class RelativeCubeRepresentation(CubeRepresentation):
 
     def make_cube(self, system: np.ndarray):
         """
-            Creating a cube from a system.
+        Creating a cube from a system.
 
-            Using a rotation invariance representation and keeping the proportions gives better results normaly.
-
-            :param system: the protein-ligand system
-            :return: a cube 4D np.ndarray of size (res, res, res, nb_features)
-            """
+        :param system: the protein-ligand system
+        :return: a cube 4D np.ndarray of size (res, res, res, nb_features)
+        """
 
         # Spatial coordinates of atoms
         original_coords = system[:, 0:3]
+
+        if self._translate_ligand:
+            is_from_protein_column = indices_features["is_from_protein"]
+            is_from_protein_indices = np.where(system[:, is_from_protein_column] == 1.)
+            original_coords = self._translate_ligand_on_protein(original_coords, is_from_protein_indices)
 
         if self._use_rotation_invariance:
             is_from_protein_column = indices_features["is_from_protein"]

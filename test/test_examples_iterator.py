@@ -31,7 +31,7 @@ class ExamplesIteratorTest(unittest.TestCase):
         np.testing.assert_array_equal(labels, indexed_labels)
 
         # Shuffling examples
-        training_examples_iterator.shuffle()
+        training_examples_iterator._shuffle()
 
         labels_after_shuffle = training_examples_iterator.get_labels()
         examples_files_after_shuffle = training_examples_iterator.get_examples_files()

@@ -9,9 +9,7 @@ from collections import defaultdict
 
 from keras.models import load_model
 
-from settings import predict_examples_folder, results_folder, nb_neg_ex_per_pos, testing_examples_folder
-
-
+from settings import testing_examples_folder, serialized_model_file_name_end
 from predict_generator import PredictGenerator
 from settings import predict_examples_folder, results_folder
 from train_cnn import f1
@@ -32,15 +30,15 @@ def predict(serialized_model_path, evaluation=True):
     logger.addHandler(fh)
 
     model_name = serialized_model_path.split(os.sep)[-1]
-    matching_file_name = os.path.join(results_folder, model_name.replace("model.h5", "matching.pkl"))
-    result_file_name = os.path.join(results_folder, model_name.replace("model.h5", "result.txt"))
+    matching_file_name = os.path.join(results_folder,
+                                      model_name.replace(serialized_model_file_name_end, "matching.pkl"))
+    result_file_name = os.path.join(results_folder, model_name.replace(serialized_model_file_name_end, "result.txt"))
 
     if evaluation:
         predict_folder = testing_examples_folder
     else:
         predict_folder = predict_examples_folder
     logger.debug(f'Using example folder: {predict_folder}.')
-
 
     # Load pre-trained good model
     my_model = load_model(serialized_model_path, custom_objects={'f1': f1})
@@ -58,7 +56,7 @@ def predict(serialized_model_path, evaluation=True):
     with open(matching_file_name, 'wb') as f:
         pickle.dump(matching, f)
         logger.debug(f'Matching pickle file saved {matching_file_name}')
-    
+
     matching_list = []
 
     with open(os.path.join(results_folder, 'result.txt'), 'w') as f:
@@ -92,7 +90,7 @@ def predict(serialized_model_path, evaluation=True):
     success_rate = cal_success_rate()
     logger.debug(f'Success rate for model {model_name} is : {success_rate}')
 
-    
+
 if __name__ == "__main__":
     # Parsing sysargv arguments
     parser = argparse.ArgumentParser(description='Evaluate a model using a serialized version of it.')
@@ -101,17 +99,6 @@ if __name__ == "__main__":
                         type=str, required=True,
                         help=f'where the serialized file of the model (.h5) is.')
 
-<<<<<<< HEAD
-    parser.add_argument('--evaluation', metavar='evaluation',
-                        type=bool, default=True,
-                        help='if true: action on test data from training set')
-
-    parser.add_argument('--verbose', metavar='verbose',
-                        type=int, default=True,
-                        help='the number of total examples to use in total')
-
-=======
->>>>>>> fix issues
     parser.add_argument('--evaluation', metavar='evaluation',
                         type=bool, default=True,
                         help='if true: action on test data from training set')

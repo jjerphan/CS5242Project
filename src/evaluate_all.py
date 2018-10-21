@@ -7,10 +7,11 @@ from keras.models import load_model
 import keras.backend as K
 from collections import defaultdict
 
+from discretization import RelativeCubeRepresentation
 from models_inspector import ModelsInspector
 from examples_iterator import ExamplesIterator
 from pipeline_fixtures import get_current_timestamp
-from settings import validation_examples_folder, metrics_for_evaluation, results_folder
+from settings import validation_examples_folder, metrics_for_evaluation, results_folder, length_cube_side
 from train_cnn import f1
 
 
@@ -53,7 +54,9 @@ def evaluate_all(max_examples=None):
 
     logger.debug(f"Evaluating {len(models_inspector)} models")
 
-    validation_examples_iterator = ExamplesIterator(examples_folder=validation_examples_folder,
+    cube_representation = RelativeCubeRepresentation(length_cube_side=length_cube_side)
+    validation_examples_iterator = ExamplesIterator(representation=cube_representation,
+                                                    examples_folder=validation_examples_folder,
                                                     max_examples=max_examples,
                                                     shuffle_after_completion=False)
 

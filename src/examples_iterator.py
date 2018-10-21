@@ -4,7 +4,7 @@ from collections import defaultdict
 import keras
 import numpy as np
 
-from discretization import load_nparray, make_relative_cube, plot_cube
+from discretization import load_nparray, make_relative_cube, plot_cube, CubeRepresentation
 from pipeline_fixtures import is_positive, is_negative
 from settings import max_nb_neg_per_pos, length_cube_side, training_examples_folder, shape_cube, validation_examples_folder
 
@@ -25,11 +25,12 @@ class ExamplesIterator(keras.utils.Sequence):
     """
 
     def __init__(self,
-                 examples_folder: object,
-                 batch_size: object = 32,
-                 nb_neg: object = None,
-                 shuffle_after_completion: object = True,
-                 max_examples: object = None) -> object:
+                 representation: CubeRepresentation,
+                 examples_folder: str,
+                 batch_size: int = 32,
+                 nb_neg: int = None,
+                 shuffle_after_completion: bool = True,
+                 max_examples: int = None):
         """
 
         :param examples_folder: the folder containing the examples
@@ -39,9 +40,10 @@ class ExamplesIterator(keras.utils.Sequence):
         :param max_examples: if specified, just use the number of examples given
         """
 
-        self.batch_size = batch_size
-        self.examples_folder = examples_folder
-        self.shuffle_after_completion = shuffle_after_completion
+        self._representation = representation
+        self._batch_size = batch_size
+        self._examples_folder = examples_folder
+        self._shuffle_after_completion = shuffle_after_completion
 
         all_files = sorted(os.listdir(examples_folder))
         pos_files = list(filter(is_positive, all_files))
@@ -67,43 +69,43 @@ class ExamplesIterator(keras.utils.Sequence):
 
         filtered_neg_files = sorted([file for group in grouped_files.values() for file in group])
 
-        self.examples_files = pos_files + filtered_neg_files
-        self.labels = np.array([1] * len(pos_files) + [0] * len(filtered_neg_files))
+        self._examples_files = pos_files + filtered_neg_files
+        self._labels = np.array([1] * len(pos_files) + [0] * len(filtered_neg_files))
 
-        assert len(self.labels) == len(self.examples_files)
-        self.indexes = np.arange(len(self.examples_files))
+        assert len(self._labels) == len(self._examples_files)
+        self._indexes = np.arange(len(self._examples_files))
 
         # We shuffle the data at least once
-        self.shuffle()
+        self._shuffle()
 
         # Taking you some examples if asked
-        if isinstance(max_examples, int) and max_examples < len(self.examples_files):
-            self.indexes = self.indexes[0:max_examples]
+        if isinstance(max_examples, int) and max_examples < len(self._examples_files):
+            self._indexes = self._indexes[0:max_examples]
 
     def nb_examples(self):
         """
         :return: the total number of examples
         """
-        return len(self.indexes)
+        return len(self._indexes)
 
     def get_labels(self):
         """
         :return:
         """
-        return self.labels[self.indexes]
+        return self._labels[self._indexes]
 
     def get_examples_files(self):
         """
         :return:
         """
-        return [self.examples_files[index] for index in self.indexes]
+        return [self._examples_files[index] for index in self._indexes]
 
-    def shuffle(self):
+    def _shuffle(self):
         """
         Shuffle the examples
         :return:
         """
-        np.random.shuffle(self.indexes)
+        np.random.shuffle(self._indexes)
 
     def __len__(self):
         """
@@ -111,7 +113,7 @@ class ExamplesIterator(keras.utils.Sequence):
 
         :return:
         """
-        return int(np.ceil(len(self.indexes) / self.batch_size))
+        return int(np.ceil(len(self._indexes) / self._batch_size))
 
     def __getitem__(self, index):
         """
@@ -122,13 +124,13 @@ class ExamplesIterator(keras.utils.Sequence):
         """
         # Getting batch : the last batch can be smaller,
         # thus some book keeping around the last index
-        first_index = index * self.batch_size
-        last_index = min((index + 1) * self.batch_size, len(self.indexes) + 1)
+        first_index = index * self._batch_size
+        last_index = min((index + 1) * self._batch_size, len(self._indexes) + 1)
 
-        indexes = self.indexes[first_index:last_index]
+        indexes = self._indexes[first_index:last_index]
 
         # Find list of IDs
-        files_to_use = [self.examples_files[k] for k in indexes]
+        files_to_use = [self._examples_files[k] for k in indexes]
 
         # Generate data
         cubes, ys = self.__data_generation(files_to_use)
@@ -143,8 +145,8 @@ class ExamplesIterator(keras.utils.Sequence):
 
         :return:
         """
-        if self.shuffle_after_completion:
-            np.random.shuffle(self.indexes)
+        if self._shuffle_after_completion:
+            np.random.shuffle(self._indexes)
 
     def __data_generation(self, files_to_use):
         """
@@ -157,10 +159,10 @@ class ExamplesIterator(keras.utils.Sequence):
         cubes = []
         ys = []
         for index, ex_file in enumerate(files_to_use):
-            file_name = os.path.join(self.examples_folder, ex_file)
+            file_name = os.path.join(self._examples_folder, ex_file)
             example = load_nparray(file_name)
 
-            cube = make_relative_cube(example, length_cube_side)
+            cube = self._representation.make_cube(example)
             y = 1 * is_positive(ex_file)
 
             cubes.append(cube)
@@ -186,6 +188,6 @@ if __name__ == "__main__":
         for i, (batch, ys) in enumerate(reversed(iterator)):
             plot_cube(batch[0])
             print("Checking size of last batch")
-            assert (batch.shape[0] == iterator.nb_examples() % iterator.batch_size)
+            assert (batch.shape[0] == iterator.nb_examples() % iterator._batch_size)
             print(i, batch.shape, np.mean(ys))
             break

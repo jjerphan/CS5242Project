@@ -91,6 +91,9 @@ batch_size_default = 32
 n_gpu_default = 1
 optimizer_default = Adam()
 
+serialized_model_file_name_end = "model.h5"
+history_file_name_end = "history.pickle"
+
 # Evaluation parameters
 metrics_for_evaluation = [accuracy_score, precision_score, recall_score, f1_score, confusion_matrix]
 

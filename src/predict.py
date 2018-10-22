@@ -62,9 +62,13 @@ def predict(serialized_model_path, evaluation=True):
         for pro, value in sorted(matching.items()):
             top_10 = sorted(value, reverse=True)[:10]
             top_10_ligands = list(map(lambda x: x[1], top_10))
-            row = [pro + "  " + "   ".join(top_10_ligands)]
-            matching_list.append(row)
+            row = pro + "   " + "   ".join(top_10_ligands)
             csvwriter.writerow(row)
+
+            row = [pro]
+            for i in top_10_ligands:
+                row.append(i)
+            matching_list.append(row)
         logger.debug(f'Result file saved {result_file_name}')
 
     def cal_success_rate(matching_list=matching_list):
@@ -77,6 +81,7 @@ def predict(serialized_model_path, evaluation=True):
                 success_count += 1
             else:
                 failure_count += 1
+        logger.debug(f'Success count: {success_count}, Failure count: {failure_count}.')
         return success_count / (success_count + failure_count)
 
     success_rate = cal_success_rate()

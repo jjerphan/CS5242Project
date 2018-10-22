@@ -5,7 +5,6 @@ import pickle
 from datetime import datetime
 
 import keras
-from keras import backend as K
 from keras.losses import binary_crossentropy
 
 from examples_iterator import ExamplesIterator
@@ -16,6 +15,7 @@ from settings import max_nb_neg_per_pos
 from settings import training_examples_folder, results_folder, nb_neg_ex_per_pos, optimizer_default, batch_size_default, \
     nb_epochs_default, parameters_file_name, training_logfile, validation_examples_folder
 from keras import backend as K
+from keras.callbacks import EarlyStopping
 
 
 
@@ -74,12 +74,14 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, batch_size,
     # Making a folder for the job to save log, model, history in it.
     if job_folder is None:
         job_folder = os.path.join(results_folder, current_timestamp)
+        logger.debug(f'job_folder is None. Created timestamp based folder {job_folder}')
     if not (os.path.exists(results_folder)):
         print(f"The {results_folder} does not exist. Creating it.")
         os.makedirs(results_folder)
 
     # Creating the folder for the job
     if not (os.path.exists(job_folder)):
+        logger.debug(f'job folder does not exist, creating {job_folder}')
         os.makedirs(job_folder)
 
     fh = logging.FileHandler(os.path.join(job_folder, training_logfile))
@@ -128,7 +130,7 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, batch_size,
 
     # To log batches and epoch
     epoch_batch_callback = LogEpochBatchCallback(logger)
-    EarlyStopping(monitor='f1', mode='max', patience=10)
+    EarlyStopping(monitor='f1', mode='max', patience=3)
 
     # To prevent having
     class_weight = {
@@ -149,10 +151,12 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, batch_size,
     train_checkpoint = datetime.now()
 
     # Saving models.py and history
-    serialized_model_file_name = job_folder.split('.')[0] + "_nbepoches_" + str(nb_epochs) + "_nbneg_" + str(nb_neg) + '_model.h5'
+    serialized_model_file_name = job_folder.split(os.sep)[-2].split('.')[0]  + "_nbepoches_" + str(nb_epochs) + "_nbneg_" + str(nb_neg) + '_model.h5'
     model_file = os.path.join(job_folder, serialized_model_file_name)
-    history_file_name = job_folder.split('.')[0] + "_nbepoches_" + str(nb_epochs) + "_nbneg_" + str(nb_neg) + '_history.pickle'
+    logger.debug(f'Model file name is: {serialized_model_file_name}. Full file is: {model_file}')
+    history_file_name = job_folder.split(os.sep)[-2].split('.')[0] + "_nbepoches_" + str(nb_epochs) + "_nbneg_" + str(nb_neg) + '_history.pickle'
     history_file = os.path.join(job_folder, history_file_name)
+    logger.debug(f'History file is {history_file}')
 
     model.save(model_file)
     logger.debug(f"Model saved in {model_file}")

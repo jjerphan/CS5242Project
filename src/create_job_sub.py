@@ -4,7 +4,7 @@ import textwrap
 from models_inspector import ModelsInspector
 from models import models_available, models_available_names
 from settings import JOB_SUBMISSIONS_FOLDER, NB_NEG_EX_PER_POS, NB_EPOCHS_DEFAULT, BATCH_SIZE_DEFAULT, N_GPU_DEFAULT, \
-    RESULTS_FOLDER, NAME_ENV
+    RESULTS_FOLDER, JOBS_ENV
 
 
 def save_job_file(stub, name_job):
@@ -39,6 +39,18 @@ def save_job_file(stub, name_job):
 
 
 def get_train_stub(model_index, name_job, nb_epochs, batch_size, nb_neg, max_examples, n_gpu):
+    """
+    Return the stub for training a using the different parameters given.
+
+    :param model_index:
+    :param name_job:
+    :param nb_epochs:
+    :param batch_size:
+    :param nb_neg:
+    :param max_examples:
+    :param n_gpu:
+    :return:
+    """
     # TODO : fix this hack to add the option
     script_name = "train_cnn.py"
 
@@ -54,7 +66,7 @@ def get_train_stub(model_index, name_job, nb_epochs, batch_size, nb_neg, max_exa
                 #PBS -N {name_job}
                 mkdir -p {RESULTS_FOLDER}/$PBS_JOBID/
                 cd $PBS_O_WORKDIR/src/
-                source activate {NAME_ENV}
+                source activate {JOBS_ENV}
                 python $PBS_O_WORKDIR/src/{script_name}  --model_index {model_index} \\
                                                          --nb_epochs {nb_epochs} \\
                                                          --batch_size {batch_size} \\
@@ -146,7 +158,7 @@ def create_job_with_for_one_serialized_model(script_name, name_job, evaluation=F
                     #PBS -l walltime=23:00:00
                     #PBS -N {name_job}
                     cd $PBS_O_WORKDIR/src/
-                    source activate {NAME_ENV}
+                    source activate {JOBS_ENV}
                     python $PBS_O_WORKDIR/src/{script_name}  --model_path {serialized_model_path} \\ {option_max if max_examples is not None else ''} \\
                                                              {option_evaluation if evaluation else ''}
                     """

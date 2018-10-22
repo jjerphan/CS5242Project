@@ -5,7 +5,12 @@ from discretization import RelativeCubeRepresentation, load_nparray, AbsoluteCub
 from settings import TRAINING_EXAMPLES_FOLDER, LENGTH_CUBE_SIDE
 
 
-def compare_relative_cube_discretization(example_file):
+def plot_relative_cube_representation(example_file):
+    """
+    Plot various relative cube representation of one example for visual inspection.
+
+    :param example_file:
+    """
     print(f"System {example_file}")
     file_name = os.path.join(TRAINING_EXAMPLES_FOLDER, example_file)
     example = load_nparray(file_name)
@@ -47,7 +52,13 @@ def compare_relative_cube_discretization(example_file):
     plt.pause(2)
 
 
-def compare_absolute_cube_discretization(example_file, cube_resolution=1.0):
+def plot_absolute_cube_representation(example_file, cube_resolution=1.0):
+    """
+    Plot various absolute cube representation of one example for visual inspection.
+
+    :param example_file:
+    :param cube_resolution: the resolution in angstrom to use for the representation
+    """
     print(f"System {example_file}")
     file_name = os.path.join(TRAINING_EXAMPLES_FOLDER, example_file)
     example = load_nparray(file_name)
@@ -78,12 +89,13 @@ def compare_absolute_cube_discretization(example_file, cube_resolution=1.0):
 
 
 if __name__ == "__main__":
-    # Just to test
     examples_files = os.listdir(TRAINING_EXAMPLES_FOLDER)
     plt.ion()
     plt.show()
+
+    # Plotting the 10 first examples
     for ex_file in examples_files[:10]:
         plt.close('all')
-        compare_relative_cube_discretization(ex_file)
-        compare_absolute_cube_discretization(ex_file, cube_resolution=3.0)
+        plot_relative_cube_representation(ex_file)
+        plot_absolute_cube_representation(ex_file, cube_resolution=3.0)
         input("Show next [Press Enter]")

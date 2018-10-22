@@ -1,11 +1,9 @@
-import numpy as np
-import os
-import matplotlib.pyplot as plt
 import logging
-from mpl_toolkits.mplot3d import Axes3D  # needed by the 3D plotter
 
-from discretization import load_nparray
-from settings import FLOAT_TYPE, COMMENT_DELIMITER, TRAINING_EXAMPLES_FOLDER, LENGTH_CUBE_SIDE, NB_FEATURES
+import matplotlib.pyplot as plt
+import numpy as np
+
+from settings import LENGTH_CUBE_SIDE
 
 logger = logging.getLogger('cnn.discretization')
 logger.addHandler(logging.NullHandler())

@@ -9,7 +9,7 @@ from collections import defaultdict
 
 from keras.models import load_model
 
-from settings import TESTING_EXAMPLES_FOLDER, SERIALIZED_MODEL_FILE_NAME_END
+from settings import TESTING_EXAMPLES_FOLDER, SERIALIZED_MODEL_FILE_NAME_PREFIX
 from predict_generator import PredictGenerator
 from settings import PREDICT_EXAMPLES_FOLDER, RESULTS_FOLDER
 from train_cnn import f1
@@ -31,8 +31,8 @@ def predict(serialized_model_path, evaluation=True):
 
     model_name = serialized_model_path.split(os.sep)[-1]
     matching_file_name = os.path.join(RESULTS_FOLDER,
-                                      model_name.replace(SERIALIZED_MODEL_FILE_NAME_END, "matching.pkl"))
-    result_file_name = os.path.join(RESULTS_FOLDER, model_name.replace(SERIALIZED_MODEL_FILE_NAME_END, "result.txt"))
+                                      model_name.replace(SERIALIZED_MODEL_FILE_NAME_PREFIX, "matching.pkl"))
+    result_file_name = os.path.join(RESULTS_FOLDER, model_name.replace(SERIALIZED_MODEL_FILE_NAME_PREFIX, "result.txt"))
 
     if evaluation:
         predict_folder = TESTING_EXAMPLES_FOLDER

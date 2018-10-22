@@ -1,19 +1,15 @@
 import numpy as np
 import os
-import shutil
 import logging
 from concurrent import futures
 from discretization import load_nparray
+from pipeline_fixtures import get_current_timestamp
 
 from settings import EXTRACTED_GIVEN_DATA_TRAIN_FOLDER, extracted_given_data_validation_folder, \
     EXTRACTED_PROTEIN_SUFFIX, \
     EXTRACTED_LIGAND_SUFFIX, COMMENT_DELIMITER, FEATURES_NAMES, TRAINING_EXAMPLES_FOLDER, \
     VALIDATION_EXAMPLES_FOLDER, NB_WORKERS, MAX_NB_NEG_PER_POS, TESTING_EXAMPLES_FOLDER, EXTRACTED_PREDICT_DATA_FOLDER, \
-    PREDICT_EXAMPLES_FOLDER, extracted_given_data_test_folder
-
-
-logger = logging.getLogger('__main__.create_example')
-logger.addHandler(logging.NullHandler())
+    PREDICT_EXAMPLES_FOLDER, extracted_given_data_test_folder, LOGS_FOLDER
 
 
 def save_example(examples_folder: str, protein: np.ndarray, ligand: np.ndarray,
@@ -95,7 +91,7 @@ def save_system_examples(system, list_systems, nb_neg, extracted_data_folder, ex
         warning_message = f"Loading protein/ligand failed. Protein folder " + \
                           f"{os.path.join(extracted_data_folder, system + EXTRACTED_PROTEIN_SUFFIX)}, " + \
                           f"Ligand folder {os.path.join(extracted_data_folder, system + EXTRACTED_LIGAND_SUFFIX)}"
-        logger.debug(warning_message)
+        # logger.debug(warning_message)
         print(warning_message)
         raise RuntimeError()
 
@@ -116,7 +112,7 @@ def save_system_examples(system, list_systems, nb_neg, extracted_data_folder, ex
         try:
             save_example(examples_folder, system_protein, other_ligand, system, other_system)
         except Exception:
-            logger.debug(f'Save failed to {examples_folder}')
+            # logger.debug(f'Save failed to {examples_folder}')
             raise RuntimeError()
 
 
@@ -143,6 +139,10 @@ def create_examples(from_folder, to_folder, nb_neg: int = -1):
     :param nb_neg: the number of negative example to create per positive example. Default -1 means maximum.
     :return:
     """
+    logger = logging.getLogger('__main__.create_example')
+    fh = logging.FileHandler(os.path.join(LOGS_FOLDER, get_current_timestamp()))
+    logger.addHandler(fh)
+
     # Getting all the systems
     extract_id = lambda x: x.split("_")[0]
 
@@ -183,14 +183,14 @@ if __name__ == "__main__":
                     to_folder=TRAINING_EXAMPLES_FOLDER,
                     nb_neg=MAX_NB_NEG_PER_POS)
 
-    print("Creating validation examples")
+    print("Creating all possible validation examples")
     create_examples(from_folder=extracted_given_data_validation_folder,
                     to_folder=VALIDATION_EXAMPLES_FOLDER)
 
-    print("Creating testing examples")
+    print("Creating all possible testing examples")
     create_examples(from_folder=extracted_given_data_test_folder,
                     to_folder=TESTING_EXAMPLES_FOLDER)
 
-    print("Creating examples for final prediction")
+    print("Creating all possible examples for final predictions")
     create_examples(from_folder=EXTRACTED_PREDICT_DATA_FOLDER,
                     to_folder=PREDICT_EXAMPLES_FOLDER)

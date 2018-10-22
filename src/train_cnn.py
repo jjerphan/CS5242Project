@@ -4,19 +4,17 @@ import os
 import pickle
 from datetime import datetime
 
-import keras
+from keras import backend as K
+from keras.utils import print_summary
 from keras.losses import binary_crossentropy
 
 from discretization import RelativeCubeRepresentation
 from examples_iterator import ExamplesIterator
 from models import models_available, models_available_names
-from pipeline_fixtures import LogEpochBatchCallback
-from pipeline_fixtures import get_current_timestamp
-from settings import MAX_NB_NEG_PER_POS, LENGTH_CUBE_SIDE
+from pipeline_fixtures import LogEpochBatchCallback, get_current_timestamp
+from settings import MAX_NB_NEG_PER_POS, LENGTH_CUBE_SIDE, HISTORY_FILE_NAME_PREFIX, JOB_FOLDER_DEFAULT, NORM_CONST_WEIGHT_DEFAULT
 from settings import TRAINING_EXAMPLES_FOLDER, RESULTS_FOLDER, NB_NEG_EX_PER_POS, OPTIMIZER_DEFAULT, BATCH_SIZE_DEFAULT, \
-    NB_EPOCHS_DEFAULT, SERIALIZED_MODEL_FILE_NAME, PARAMETERS_FILE_NAME, TRAINING_LOGFILE, VALIDATION_EXAMPLES_FOLDER
-from keras import backend as K
-from keras.callbacks import EarlyStopping
+    NB_EPOCHS_DEFAULT, SERIALIZED_MODEL_FILE_NAME_PREFIX, PARAMETERS_FILE_NAME, TRAINING_LOGFILE, VALIDATION_EXAMPLES_FOLDER
 
 
 def f1(y_true, y_pred):
@@ -54,35 +52,40 @@ def f1(y_true, y_pred):
 def train_cnn(model_index, nb_epochs, nb_neg, max_examples, batch_size,
               optimizer=OPTIMIZER_DEFAULT, results_folder=RESULTS_FOLDER, job_folder=None):
     """
-    Train a given CNN.
+    Train a given CNN using some given parameters.
+
+    Saved the results in a given `job_folder`. Results include:
+     - the serialized model
+     - a log of the training procedure
+     - a file listing the parameters
 
     :param model_index: the index of the model to use in the list `model_available`
     :param nb_epochs: the number of epochs to use
     :param nb_neg: the number of training examples to use to train the network
     :param max_examples: the maximum number of examples to choose
     :param batch_size: the number of examples to use per batch
-    :param optimizer: the optimizer to use to train (default = "rmsprop"
-    :param results_folder: where to save results
+    :param optimizer: the optimizer to use to train (default = "Adam")
+    :param results_folder: where to save `job_folder` if it is None
+    :param job_folder: where results can saved
     :return:
     """
-    # Formatting fixtures
-    current_timestamp = get_current_timestamp()
-    logger = logging.getLogger(__name__)
-    logger.setLevel(logging.DEBUG)
 
     # Making a folder for the job to save log, model, history in it.
     if job_folder is None:
-        job_folder = os.path.join(results_folder, current_timestamp)
-        logger.debug(f'job_folder is None. Created timestamp based folder {job_folder}')
+        job_folder = os.path.join(results_folder, get_current_timestamp())
+
     if not (os.path.exists(results_folder)):
         print(f"The {results_folder} does not exist. Creating it.")
         os.makedirs(results_folder)
 
     # Creating the folder for the job
     if not (os.path.exists(job_folder)):
-        logger.debug(f'job folder does not exist, creating {job_folder}')
+        print(f'job folder does not exist, creating {job_folder}')
         os.makedirs(job_folder)
 
+    # Formatting fixtures
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.DEBUG)
     fh = logging.FileHandler(os.path.join(job_folder, TRAINING_LOGFILE))
     fh.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -94,7 +97,7 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, batch_size,
     logger.debug('Creating network model')
     model = models_available[model_index]
     logger.debug(f"Model {model.name} chosen")
-    keras.utils.print_summary(model, print_fn=logger.debug)
+    print_summary(model, print_fn=logger.debug)
 
     model.compile(optimizer=optimizer, loss=binary_crossentropy, metrics=['accuracy', f1])
 
@@ -106,6 +109,7 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, batch_size,
     logger.debug(f'nb_neg      = {nb_neg}')
     logger.debug(f'optimizer   = {optimizer}')
 
+    # Saving parameters in a file
     with open(os.path.join(job_folder, PARAMETERS_FILE_NAME), "w") as f:
         f.write(f'model={model.name}\n')
         f.write(f'nb_epochs={nb_epochs}\n')
@@ -114,8 +118,9 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, batch_size,
         f.write(f'nb_neg={nb_neg}\n')
         f.write(f'optimizer={optimizer}\n')
 
-    logger.debug(f'model, log and history to be saved in {job_folder}')
+    logger.debug(f'Serialized model, log and history to be saved in {job_folder}')
 
+    # The representation to use
     cube_representation = RelativeCubeRepresentation(length_cube_side=LENGTH_CUBE_SIDE)
 
     # To load the data incrementally
@@ -134,31 +139,30 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, batch_size,
     # To log batches and epoch
     epoch_batch_callback = LogEpochBatchCallback(logger)
 
-    # To prevent having
-    class_weight = {
+    # To re-balance the class
+    classes_weights = {
         0: 1,
-        1: min(nb_neg, MAX_NB_NEG_PER_POS) // 2
+        1: min(nb_neg, MAX_NB_NEG_PER_POS) // NORM_CONST_WEIGHT_DEFAULT
     }
 
-    logger.debug(f'Training with class_weight: {class_weight}')
+    logger.debug(f'Training with the following classes weights: {classes_weights}')
 
     # Here we go !
     history = model.fit_generator(generator=train_examples_iterator,
                                   epochs=nb_epochs,
                                   validation_data=validation_examples_iterator,
                                   callbacks=[epoch_batch_callback],
-                                  class_weight=class_weight)
+                                  class_weight=classes_weights)
 
     logger.debug('Done training !')
     train_checkpoint = datetime.now()
 
-    # Saving models.py and history
-    id = job_folder.split('.')[0]
-    serialized_model_file_name = f"{id}_nbepoches_{nb_epochs}_nbneg_{nb_neg}_{model_file_name}"
-    model_file = os.path.join(job_folder, serialized_model_file_name)
-    history_file_name = f"{id}_nbepoches_{nb_epochs}_nbneg_{nb_neg}_{model_file_name}"
-    history_file = os.path.join(job_folder, history_file_name)
-    logger.debug(f'History file is {history_file}')
+
+    # Saving the serialized model and its history
+    id = job_folder.split(os.sep)[-1].replace(os.sep, "")
+    prefix = f"{id}_nbepoches_{nb_epochs}_nbneg_{nb_neg}"
+    model_file = os.path.join(job_folder, f"{prefix}_{SERIALIZED_MODEL_FILE_NAME_PREFIX}")
+    history_file = os.path.join(job_folder, f"{prefix}__{HISTORY_FILE_NAME_PREFIX}")
 
     model.save(model_file)
     logger.debug(f"Model saved in {model_file}")
@@ -166,7 +170,6 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, batch_size,
         pickle.dump(history.history, handle)
 
     logger.debug(f"History saved in {model_file}")
-    logger.debug(f"Done !")
     logger.debug(f"Training done in      : {train_checkpoint - start_time}")
 
 
@@ -195,7 +198,7 @@ if __name__ == "__main__":
                         help='the number of total examples to use in total')
 
     parser.add_argument('--job_folder', metavar='job_folder',
-                        type=str, default='./results/local/',
+                        type=str, default=JOB_FOLDER_DEFAULT,
                         help='the folder where results are to be saved')
 
     args = parser.parse_args()

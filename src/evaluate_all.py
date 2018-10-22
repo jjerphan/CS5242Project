@@ -21,7 +21,8 @@ def mean_pred(y_pred, y_true):
 
 def evaluate_all(max_examples=None):
     """
-    Evaluate a given model using custom metrics.
+    Evaluate all the models that are present in the `results_folder`.
+    Can take quite a long time.
 
     :param max_examples: the maximum number of examples to use
     :return:
@@ -62,7 +63,7 @@ def evaluate_all(max_examples=None):
 
     ys = validation_examples_iterator.get_labels()
 
-    logger.debug(f"Evaluating on {validation_examples_iterator.nb_examples()} examples")
+    logger.debug(f"Evaluating on {validation_examples_iterator.get_nb_examples()} examples")
 
     # Constructing the header : we are saving the results of the evaluation with for each models
     # the parameters that have been used to train

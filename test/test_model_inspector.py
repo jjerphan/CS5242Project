@@ -7,9 +7,9 @@ warnings.simplefilter("ignore")
 from src.models_inspector import ModelsInspector
 
 
-class ModelInspectorTest(unittest.TestCase):
+class ModelsInspectorTest(unittest.TestCase):
     """
-    Testing the ModelInspector.
+    Testing the ModelsInspector.
 
     """
 
@@ -30,8 +30,8 @@ class ModelInspectorTest(unittest.TestCase):
         sub_folder, set_parameters, serialized_model_path, history_file_path = self.models_inspector[0]
         true_sub_folder = os.path.join(self.test_folder, "with_serialized_model")
         self.assertEqual(sub_folder, true_sub_folder)
-        self.assertEqual(serialized_model_path, os.path.join(sub_folder, "model.h5"))
-        self.assertEqual(history_file_path, os.path.join(sub_folder, "history.pickle"))
+        self.assertEqual(serialized_model_path, os.path.join(sub_folder, "20181224122334model.h5"))
+        self.assertEqual(history_file_path, os.path.join(sub_folder, "20181224122334history.pickle"))
         true_set_parameters = {
             "model_name": "pafnucy_like",
             "nb_epochs": "20",

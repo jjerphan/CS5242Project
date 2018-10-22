@@ -20,9 +20,10 @@ def evaluate(serialized_model_path, max_examples=None):
     """
     Evaluate a given model using custom metrics.
 
+    Saves a log in its associated results folder.
+
     :param serialized_model_path: where the serialized_model is
     :param max_examples: the maximum number of examples to use
-    :param verbose: to have verbose outputs
     :return:
     """
 
@@ -54,10 +55,11 @@ def evaluate(serialized_model_path, max_examples=None):
                                                     max_examples=max_examples,
                                                     shuffle_after_completion=False)
 
-    logger.debug(f"Evaluating on {validation_examples_iterator.nb_examples()} examples")
+    logger.debug(f"Evaluating on {validation_examples_iterator.get_nb_examples()} examples")
 
     ys = validation_examples_iterator.get_labels()
     y_preds = model.predict_generator(validation_examples_iterator)
+
     # Rounding the prediction : using the second one
     y_rounded = np.array([1 if y > 0.5 else 0 for y in y_preds])
 

@@ -20,7 +20,7 @@ def download_file():
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     ssh.connect(hostname=hostname, username=username, password=password)
 
-    In, Out, Err = ssh.exec_command('ls ' + basedir + '*/results/*history.pickle')
+    In, Out, Err = ssh.exec_command('ls ' + basedir + '*/results/*20181224122334history.pickle')
 
     ftp_client = ssh.open_sftp()
     for remotefile in Out:

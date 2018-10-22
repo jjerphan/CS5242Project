@@ -86,6 +86,10 @@ if __name__ == "__main__":
                         type=int, default=None,
                         help='the number of total examples to use in total')
 
+    parser.add_argument('--evaluation', metavar='evaluation',
+                        type=bool, default=True,
+                        help='if true: action on test data from training set')
+
     args = parser.parse_args()
 
     print("Argument parsed : ", args)

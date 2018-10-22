@@ -4,13 +4,19 @@ import getpass
 import pickle
 import matplotlib.pyplot as plt
 
+from settings import RESULTS_FOLDER
+
 
 def download_file():
+    """
+    Download the histories present remotely
+    :return:
+    """
     hostname = 'nus.nscc.sg'
     username = input("Input your student id: ")
     password = getpass.getpass(prompt='Enter your password: ')
     basedir = '/home/users/nus/' + str(username) + '/'
-    localdir = './results/historys/'
+    localdir = os.path.join(RESULTS_FOLDER, "histories")
     localfiles = []
 
     if not os.path.exists(localdir):
@@ -20,7 +26,7 @@ def download_file():
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     ssh.connect(hostname=hostname, username=username, password=password)
 
-    In, Out, Err = ssh.exec_command('ls ' + basedir + '*/results/*20181224122334history.pickle')
+    In, Out, Err = ssh.exec_command('ls ' + basedir + '*/results/*history.pickle')
 
     ftp_client = ssh.open_sftp()
     for remotefile in Out:
@@ -36,10 +42,15 @@ def download_file():
 
 
 def plot_scores(file=''):
+    """
+    Plot the F1 score using a serialized history
+    :param file:
+    :return:
+    """
     with open(file, 'rb') as f:
         data = pickle.load(f)
 
-    epoches = [i + 1 for i in range(len(data['loss']))]
+    epoches = list(range(1, len(data['loss']+1)))
 
     plt.figure()
     plt.plot(epoches, data['f1'], c='black', label='training')

@@ -37,6 +37,9 @@ def save_job_file(stub, name_job):
         # Showing the content of the file
         os.system(f"cat {file_name}")
         print(f"Saved in {file_name}")
+        print()
+        print(f"To submit the job, just run in the root of the folder :")
+        print(f"$ qsub {file_name}")
 
 
 def get_train_stub(model_index, name_job, nb_epochs, batch_size, nb_neg, max_examples, n_gpu, weight_pos_class,
@@ -57,7 +60,7 @@ def get_train_stub(model_index, name_job, nb_epochs, batch_size, nb_neg, max_exa
     """
     script_name = "train_cnn.py"
 
-    option_max = f"--max_examples {max_examples} \\"
+    option_max = f"\n                                                         --max_examples {max_examples} \\"
 
     stub = f"""
                 #! /bin/bash
@@ -75,8 +78,7 @@ def get_train_stub(model_index, name_job, nb_epochs, batch_size, nb_neg, max_exa
                                                          --batch_size {batch_size} \\
                                                          --weight_pos_class {weight_pos_class} \\
                                                          --representation {representation} \\
-                                                         --nb_neg {nb_neg}\\
-                                                         {option_max if max_examples is not None else ''}
+                                                         --nb_neg {nb_neg}\\{option_max if max_examples is not None else ''}
                                                          --job_folder {RESULTS_FOLDER}/$PBS_JOBID/
                 """
     # We remove the first return in the string
@@ -138,9 +140,13 @@ def create_train_job():
     save_job_file(stub, name_job)
 
 
-def create_job_with_for_one_serialized_model(script_name, name_job, evaluation=False):
+def create_job_with_for_one_serialized_model(script_name, evaluation=True):
     """
-    The file gets saved in `job_submissions`.
+    Create submission files to executed on one serialized model.
+
+    :param script_name: the python script file name in `src/`
+    :param evaluation: boolean that indicates if the job has to be created for evaluation (testing)
+    :return:
     """
 
     # Asking for the different parameters
@@ -154,12 +160,10 @@ def create_job_with_for_one_serialized_model(script_name, name_job, evaluation=F
     n_gpu = N_GPU_DEFAULT if n_gpu == "" else int(n_gpu)
 
     # TODO : fix this hack to add the option
-
     option_max = f"                                         --max_examples {max_examples} \\"
-    option_evaluation = f"                                         --evaluation {prediction}\\"
 
     # We append the ID for the model to it
-    name_job += "_" + id_model
+    name_job = f"{script_name.split('.')[0]}_{id_model}"
     assert (n_gpu > 0)
 
     stub = f"""
@@ -172,9 +176,8 @@ def create_job_with_for_one_serialized_model(script_name, name_job, evaluation=F
                     #PBS -N {name_job}
                     cd $PBS_O_WORKDIR/src/
                     source activate {JOBS_ENV}
-                    python $PBS_O_WORKDIR/src/{script_name}  --model_path {serialized_model_path} \\
-                    {option_max if max_examples is not None else ''}
-                    {option_evaluation if evaluation else ''}
+                    python $PBS_O_WORKDIR/src/{script_name}  --model_path {serialized_model_path} \\{option_max if max_examples is not None else ''}
+                                                             --evaluation {evaluation}
                     """
     # We remove the first return in the string
     stub = stub[1:]
@@ -182,8 +185,9 @@ def create_job_with_for_one_serialized_model(script_name, name_job, evaluation=F
     save_job_file(stub, name_job)
 
 
-def create_multiple_train_jobs(batch_size=32, max_examples=None, n_gpu=1):
+def create_multiple_train_jobs(batch_size: int=BATCH_SIZE_DEFAULT, max_examples=None, n_gpu=N_GPU_DEFAULT):
     """
+    Create several submissions files to train different models.
 
     :return:
     """
@@ -206,8 +210,8 @@ def create_multiple_train_jobs(batch_size=32, max_examples=None, n_gpu=1):
     weight_pos_class = input(f"Weight for the positive class (leave blank for default = {WEIGHT_POS_CLASS}) : ")
     weight_pos_class = WEIGHT_POS_CLASS if weight_pos_class == "" else int(weight_pos_class)
 
-    representation = input(f"Cube representation: leave blank for absolute, type any character for relative : ")
-    representation = Relative if representation == "" else "relative"
+    representation = input(f"Cube representation: leave blank for relative, type any character for absolute: ")
+    representation = RelativeCubeRepresentation.name if representation == "" else AbsoluteCubeRepresentation.name
 
     for nb_epochs in list_nb_epochs:
         for nb_neg in list_nb_neg:
@@ -232,8 +236,7 @@ def create_evaluation_job():
 
     :return:
     """
-    create_job_with_for_one_serialized_model(script_name="evaluate.py",
-                                             name_job="evaluate")
+    create_job_with_for_one_serialized_model(script_name="evaluate.py", evaluation=True)
 
 
 def create_prediction_job():
@@ -242,10 +245,10 @@ def create_prediction_job():
 
     :return:
     """
-    choice = input(f"Testing? Choose 'n' for prediction. [y (default)/n] : ")
-    evaluation = False if choice == "" or choice == "y" else True
+    print("You can test a model (evaluating its performance) or predict on new using this model.")
+    choice = input(f"Enter any character to predict. Leave empty for evaluation.")
+    evaluation = (choice == "")
     create_job_with_for_one_serialized_model(script_name="predict.py",
-                                             name_job="predict",
                                              evaluation=evaluation)
 
 
@@ -253,9 +256,14 @@ if __name__ == "__main__":
     # Choosing the time of job to create
     choice = -1
     jobs = [create_train_job, create_multiple_train_jobs, create_evaluation_job, create_prediction_job]
+    description_jobs = ["File to train just one specific model",
+                        "Several files to train specific models",
+                        "File to evaluate a saved model",
+                        "File to predict using a saved model"]
     while choice not in range(len(jobs)):
+        print("What do you want to create?")
         for i, job in enumerate(jobs):
-            print(i, job.__name__)
+            print(i, description_jobs[i])
         choice = int(input("Your choice : # "))
 
     jobs[choice]()

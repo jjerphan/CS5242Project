@@ -33,7 +33,6 @@ class ModelsInspector:
         # (if the model is being trained for example) so, we chose here to
         # only keep sub folders that contains one.
         self._sub_folders = list(filter(lambda folder: any([SERIALIZED_MODEL_FILE_NAME_PREFIX in file for file in os.listdir(folder)]), sub_folders))
-        print(sub_folders)
         serialized_models_file_names = defaultdict(str)
         histories_file_names = defaultdict(str)
 
@@ -143,8 +142,3 @@ class ModelsInspector:
 
         return id, serialized_model_path
 
-
-if __name__ == "__main__":
-    model_inspector = ModelsInspector(results_folder=RESULTS_FOLDER)
-
-    print(model_inspector[0])

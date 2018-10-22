@@ -118,6 +118,7 @@ def train_cnn(model_index:int,
     logger.debug(f'batch_size  = {batch_size}')
     logger.debug(f'nb_neg      = {nb_neg}')
     logger.debug(f'optimizer   = {optimizer}')
+    logger.debug(f'representation   = {representation.name}')
     logger.debug(f'weight_pos_class   = {weight_pos_class}')
 
     # Saving parameters in a file
@@ -128,6 +129,7 @@ def train_cnn(model_index:int,
         f.write(f'batch_size={batch_size}\n')
         f.write(f'nb_neg={nb_neg}\n')
         f.write(f'optimizer={optimizer}\n')
+        f.write(f'representation={representation.name}\n')
         f.write(f'weight_pos_class={weight_pos_class}\n')
 
     logger.debug(f'Serialized model, log and history to be saved in {job_folder}')

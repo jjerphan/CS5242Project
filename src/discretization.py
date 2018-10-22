@@ -153,7 +153,8 @@ class AbsoluteCubeRepresentation(CubeRepresentation):
     Class that construct an absolute cube representation (see `CubeRepresentation` for an general overview of cube
     representations).
 
-    This representation construct a box using a fixed resolution in angstrom given by the `cube_resolution`.
+    This representation construct a box using a fixed resolution in angstrom (by default 3 angstrom)
+    given by the `cube_resolution`.
     Then it represents the system by placing the center of the system in the center of the cube.
 
     Atom that are outside of the boxes get discarded
@@ -165,7 +166,7 @@ class AbsoluteCubeRepresentation(CubeRepresentation):
     """
     name = "absolute"
 
-    def __init__(self, length_cube_side, cube_resolution=1.0, use_rotation_invariance=True, translate_ligand=False,
+    def __init__(self, length_cube_side, cube_resolution=3.0, use_rotation_invariance=True, translate_ligand=False,
                  verbose=False):
         """
 
@@ -226,6 +227,7 @@ class AbsoluteCubeRepresentation(CubeRepresentation):
 
         return cube
 
+
 class RelativeCubeRepresentation(CubeRepresentation):
     """
     Class that construct a relative cube representation (see `CubeRepresentation` for an general overview of cube
@@ -241,7 +243,8 @@ class RelativeCubeRepresentation(CubeRepresentation):
 
     name = "relative"
 
-    def __init__(self, length_cube_side, use_rotation_invariance=True, translate_ligand=False, verbose=False, keep_proportions=True):
+    def __init__(self, length_cube_side, use_rotation_invariance=True, translate_ligand=False, verbose=False,
+                 keep_proportions=True):
         """
 
         :param length_cube_side:
@@ -250,7 +253,7 @@ class RelativeCubeRepresentation(CubeRepresentation):
         :param verbose:
         :param keep_proportions:
         """
-        super().__init__(length_cube_side,use_rotation_invariance, translate_ligand,verbose)
+        super().__init__(length_cube_side, use_rotation_invariance, translate_ligand, verbose)
         self._keep_proportions = keep_proportions
 
     @staticmethod

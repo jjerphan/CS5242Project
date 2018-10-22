@@ -151,10 +151,10 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, batch_size,
     train_checkpoint = datetime.now()
 
     # Saving models.py and history
-    serialized_model_file_name = job_folder.split('.')[0] + "_nbepoches_" + str(nb_epochs) + "_nbneg_" + str(nb_neg) + '_model.h5'
+    serialized_model_file_name = job_folder.split(os.sep)[-2].split('.')[0]  + "_nbepoches_" + str(nb_epochs) + "_nbneg_" + str(nb_neg) + '_model.h5'
     model_file = os.path.join(job_folder, serialized_model_file_name)
     logger.debug(f'Model file name is: {serialized_model_file_name}. Full file is: {model_file}')
-    history_file_name = job_folder.split('.')[0] + "_nbepoches_" + str(nb_epochs) + "_nbneg_" + str(nb_neg) + '_history.pickle'
+    history_file_name = job_folder.split(os.sep)[-2].split('.')[0] + "_nbepoches_" + str(nb_epochs) + "_nbneg_" + str(nb_neg) + '_history.pickle'
     history_file = os.path.join(job_folder, history_file_name)
     logger.debug(f'History file is {history_file}')
 

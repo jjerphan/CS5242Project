@@ -4,12 +4,9 @@ from collections import defaultdict
 import keras
 import numpy as np
 
-from discretization import load_nparray, CubeRepresentation, RelativeCubeRepresentation
-from pipeline_fixtures import is_positive, is_negative
-from settings import TRAINING_EXAMPLES_FOLDER, SHAPE_CUBE, VALIDATION_EXAMPLES_FOLDER, LENGTH_CUBE_SIDE, \
-    TESTING_EXAMPLES_FOLDER
-
-from mpl_toolkits.mplot3d import Axes3D
+from discretization import CubeRepresentation
+from pipeline_fixtures import is_positive, is_negative, load_nparray
+from settings import SHAPE_CUBE
 
 
 class ExamplesIterator(keras.utils.Sequence):
@@ -188,16 +185,3 @@ class ExamplesIterator(keras.utils.Sequence):
         # Dimensions
         assert (cubes.shape[1:] == SHAPE_CUBE)
         return cubes, ys
-
-
-if __name__ == "__main__":
-    for folder in [TRAINING_EXAMPLES_FOLDER, VALIDATION_EXAMPLES_FOLDER, TESTING_EXAMPLES_FOLDER]:
-        relative_representation = RelativeCubeRepresentation(length_cube_side=LENGTH_CUBE_SIDE)
-        iterator = ExamplesIterator(representation=relative_representation, examples_folder=folder)
-        # Reverse iterator
-        for i, (batch, ys) in enumerate(reversed(iterator)):
-            relative_representation.plot_cube(batch[0])
-            print("Checking size of last batch")
-            assert (batch.shape[0] == iterator.get_nb_examples() % iterator._batch_size)
-            print(i, batch.shape, np.mean(ys))
-            break

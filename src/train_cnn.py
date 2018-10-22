@@ -8,11 +8,11 @@ from keras import backend as K
 from keras.utils import print_summary
 from keras.losses import binary_crossentropy
 
-from discretization import RelativeCubeRepresentation
+from discretization import RelativeCubeRepresentation, AbsoluteCubeRepresentation, CubeRepresentation
 from examples_iterator import ExamplesIterator
 from models import models_available, models_available_names
 from pipeline_fixtures import LogEpochBatchCallback, get_current_timestamp
-from settings import MAX_NB_NEG_PER_POS, LENGTH_CUBE_SIDE, HISTORY_FILE_NAME_PREFIX, JOB_FOLDER_DEFAULT, NORM_CONST_WEIGHT_DEFAULT
+from settings import MAX_NB_NEG_PER_POS, LENGTH_CUBE_SIDE, HISTORY_FILE_NAME_PREFIX, JOB_FOLDER_DEFAULT, WEIGHT_POS_CLASS
 from settings import TRAINING_EXAMPLES_FOLDER, RESULTS_FOLDER, NB_NEG_EX_PER_POS, OPTIMIZER_DEFAULT, BATCH_SIZE_DEFAULT, \
     NB_EPOCHS_DEFAULT, SERIALIZED_MODEL_FILE_NAME_PREFIX, PARAMETERS_FILE_NAME, TRAINING_LOGFILE, VALIDATION_EXAMPLES_FOLDER
 
@@ -49,8 +49,16 @@ def f1(y_true, y_pred):
     return 2 * ((precision * recall) / (precision + recall + K.epsilon()))
 
 
-def train_cnn(model_index, nb_epochs, nb_neg, max_examples, batch_size,
-              optimizer=OPTIMIZER_DEFAULT, results_folder=RESULTS_FOLDER, job_folder=None):
+def train_cnn(model_index:int,
+              nb_epochs: int,
+              nb_neg: int,
+              max_examples: int,
+              batch_size: int,
+              representation:CubeRepresentation=RelativeCubeRepresentation(length_cube_side=LENGTH_CUBE_SIDE),
+              weight_pos_class:int=WEIGHT_POS_CLASS,
+              optimizer=OPTIMIZER_DEFAULT,
+              results_folder:str=RESULTS_FOLDER,
+              job_folder:str=None):
     """
     Train a given CNN using some given parameters.
 
@@ -64,6 +72,8 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, batch_size,
     :param nb_neg: the number of training examples to use to train the network
     :param max_examples: the maximum number of examples to choose
     :param batch_size: the number of examples to use per batch
+    :param representation: the 3D representation of the cube to use for training
+    :param weight_pos_class: the weight to use for the positive class
     :param optimizer: the optimizer to use to train (default = "Adam")
     :param results_folder: where to save `job_folder` if it is None
     :param job_folder: where results can saved
@@ -108,6 +118,7 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, batch_size,
     logger.debug(f'batch_size  = {batch_size}')
     logger.debug(f'nb_neg      = {nb_neg}')
     logger.debug(f'optimizer   = {optimizer}')
+    logger.debug(f'weight_pos_class   = {weight_pos_class}')
 
     # Saving parameters in a file
     with open(os.path.join(job_folder, PARAMETERS_FILE_NAME), "w") as f:
@@ -117,20 +128,18 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, batch_size,
         f.write(f'batch_size={batch_size}\n')
         f.write(f'nb_neg={nb_neg}\n')
         f.write(f'optimizer={optimizer}\n')
+        f.write(f'weight_pos_class={weight_pos_class}\n')
 
     logger.debug(f'Serialized model, log and history to be saved in {job_folder}')
 
-    # The representation to use
-    cube_representation = RelativeCubeRepresentation(length_cube_side=LENGTH_CUBE_SIDE)
-
     # To load the data incrementally
-    train_examples_iterator = ExamplesIterator(representation=cube_representation,
+    train_examples_iterator = ExamplesIterator(representation=representation,
                                                examples_folder=TRAINING_EXAMPLES_FOLDER,
                                                nb_neg=nb_neg,
                                                batch_size=batch_size,
                                                max_examples=max_examples)
 
-    validation_examples_iterator = ExamplesIterator(representation=cube_representation,
+    validation_examples_iterator = ExamplesIterator(representation=representation,
                                                     examples_folder=VALIDATION_EXAMPLES_FOLDER,
                                                     nb_neg=nb_neg,
                                                     batch_size=batch_size,
@@ -142,7 +151,7 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, batch_size,
     # To re-balance the class
     classes_weights = {
         0: 1,
-        1: min(nb_neg, MAX_NB_NEG_PER_POS) // NORM_CONST_WEIGHT_DEFAULT
+        1: weight_pos_class
     }
 
     logger.debug(f'Training with the following classes weights: {classes_weights}')
@@ -197,6 +206,15 @@ if __name__ == "__main__":
                         type=int, default=None,
                         help='the number of total examples to use in total')
 
+    parser.add_argument('--weight_pos_class', metavar='weight_pos_class',
+                        type=int, default=WEIGHT_POS_CLASS,
+                        help='the weight to readjust the class of positive example with respect to training')
+
+    parser.add_argument('--representation', metavar='weight_pos_class',
+                        type=str, default="relative",
+                        help=f'the representation to use for the 3D cube ("{RelativeCubeRepresentation.name}" or '
+                             f'"{AbsoluteCubeRepresentation.name}")')
+
     parser.add_argument('--job_folder', metavar='job_folder',
                         type=str, default=JOB_FOLDER_DEFAULT,
                         help='the folder where results are to be saved')
@@ -209,9 +227,14 @@ if __name__ == "__main__":
     assert (args.nb_epochs > 0)
     assert (args.nb_neg > 0)
 
+    representation = (RelativeCubeRepresentation(length_cube_side=LENGTH_CUBE_SIDE)
+        if args.representation == RelativeCubeRepresentation.name else
+        AbsoluteCubeRepresentation)
+
     train_cnn(model_index=args.model_index,
               nb_epochs=args.nb_epochs,
               nb_neg=args.nb_neg,
               max_examples=args.max_examples,
               batch_size=args.batch_size,
+              weight_pos_class=args.weight_pos_class,
               job_folder=args.job_folder)

@@ -1,16 +1,9 @@
 import numpy as np
-import os
 import matplotlib.pyplot as plt
-import logging
 from abc import ABC, abstractmethod
 
-from mpl_toolkits.mplot3d import Axes3D
-
-from settings import FLOAT_TYPE, COMMENT_DELIMITER, TRAINING_EXAMPLES_FOLDER, LENGTH_CUBE_SIDE, NB_FEATURES, \
+from settings import LENGTH_CUBE_SIDE, NB_FEATURES, \
     INDICES_FEATURES
-
-logger = logging.getLogger('cnn.discretization')
-logger.addHandler(logging.NullHandler())
 
 
 class CubeRepresentation(ABC):
@@ -37,6 +30,8 @@ class CubeRepresentation(ABC):
     respectively on the constructor.
 
     """
+
+    name = "abstract"
 
     def __init__(self, length_cube_side: int, use_rotation_invariance: bool, translate_ligand: bool, verbose: bool):
         """
@@ -168,6 +163,7 @@ class AbsoluteCubeRepresentation(CubeRepresentation):
 
 
     """
+    name = "absolute"
 
     def __init__(self, length_cube_side, cube_resolution=1.0, use_rotation_invariance=True, translate_ligand=False,
                  verbose=False):
@@ -230,7 +226,6 @@ class AbsoluteCubeRepresentation(CubeRepresentation):
 
         return cube
 
-
 class RelativeCubeRepresentation(CubeRepresentation):
     """
     Class that construct a relative cube representation (see `CubeRepresentation` for an general overview of cube
@@ -243,6 +238,9 @@ class RelativeCubeRepresentation(CubeRepresentation):
     be translated on the protein, constructing the cube can be verbose.
 
     """
+
+    name = "relative"
+
     def __init__(self, length_cube_side, use_rotation_invariance=True, translate_ligand=False, verbose=False, keep_proportions=True):
         """
 
@@ -325,26 +323,9 @@ class RelativeCubeRepresentation(CubeRepresentation):
         scaled_coords[:, 2] = np.floor((coords[:, 2] - z_min) / (z_range + eps) * LENGTH_CUBE_SIDE).astype(int)
 
         cube = np.zeros((LENGTH_CUBE_SIDE, LENGTH_CUBE_SIDE, LENGTH_CUBE_SIDE, nb_feat))
-        logger.debug("Cube size is %s", str(cube.shape))
 
         # Filling the cube with the features
         for (x, y, z), f in zip(scaled_coords, atom_features):
             cube[x, y, z] += f
 
         return cube
-
-
-def load_nparray(file_name: str):
-    """
-    Loads an numpy ndarray stored in given file
-    :param file_name: the file to use
-    :return:
-    """
-
-    example = np.loadtxt(file_name, dtype=FLOAT_TYPE, comments=COMMENT_DELIMITER)
-    # If it's a vector (i.e if there is just one atom),
-    # we reshape it into a (1,n nb_features) array
-    if len(example.shape) == 1:
-        example = example.reshape(1, -1)
-
-    return example

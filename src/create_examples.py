@@ -2,8 +2,7 @@ import numpy as np
 import os
 import logging
 from concurrent import futures
-from discretization import load_nparray
-from pipeline_fixtures import get_current_timestamp
+from pipeline_fixtures import get_current_timestamp, load_nparray
 
 from settings import EXTRACTED_GIVEN_DATA_TRAIN_FOLDER, extracted_given_data_validation_folder, \
     EXTRACTED_PROTEIN_SUFFIX, \

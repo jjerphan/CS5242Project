@@ -6,8 +6,7 @@ from pandas import DataFrame
 
 from settings import EXTRACTED_GIVEN_DATA_TRAIN_FOLDER, extracted_given_data_validation_folder, NORMALIZED_DATA_TRAIN_FOLDER, \
     NORMALIZED_DATA_TEST_FOLDER, NORMALIZED_DATA_FOLDER, GIVEN_DATA_FOLDER
-from pipeline_fixtures import show_progress
-from discretization import load_nparray
+from pipeline_fixtures import show_progress, load_nparray
 
 logger = logging.getLogger('cnn.Normalizing')
 logger.addHandler(logging.NullHandler())

@@ -104,7 +104,7 @@ OPTIMIZER_DEFAULT = Adam()
 NB_NEG_EX_PER_POS = 10
 
 # A constant to reduce the weight of the positive class
-NORM_CONST_WEIGHT_DEFAULT = 2
+WEIGHT_POS_CLASS = 2
 
 # Evaluation settings
 METRICS_FOR_EVALUATION = [accuracy_score, precision_score, recall_score, f1_score, confusion_matrix]

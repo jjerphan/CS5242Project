@@ -1,5 +1,6 @@
 import os
-from discretization import load_nparray, RelativeCubeRepresentation
+from discretization import RelativeCubeRepresentation
+from pipeline_fixtures import load_nparray
 from settings import LENGTH_CUBE_SIDE
 import numpy as np
 

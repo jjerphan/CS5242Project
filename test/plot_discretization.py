@@ -1,7 +1,8 @@
 import os
 
 from matplotlib import pyplot as plt
-from discretization import RelativeCubeRepresentation, load_nparray, AbsoluteCubeRepresentation
+from discretization import RelativeCubeRepresentation, AbsoluteCubeRepresentation
+from pipeline_fixtures import load_nparray
 from settings import TRAINING_EXAMPLES_FOLDER, LENGTH_CUBE_SIDE
 
 

@@ -1,10 +1,11 @@
 import os
 import textwrap
 
+from discretization import RelativeCubeRepresentation, AbsoluteCubeRepresentation
 from models_inspector import ModelsInspector
 from models import models_available, models_available_names
 from settings import JOB_SUBMISSIONS_FOLDER, NB_NEG_EX_PER_POS, NB_EPOCHS_DEFAULT, BATCH_SIZE_DEFAULT, N_GPU_DEFAULT, \
-    RESULTS_FOLDER, JOBS_ENV
+    RESULTS_FOLDER, JOBS_ENV, WEIGHT_POS_CLASS
 
 
 def save_job_file(stub, name_job):
@@ -38,7 +39,8 @@ def save_job_file(stub, name_job):
         print(f"Saved in {file_name}")
 
 
-def get_train_stub(model_index, name_job, nb_epochs, batch_size, nb_neg, max_examples, n_gpu):
+def get_train_stub(model_index, name_job, nb_epochs, batch_size, nb_neg, max_examples, n_gpu, weight_pos_class,
+                   representation):
     """
     Return the stub for training a using the different parameters given.
 
@@ -49,12 +51,13 @@ def get_train_stub(model_index, name_job, nb_epochs, batch_size, nb_neg, max_exa
     :param nb_neg:
     :param max_examples:
     :param n_gpu:
+    :param weight_pos_class:
+    :param representation:
     :return:
     """
-    # TODO : fix this hack to add the option
     script_name = "train_cnn.py"
 
-    option_max = f"\n                                                     --max_examples {max_examples} \\"
+    option_max = f"--max_examples {max_examples} \\"
 
     stub = f"""
                 #! /bin/bash
@@ -70,7 +73,10 @@ def get_train_stub(model_index, name_job, nb_epochs, batch_size, nb_neg, max_exa
                 python $PBS_O_WORKDIR/src/{script_name}  --model_index {model_index} \\
                                                          --nb_epochs {nb_epochs} \\
                                                          --batch_size {batch_size} \\
-                                                         --nb_neg {nb_neg} \\{option_max if max_examples is not None else ''}
+                                                         --weight_pos_class {weight_pos_class} \\
+                                                         --representation {representation} \\
+                                                         --nb_neg {nb_neg}\\
+                                                         {option_max if max_examples is not None else ''}
                                                          --job_folder {RESULTS_FOLDER}/$PBS_JOBID/
                 """
     # We remove the first return in the string
@@ -112,6 +118,12 @@ def create_train_job():
     max_examples = input(f"Number of maximum examples to use (leave empty to use all examples) : ")
     max_examples = None if max_examples == "" else int(max_examples)
 
+    weight_pos_class = input(f"Weight for the positive class (leave blank for default = {WEIGHT_POS_CLASS}) : ")
+    weight_pos_class = WEIGHT_POS_CLASS if weight_pos_class == "" else int(weight_pos_class)
+
+    representation = input(f"Cube representation: leave blank for relative, type any character for absolute : ")
+    representation = RelativeCubeRepresentation.name if representation == "" else AbsoluteCubeRepresentation.name
+
     n_gpu = input(f"Choose number of GPU (leave blank for default = {N_GPU_DEFAULT}) : ")
     n_gpu = N_GPU_DEFAULT if n_gpu == "" else int(n_gpu)
 
@@ -120,7 +132,8 @@ def create_train_job():
     name_job = f'train_{models_available_names[model_index]}_{nb_epochs}epochs_{batch_size}batch_{nb_neg}neg'
     name_job += f"_{max_examples}max" if max_examples else ""
 
-    stub = get_train_stub(model_index, name_job, nb_epochs, batch_size, nb_neg, max_examples, n_gpu)
+    stub = get_train_stub(model_index, name_job, nb_epochs, batch_size, nb_neg, max_examples, n_gpu, weight_pos_class,
+                          representation)
 
     save_job_file(stub, name_job)
 
@@ -142,8 +155,8 @@ def create_job_with_for_one_serialized_model(script_name, name_job, evaluation=F
 
     # TODO : fix this hack to add the option
 
-    option_max = f"                                                     --max_examples {max_examples} \\"
-    option_evaluation = f"                                                     --evaluation {prediction}"
+    option_max = f"                                         --max_examples {max_examples} \\"
+    option_evaluation = f"                                         --evaluation {prediction}\\"
 
     # We append the ID for the model to it
     name_job += "_" + id_model
@@ -159,8 +172,9 @@ def create_job_with_for_one_serialized_model(script_name, name_job, evaluation=F
                     #PBS -N {name_job}
                     cd $PBS_O_WORKDIR/src/
                     source activate {JOBS_ENV}
-                    python $PBS_O_WORKDIR/src/{script_name}  --model_path {serialized_model_path} \\ {option_max if max_examples is not None else ''} \\
-                                                             {option_evaluation if evaluation else ''}
+                    python $PBS_O_WORKDIR/src/{script_name}  --model_path {serialized_model_path} \\
+                    {option_max if max_examples is not None else ''}
+                    {option_evaluation if evaluation else ''}
                     """
     # We remove the first return in the string
     stub = stub[1:]
@@ -189,6 +203,12 @@ def create_multiple_train_jobs(batch_size=32, max_examples=None, n_gpu=1):
     list_nb_neg = list(
         map(int, input(f"Number of negatives examples to use (separate with spaces then enter) : ").split()))
 
+    weight_pos_class = input(f"Weight for the positive class (leave blank for default = {WEIGHT_POS_CLASS}) : ")
+    weight_pos_class = WEIGHT_POS_CLASS if weight_pos_class == "" else int(weight_pos_class)
+
+    representation = input(f"Cube representation: leave blank for absolute, type any character for relative : ")
+    representation = Relative if representation == "" else "relative"
+
     for nb_epochs in list_nb_epochs:
         for nb_neg in list_nb_neg:
             name_job = f'train_{models_available_names[model_index]}_{nb_epochs}epochs_{batch_size}batch_{nb_neg}neg'
@@ -200,7 +220,8 @@ def create_multiple_train_jobs(batch_size=32, max_examples=None, n_gpu=1):
                                   batch_size=batch_size,
                                   nb_neg=nb_neg,
                                   max_examples=max_examples,
-                                  n_gpu=n_gpu)
+                                  n_gpu=n_gpu, weight_pos_class=weight_pos_class,
+                                  representation=representation)
 
             save_job_file(stub, name_job)
 

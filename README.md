@@ -29,7 +29,7 @@ The pipeline works in several stages:
 
 ### Downloading the data and putting it in the right folder
 
-Before running anything, you need to place the original data in the `training_data/original` folder and to put the data for prediction in `predict_data/original`.
+Before running anything, you need to place the original data in the `training_data/original` folder and to put the data for prediction in `testing_data_release/original`.
 
 We recommend using `scp` to upload the files on the server instead as it is faster than directly downloading the data set on the server.
 
@@ -72,7 +72,7 @@ To extract the data you have to run:
 (CS5242) $ python src/extract_data.py
 ```
 
-The data will be extracted in the `training_data/extracted/train/`, `training_data/extracted/validation/`, `training_data/extracted/test`  for the original data and in `predict_data/extracted`for the data used for prediction
+The data will be extracted in the `training_data/extracted/train/`, `training_data/extracted/validation/`, `training_data/extracted/test`  for the original data and in `testing_data_release/extracted`for the data used for prediction
 
 ## Creation of examples
 
@@ -84,7 +84,7 @@ To extract the data you have to run:
 (CS5242) $ python src/create_examples.py
 ```
 
-Examples will be populated in the `training_data/training_examples/`, `training_data/validation_examples/`, `training_data/test_examples` for the original data and in `predict_data/predict_examples`for the data used for prediction as follows
+Examples will be populated in the `training_data/training_examples/`, `training_data/validation_examples/`, `training_data/test_examples` for the original data and in `testing_data_release/predict_examples`for the data used for prediction as follows
 
 ## Training a model
 

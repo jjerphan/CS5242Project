@@ -9,9 +9,9 @@ from collections import defaultdict
 
 from keras.models import load_model
 
-from settings import testing_examples_folder, serialized_model_file_name_end
+from settings import TESTING_EXAMPLES_FOLDER, SERIALIZED_MODEL_FILE_NAME_END
 from predict_generator import PredictGenerator
-from settings import predict_examples_folder, results_folder
+from settings import PREDICT_EXAMPLES_FOLDER, RESULTS_FOLDER
 from train_cnn import f1
 
 
@@ -23,21 +23,21 @@ def predict(serialized_model_path, evaluation=True):
     """
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.DEBUG)
-    fh = logging.FileHandler(os.path.join(results_folder, 'prediction.log'))
+    fh = logging.FileHandler(os.path.join(RESULTS_FOLDER, 'prediction.log'))
     fh.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     fh.setFormatter(formatter)
     logger.addHandler(fh)
 
     model_name = serialized_model_path.split(os.sep)[-1]
-    matching_file_name = os.path.join(results_folder,
-                                      model_name.replace(serialized_model_file_name_end, "matching.pkl"))
-    result_file_name = os.path.join(results_folder, model_name.replace(serialized_model_file_name_end, "result.txt"))
+    matching_file_name = os.path.join(RESULTS_FOLDER,
+                                      model_name.replace(SERIALIZED_MODEL_FILE_NAME_END, "matching.pkl"))
+    result_file_name = os.path.join(RESULTS_FOLDER, model_name.replace(SERIALIZED_MODEL_FILE_NAME_END, "result.txt"))
 
     if evaluation:
-        predict_folder = testing_examples_folder
+        predict_folder = TESTING_EXAMPLES_FOLDER
     else:
-        predict_folder = predict_examples_folder
+        predict_folder = PREDICT_EXAMPLES_FOLDER
     logger.debug(f'Using example folder: {predict_folder}.')
 
     # Load pre-trained good model
@@ -59,7 +59,7 @@ def predict(serialized_model_path, evaluation=True):
 
     matching_list = []
 
-    with open(os.path.join(results_folder, 'result.txt'), 'w') as f:
+    with open(os.path.join(RESULTS_FOLDER, 'result.txt'), 'w') as f:
         csvwriter = csv.writer(f)
         csvwriter.writerow('pro_id  lig1_id lig2_id lig3_id lig4_id lig5_id lig6_id lig7_id lig8_id lig9_id lig10_id')
         for pro, value in sorted(matching.items()):

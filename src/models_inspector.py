@@ -1,7 +1,7 @@
 import os
 from collections import defaultdict
 
-from settings import parameters_file_name, results_folder, serialized_model_file_name_end, history_file_name_end
+from settings import PARAMETERS_FILE_NAME, RESULTS_FOLDER, SERIALIZED_MODEL_FILE_NAME_END, HISTORY_FILE_NAME_END
 
 
 class ModelsInspector:
@@ -32,7 +32,7 @@ class ModelsInspector:
         # It is possible that there exist sub-folders with no serialized model
         # (if the model is being trained for example) so, we chose here to
         # only keep sub folders that contains one.
-        self._sub_folders = list(filter(lambda folder: [serialized_model_file_name_end in file for file in os.listdir(folder)], sub_folders))
+        self._sub_folders = list(filter(lambda folder: [SERIALIZED_MODEL_FILE_NAME_END in file for file in os.listdir(folder)], sub_folders))
         serialized_models_file_names = defaultdict(str)
         histories_file_names = defaultdict(str)
 
@@ -45,13 +45,13 @@ class ModelsInspector:
             files_present = os.listdir(folder)
 
             for file in files_present:
-                if history_file_name_end in file:
+                if HISTORY_FILE_NAME_END in file:
                     histories_file_names[folder] = file
 
-                if serialized_model_file_name_end in file:
+                if SERIALIZED_MODEL_FILE_NAME_END in file:
                     serialized_models_file_names[folder] = file
 
-                if file == parameters_file_name:
+                if file == PARAMETERS_FILE_NAME:
                     with open(os.path.join(self._general_folder, folder, file), "r") as f:
                         lines = f.readlines()
                         for line in lines:
@@ -144,6 +144,6 @@ class ModelsInspector:
 
 
 if __name__ == "__main__":
-    model_inspector = ModelsInspector(results_folder=results_folder)
+    model_inspector = ModelsInspector(results_folder=RESULTS_FOLDER)
 
     print(model_inspector[0])

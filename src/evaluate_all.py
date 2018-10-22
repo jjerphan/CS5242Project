@@ -11,7 +11,7 @@ from discretization import RelativeCubeRepresentation
 from models_inspector import ModelsInspector
 from examples_iterator import ExamplesIterator
 from pipeline_fixtures import get_current_timestamp
-from settings import validation_examples_folder, metrics_for_evaluation, results_folder, length_cube_side
+from settings import VALIDATION_EXAMPLES_FOLDER, METRICS_FOR_EVALUATION, RESULTS_FOLDER, LENGTH_CUBE_SIDE
 from train_cnn import f1
 
 
@@ -34,11 +34,11 @@ def evaluate_all(max_examples=None):
     logfile = f"evaluate_all{current_timestamp}.log"
     results_csv_file = f"evaluate_all{current_timestamp}.csv"
 
-    evaluation_logs_folder = os.path.join(results_folder, "evaluation")
+    evaluation_logs_folder = os.path.join(RESULTS_FOLDER, "evaluation")
     # Making a folder for the job to save log, model, history in it.
-    if not (os.path.exists(results_folder)):
-        print(f"The {results_folder} does not exist. Creating it.")
-        os.makedirs(results_folder)
+    if not (os.path.exists(RESULTS_FOLDER)):
+        print(f"The {RESULTS_FOLDER} does not exist. Creating it.")
+        os.makedirs(RESULTS_FOLDER)
 
     if not (os.path.exists(evaluation_logs_folder)):
         print(f"The {evaluation_logs_folder} does not exist. Creating it.")
@@ -50,13 +50,13 @@ def evaluate_all(max_examples=None):
     fh.setFormatter(formatter)
     logger.addHandler(fh)
 
-    models_inspector = ModelsInspector(results_folder=results_folder)
+    models_inspector = ModelsInspector(results_folder=RESULTS_FOLDER)
 
     logger.debug(f"Evaluating {len(models_inspector)} models")
 
-    cube_representation = RelativeCubeRepresentation(length_cube_side=length_cube_side)
+    cube_representation = RelativeCubeRepresentation(length_cube_side=LENGTH_CUBE_SIDE)
     validation_examples_iterator = ExamplesIterator(representation=cube_representation,
-                                                    examples_folder=validation_examples_folder,
+                                                    examples_folder=VALIDATION_EXAMPLES_FOLDER,
                                                     max_examples=max_examples,
                                                     shuffle_after_completion=False)
 
@@ -66,7 +66,7 @@ def evaluate_all(max_examples=None):
 
     # Constructing the header : we are saving the results of the evaluation with for each models
     # the parameters that have been used to train
-    metrics_name = list(map(lambda m: m.__name__, metrics_for_evaluation))
+    metrics_name = list(map(lambda m: m.__name__, METRICS_FOR_EVALUATION))
     parameters_name = ["model", "nb_epochs", "nb_neg", "max_examples", "batch_size", "optimizer"]
 
     headers = ["id", *metrics_name, "positives_prediction",
@@ -89,7 +89,7 @@ def evaluate_all(max_examples=None):
             y_rounded = np.array([1 if y > 0.5 else 0 for y in y_preds])
 
             logger.debug("Computing metrics")
-            metrics_results = dict(map(lambda metric: (metric.__name__, metric(ys, y_rounded)), metrics_for_evaluation))
+            metrics_results = dict(map(lambda metric: (metric.__name__, metric(ys, y_rounded)), METRICS_FOR_EVALUATION))
             log = defaultdict(str, metrics_results)
 
             # Gathering all the info together

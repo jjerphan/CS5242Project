@@ -12,9 +12,9 @@ from examples_iterator import ExamplesIterator
 from models import models_available, models_available_names
 from pipeline_fixtures import LogEpochBatchCallback
 from pipeline_fixtures import get_current_timestamp
-from settings import max_nb_neg_per_pos, length_cube_side
-from settings import training_examples_folder, results_folder, nb_neg_ex_per_pos, optimizer_default, batch_size_default, \
-    nb_epochs_default, serialized_model_file_name, parameters_file_name, training_logfile, validation_examples_folder
+from settings import MAX_NB_NEG_PER_POS, LENGTH_CUBE_SIDE
+from settings import TRAINING_EXAMPLES_FOLDER, RESULTS_FOLDER, NB_NEG_EX_PER_POS, OPTIMIZER_DEFAULT, BATCH_SIZE_DEFAULT, \
+    NB_EPOCHS_DEFAULT, SERIALIZED_MODEL_FILE_NAME, PARAMETERS_FILE_NAME, TRAINING_LOGFILE, VALIDATION_EXAMPLES_FOLDER
 from keras import backend as K
 from keras.callbacks import EarlyStopping
 
@@ -52,7 +52,7 @@ def f1(y_true, y_pred):
 
 
 def train_cnn(model_index, nb_epochs, nb_neg, max_examples, batch_size,
-              optimizer=optimizer_default, results_folder=results_folder, job_folder=None):
+              optimizer=OPTIMIZER_DEFAULT, results_folder=RESULTS_FOLDER, job_folder=None):
     """
     Train a given CNN.
 
@@ -60,7 +60,6 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, batch_size,
     :param nb_epochs: the number of epochs to use
     :param nb_neg: the number of training examples to use to train the network
     :param max_examples: the maximum number of examples to choose
-    :param verbose: if != 0, make the output verbose
     :param batch_size: the number of examples to use per batch
     :param optimizer: the optimizer to use to train (default = "rmsprop"
     :param results_folder: where to save results
@@ -84,7 +83,7 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, batch_size,
         logger.debug(f'job folder does not exist, creating {job_folder}')
         os.makedirs(job_folder)
 
-    fh = logging.FileHandler(os.path.join(job_folder, training_logfile))
+    fh = logging.FileHandler(os.path.join(job_folder, TRAINING_LOGFILE))
     fh.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     fh.setFormatter(formatter)
@@ -107,7 +106,7 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, batch_size,
     logger.debug(f'nb_neg      = {nb_neg}')
     logger.debug(f'optimizer   = {optimizer}')
 
-    with open(os.path.join(job_folder, parameters_file_name), "w") as f:
+    with open(os.path.join(job_folder, PARAMETERS_FILE_NAME), "w") as f:
         f.write(f'model={model.name}\n')
         f.write(f'nb_epochs={nb_epochs}\n')
         f.write(f'max_examples={max_examples}\n')
@@ -117,17 +116,17 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, batch_size,
 
     logger.debug(f'model, log and history to be saved in {job_folder}')
 
-    cube_representation = RelativeCubeRepresentation(length_cube_side=length_cube_side)
+    cube_representation = RelativeCubeRepresentation(length_cube_side=LENGTH_CUBE_SIDE)
 
     # To load the data incrementally
     train_examples_iterator = ExamplesIterator(representation=cube_representation,
-                                               examples_folder=training_examples_folder,
+                                               examples_folder=TRAINING_EXAMPLES_FOLDER,
                                                nb_neg=nb_neg,
                                                batch_size=batch_size,
                                                max_examples=max_examples)
 
     validation_examples_iterator = ExamplesIterator(representation=cube_representation,
-                                                    examples_folder=validation_examples_folder,
+                                                    examples_folder=VALIDATION_EXAMPLES_FOLDER,
                                                     nb_neg=nb_neg,
                                                     batch_size=batch_size,
                                                     max_examples=max_examples)
@@ -138,7 +137,7 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, batch_size,
     # To prevent having
     class_weight = {
         0: 1,
-        1: min(nb_neg, max_nb_neg_per_pos) //2
+        1: min(nb_neg, MAX_NB_NEG_PER_POS) // 2
     }
 
     logger.debug(f'Training with class_weight: {class_weight}')
@@ -180,15 +179,15 @@ if __name__ == "__main__":
                         help=f'the index of the model to use in the list {models_available_names}')
 
     parser.add_argument('--nb_epochs', metavar='nb_epochs',
-                        type=int, default=nb_epochs_default,
+                        type=int, default=NB_EPOCHS_DEFAULT,
                         help='the number of epochs to use')
 
     parser.add_argument('--batch_size', metavar='batch_size',
-                        type=int, default=batch_size_default,
+                        type=int, default=BATCH_SIZE_DEFAULT,
                         help='the number of examples to use per batch')
 
     parser.add_argument('--nb_neg', metavar='nb_neg',
-                        type=int, default=nb_neg_ex_per_pos,
+                        type=int, default=NB_NEG_EX_PER_POS,
                         help='the number of negatives examples to use per positive example')
 
     parser.add_argument('--max_examples', metavar='max_examples',

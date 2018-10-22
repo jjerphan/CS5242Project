@@ -5,100 +5,100 @@ from sklearn.metrics import f1_score, recall_score, precision_score, accuracy_sc
 
 # Folders
 # Global folder for data and logs
-absolute_path = os.path.abspath(os.path.join(os.path.realpath(__file__), os.pardir, os.pardir))
+ROOT = os.path.abspath(os.path.join(os.path.realpath(__file__), os.pardir, os.pardir))
 
-job_submissions_folder = os.path.join(absolute_path, "job_submissions")
+JOB_SUBMISSIONS_FOLDER = os.path.join(ROOT, "job_submissions")
 
 # Data given
-given_data_folder = os.path.join(absolute_path, "training_data")
-original_given_data_folder = os.path.join(given_data_folder, "original")
-extracted_given_data_folder = os.path.join(given_data_folder, "extracted")
-extracted_given_data_train_folder = os.path.join(extracted_given_data_folder, "train")
-extracted_given_data_validation_folder = os.path.join(extracted_given_data_folder, "validation")
-extracted_given_data_test_folder = os.path.join(extracted_given_data_folder, "test")
+GIVEN_DATA_FOLDER = os.path.join(ROOT, "training_data")
+ORIGINAL_GIVEN_DATA_FOLDER = os.path.join(GIVEN_DATA_FOLDER, "original")
+EXTRACTED_GIVEN_DATA_FOLDER = os.path.join(GIVEN_DATA_FOLDER, "extracted")
+EXTRACTED_GIVEN_DATA_TRAIN_FOLDER = os.path.join(EXTRACTED_GIVEN_DATA_FOLDER, "train")
+extracted_given_data_validation_folder = os.path.join(EXTRACTED_GIVEN_DATA_FOLDER, "validation")
+extracted_given_data_test_folder = os.path.join(EXTRACTED_GIVEN_DATA_FOLDER, "test")
 
 # Conversion to examples
-training_examples_folder = os.path.join(given_data_folder, "training_examples")
-validation_examples_folder = os.path.join(given_data_folder, "validation_examples")
-testing_examples_folder = os.path.join(given_data_folder, "testing_examples")
+TRAINING_EXAMPLES_FOLDER = os.path.join(GIVEN_DATA_FOLDER, "training_examples")
+VALIDATION_EXAMPLES_FOLDER = os.path.join(GIVEN_DATA_FOLDER, "validation_examples")
+TESTING_EXAMPLES_FOLDER = os.path.join(GIVEN_DATA_FOLDER, "testing_examples")
 
 # Not used for now
-normalized_data_folder = os.path.join(given_data_folder, "normalized")
-normalized_data_train_folder = os.path.join(normalized_data_folder, "train")
-normalized_data_validate_folder = os.path.join(normalized_data_folder, "validate")
-normalized_data_test_folder = os.path.join(normalized_data_folder, "test")
+NORMALIZED_DATA_FOLDER = os.path.join(GIVEN_DATA_FOLDER, "normalized")
+NORMALIZED_DATA_TRAIN_FOLDER = os.path.join(NORMALIZED_DATA_FOLDER, "train")
+NORMALIZED_DATA_VALIDATE_FOLDER = os.path.join(NORMALIZED_DATA_FOLDER, "validate")
+NORMALIZED_DATA_TEST_FOLDER = os.path.join(NORMALIZED_DATA_FOLDER, "test")
 
 # Data to predict final results
-predict_data_folder = os.path.join(absolute_path, "testing_data_release")
-original_predict_data_folder = os.path.join(predict_data_folder, "testing_data")
-extracted_predict_data_folder = os.path.join(predict_data_folder, "extracted")
+PREDICT_DATA_FOLDER = os.path.join(ROOT, "testing_data_release")
+ORIGINAL_PREDICT_DATA_FOLDER = os.path.join(PREDICT_DATA_FOLDER, "testing_data")
+EXTRACTED_PREDICT_DATA_FOLDER = os.path.join(PREDICT_DATA_FOLDER, "extracted")
 
-predict_examples_folder = os.path.join(predict_data_folder, "predict_examples")
+PREDICT_EXAMPLES_FOLDER = os.path.join(PREDICT_DATA_FOLDER, "predict_examples")
 
 # Suffixes for extracted data files
-extracted_protein_suffix = "_pro_cg.csv"
-extracted_ligand_suffix = "_lig_cg.csv"
+EXTRACTED_PROTEIN_SUFFIX = "_pro_cg.csv"
+EXTRACTED_LIGAND_SUFFIX = "_lig_cg.csv"
 
 # Results
-training_logfile = f"train_cnn.log"
-results_folder = os.path.join(absolute_path, "results")
-parameters_file_name = "parameters.txt"
-serialized_model_file_name = "model.h5"
+TRAINING_LOGFILE = f"train_cnn.log"
+RESULTS_FOLDER = os.path.join(ROOT, "results")
+PARAMETERS_FILE_NAME = "parameters.txt"
+SERIALIZED_MODEL_FILE_NAME = "model.h5"
 
 # Some settings for number and persisting tensors
-float_type = np.float32
-formatter = "%.16f"
-comment_delimiter = "#"
+FLOAT_TYPE = np.float32
+FORMATTER = "%.16f"
+COMMENT_DELIMITER = "#"
 
 # Features used to train:
 #  - 3 spatial coordinates : x , y, z (floating values)
 #  - 1 features for one hot encoding of atom types (is_hydrophobic)
 #  - 1 features for one hot encoding of molecules types (is_from_protein)
 
-features_names = ["x", "y", "z", "is_hydrophobic", "is_from_protein"]
-nb_features = len(features_names)
-nb_channels = nb_features - 3  # coordinates are not used as features
-indices_features = dict(zip(features_names, list(range(nb_features))))
+FEATURES_NAMES = ["x", "y", "z", "is_hydrophobic", "is_from_protein"]
+NB_FEATURES = len(FEATURES_NAMES)
+NB_CHANNELS = NB_FEATURES - 3  # coordinates are not used as features
+INDICES_FEATURES = dict(zip(FEATURES_NAMES, list(range(NB_FEATURES))))
 
 # We have 3000 positives pairs of ligands
-percent_train = 0.8
-percent_test = 0.1
-n_training_examples = 2400
+PERCENT_TRAIN = 0.8
+PERCENT_TEST = 0.1
+N_TRAINING_EXAMPLES = 2400
 
 # All the other will be used to construct examples on the go
 
 # The maximum number of negative example to create per positive example to train
 # Used for creating training examples
-max_nb_neg_per_pos = 20
+MAX_NB_NEG_PER_POS = 20
 
 # The number of negative example to use per positive example to train
-nb_neg_ex_per_pos = 10
+NB_NEG_EX_PER_POS = 10
 
 # To scale protein-ligands system in a cube of shape (resolution_cube,resolution_cube,resolution_cube)
-length_cube_side = 20
-shape_cube = (length_cube_side, length_cube_side, length_cube_side, 2)
+LENGTH_CUBE_SIDE = 20
+SHAPE_CUBE = (LENGTH_CUBE_SIDE, LENGTH_CUBE_SIDE, LENGTH_CUBE_SIDE, 2)
 
 # Obtained with values_range on the complete original dataset
-hydrophobic_types = {'h', 'C'}
-polar_types = {'p', 'P', 'O', 'TE', 'F', 'N', 'AS', 'O1-', 'MO',
+HYDROPHOBIC_TYPES = {'h', 'C'}
+POLAR_TYPES = {'p', 'P', 'O', 'TE', 'F', 'N', 'AS', 'O1-', 'MO',
                'B', 'BR', 'SB', 'RU', 'SE', 'HG', 'CL',
                'S', 'FE', 'ZN', 'CU', 'SI', 'V', 'I', 'N+1',
                'N1+', 'CO', 'W'}
 
 # Training parameters
-nb_epochs_default = 1
-batch_size_default = 32
-n_gpu_default = 1
-optimizer_default = Adam()
+NB_EPOCHS_DEFAULT = 1
+BATCH_SIZE_DEFAULT = 32
+N_GPU_DEFAULT = 1
+OPTIMIZER_DEFAULT = Adam()
 
-serialized_model_file_name_end = "model.h5"
-history_file_name_end = "history.pickle"
+SERIALIZED_MODEL_FILE_NAME_END = "model.h5"
+HISTORY_FILE_NAME_END = "history.pickle"
 
 # Evaluation parameters
-metrics_for_evaluation = [accuracy_score, precision_score, recall_score, f1_score, confusion_matrix]
+METRICS_FOR_EVALUATION = [accuracy_score, precision_score, recall_score, f1_score, confusion_matrix]
 
 # Pre-processing settings
-nb_workers = 6
-name_env = "CS5242_gpu"
+NB_WORKERS = 6
+NAME_ENV = "CS5242_gpu"
 
 

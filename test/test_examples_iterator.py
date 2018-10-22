@@ -5,7 +5,7 @@ warnings.simplefilter("ignore")
 
 from src.examples_iterator import ExamplesIterator
 from src.pipeline_fixtures import is_positive
-from src.settings import training_examples_folder
+from src.settings import TRAINING_EXAMPLES_FOLDER
 
 
 class ExamplesIteratorTest(unittest.TestCase):
@@ -21,7 +21,7 @@ class ExamplesIteratorTest(unittest.TestCase):
         :return:
         """
 
-        training_examples_iterator = ExamplesIterator(examples_folder=training_examples_folder)
+        training_examples_iterator = ExamplesIterator(examples_folder=TRAINING_EXAMPLES_FOLDER)
 
         labels = training_examples_iterator.get_labels()
         examples_files = training_examples_iterator.get_examples_files()

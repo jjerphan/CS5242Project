@@ -8,7 +8,7 @@ import keras.backend as K
 
 from discretization import RelativeCubeRepresentation
 from examples_iterator import ExamplesIterator
-from settings import validation_examples_folder, metrics_for_evaluation, results_folder, length_cube_side
+from settings import VALIDATION_EXAMPLES_FOLDER, METRICS_FOR_EVALUATION, RESULTS_FOLDER, LENGTH_CUBE_SIDE
 from train_cnn import f1
 
 
@@ -33,10 +33,10 @@ def evaluate(serialized_model_path, max_examples=None):
 
     # Making a folder for the job to save log, model, history in it.
     id = serialized_model_path.split(os.sep)[-2]
-    job_folder = os.path.join(results_folder, id)
-    if not (os.path.exists(results_folder)):
-        print(f"The {results_folder} does not exist. Creating it.")
-        os.makedirs(results_folder)
+    job_folder = os.path.join(RESULTS_FOLDER, id)
+    if not (os.path.exists(RESULTS_FOLDER)):
+        print(f"The {RESULTS_FOLDER} does not exist. Creating it.")
+        os.makedirs(RESULTS_FOLDER)
 
     fh = logging.FileHandler(os.path.join(job_folder, logfile))
     fh.setLevel(logging.DEBUG)
@@ -48,9 +48,9 @@ def evaluate(serialized_model_path, max_examples=None):
 
     model = load_model(serialized_model_path, custom_objects={"mean_pred": mean_pred, "f1": f1})
 
-    cube_representation = RelativeCubeRepresentation(length_cube_side=length_cube_side)
+    cube_representation = RelativeCubeRepresentation(length_cube_side=LENGTH_CUBE_SIDE)
     validation_examples_iterator = ExamplesIterator(representation=cube_representation,
-                                                    examples_folder=validation_examples_folder,
+                                                    examples_folder=VALIDATION_EXAMPLES_FOLDER,
                                                     max_examples=max_examples,
                                                     shuffle_after_completion=False)
 
@@ -62,7 +62,7 @@ def evaluate(serialized_model_path, max_examples=None):
     y_rounded = np.array([1 if y > 0.5 else 0 for y in y_preds])
 
     logger.debug("Computing metrics")
-    metrics_results = dict(map(lambda metric: (metric.__name__, metric(ys, y_rounded)), metrics_for_evaluation))
+    metrics_results = dict(map(lambda metric: (metric.__name__, metric(ys, y_rounded)), METRICS_FOR_EVALUATION))
 
     metrics_results["serialized_model_path"] = serialized_model_path
 

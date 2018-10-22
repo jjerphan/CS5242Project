@@ -4,9 +4,9 @@ from collections import defaultdict
 import keras
 import numpy as np
 
-from discretization import load_nparray, make_relative_cube, plot_cube, CubeRepresentation
+from discretization import load_nparray, CubeRepresentation, RelativeCubeRepresentation
 from pipeline_fixtures import is_positive, is_negative
-from settings import max_nb_neg_per_pos, length_cube_side, training_examples_folder, shape_cube, validation_examples_folder
+from settings import TRAINING_EXAMPLES_FOLDER, SHAPE_CUBE, VALIDATION_EXAMPLES_FOLDER, LENGTH_CUBE_SIDE
 
 from mpl_toolkits.mplot3d import Axes3D
 
@@ -176,17 +176,17 @@ class ExamplesIterator(keras.utils.Sequence):
         assert (ys.shape[0] == len(files_to_use))
         assert (cubes.shape[0] == len(files_to_use))
         # Dimensions
-        assert (cubes.shape[1:] == shape_cube)
+        assert (cubes.shape[1:] == SHAPE_CUBE)
         return cubes, ys
 
 
 if __name__ == "__main__":
-    for folder in [training_examples_folder, validation_examples_folder]:
-        iterator = ExamplesIterator(folder)
-
+    for folder in [TRAINING_EXAMPLES_FOLDER, VALIDATION_EXAMPLES_FOLDER]:
+        relative_representation = RelativeCubeRepresentation(length_cube_side=LENGTH_CUBE_SIDE)
+        iterator = ExamplesIterator(representation=relative_representation,examples_folder=folder)
         # Reverse iterator
         for i, (batch, ys) in enumerate(reversed(iterator)):
-            plot_cube(batch[0])
+            relative_representation.plot_cube(batch[0])
             print("Checking size of last batch")
             assert (batch.shape[0] == iterator.nb_examples() % iterator._batch_size)
             print(i, batch.shape, np.mean(ys))

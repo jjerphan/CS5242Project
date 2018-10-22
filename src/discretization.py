@@ -6,8 +6,8 @@ from abc import ABC, abstractmethod
 
 from mpl_toolkits.mplot3d import Axes3D
 
-from settings import float_type, comment_delimiter, training_examples_folder, length_cube_side, nb_features, \
-    indices_features
+from settings import FLOAT_TYPE, COMMENT_DELIMITER, TRAINING_EXAMPLES_FOLDER, LENGTH_CUBE_SIDE, NB_FEATURES, \
+    INDICES_FEATURES
 
 logger = logging.getLogger('cnn.discretization')
 logger.addHandler(logging.NullHandler())
@@ -123,10 +123,10 @@ class CubeRepresentation(ABC):
         ys = []
         zs = []
         cs = []
-        for x in range(length_cube_side):
-            for y in range(length_cube_side):
-                for z in range(length_cube_side):
-                    is_from_protein_pos = indices_features["is_from_protein"] - 3
+        for x in range(LENGTH_CUBE_SIDE):
+            for y in range(LENGTH_CUBE_SIDE):
+                for z in range(LENGTH_CUBE_SIDE):
+                    is_from_protein_pos = INDICES_FEATURES["is_from_protein"] - 3
                     is_atom_in_voxel = cube[x, y, z, is_from_protein_pos] != 0
                     if is_atom_in_voxel:
                         # Plotting accordingly to the molecule type
@@ -138,9 +138,9 @@ class CubeRepresentation(ABC):
 
         ax.scatter(xs, ys, zs, c=cs, marker="o")
 
-        ax.set_xlim((0, length_cube_side))
-        ax.set_ylim((0, length_cube_side))
-        ax.set_zlim((0, length_cube_side))
+        ax.set_xlim((0, LENGTH_CUBE_SIDE))
+        ax.set_ylim((0, LENGTH_CUBE_SIDE))
+        ax.set_zlim((0, LENGTH_CUBE_SIDE))
 
         ax.set_xlabel('X Label')
         ax.set_ylabel('Y Label')
@@ -194,12 +194,12 @@ class AbsoluteCubeRepresentation(CubeRepresentation):
         original_coords = system[:, 0:3]
 
         if self._translate_ligand:
-            is_from_protein_column = indices_features["is_from_protein"]
+            is_from_protein_column = INDICES_FEATURES["is_from_protein"]
             is_from_protein_indices = np.where(system[:, is_from_protein_column] == 1.)
             original_coords = self._translate_ligand_on_protein(original_coords, is_from_protein_indices)
 
         if self._use_rotation_invariance:
-            is_from_protein_column = indices_features["is_from_protein"]
+            is_from_protein_column = INDICES_FEATURES["is_from_protein"]
             is_from_protein_indices = np.where(system[:, is_from_protein_column] == 1.)
             coords = self._representation_invariance(original_coords, is_from_protein_indices)
         else:
@@ -208,10 +208,10 @@ class AbsoluteCubeRepresentation(CubeRepresentation):
         atom_features = system[:, 3:]
         nb_feat = atom_features.shape[1]
 
-        assert nb_feat + coords.shape[1] == nb_features
+        assert nb_feat + coords.shape[1] == NB_FEATURES
 
-        length_cube_side_int = int(length_cube_side)
-        length_cube_side_float = float(length_cube_side)
+        length_cube_side_int = int(LENGTH_CUBE_SIDE)
+        length_cube_side_float = float(LENGTH_CUBE_SIDE)
 
         center = np.mean(coords, axis=0)
 
@@ -223,7 +223,7 @@ class AbsoluteCubeRepresentation(CubeRepresentation):
         scaled_coords = scaled_coords.round().astype(int)
 
         # Just keeping atom that are in the box
-        in_box = ((scaled_coords >= 0) & (scaled_coords < length_cube_side)).all(axis=1)
+        in_box = ((scaled_coords >= 0) & (scaled_coords < LENGTH_CUBE_SIDE)).all(axis=1)
         cube = np.zeros((length_cube_side_int, length_cube_side_int, length_cube_side_int, nb_feat), dtype=np.float32)
         for (x, y, z), f in zip(scaled_coords[in_box], atom_features[in_box]):
             cube[x, y, z] += f
@@ -285,12 +285,12 @@ class RelativeCubeRepresentation(CubeRepresentation):
         original_coords = system[:, 0:3]
 
         if self._translate_ligand:
-            is_from_protein_column = indices_features["is_from_protein"]
+            is_from_protein_column = INDICES_FEATURES["is_from_protein"]
             is_from_protein_indices = np.where(system[:, is_from_protein_column] == 1.)
             original_coords = self._translate_ligand_on_protein(original_coords, is_from_protein_indices)
 
         if self._use_rotation_invariance:
-            is_from_protein_column = indices_features["is_from_protein"]
+            is_from_protein_column = INDICES_FEATURES["is_from_protein"]
             is_from_protein_indices = np.where(system[:, is_from_protein_column] == 1.)
             coords = self._representation_invariance(original_coords, is_from_protein_indices)
         else:
@@ -299,7 +299,7 @@ class RelativeCubeRepresentation(CubeRepresentation):
         atom_features = system[:, 3:]
         nb_feat = atom_features.shape[1]
 
-        assert nb_feat + coords.shape[1] == nb_features
+        assert nb_feat + coords.shape[1] == NB_FEATURES
 
         # Getting extreme values
         x_min, x_max, y_min, y_max, z_min, z_max = self._values_range(coords)
@@ -320,11 +320,11 @@ class RelativeCubeRepresentation(CubeRepresentation):
 
         scaled_coords = (coords * 0).astype(int)
         eps = 10e-4  # To be sure to round down on exact position
-        scaled_coords[:, 0] = np.floor((coords[:, 0] - x_min) / (x_range + eps) * length_cube_side).astype(int)
-        scaled_coords[:, 1] = np.floor((coords[:, 1] - y_min) / (y_range + eps) * length_cube_side).astype(int)
-        scaled_coords[:, 2] = np.floor((coords[:, 2] - z_min) / (z_range + eps) * length_cube_side).astype(int)
+        scaled_coords[:, 0] = np.floor((coords[:, 0] - x_min) / (x_range + eps) * LENGTH_CUBE_SIDE).astype(int)
+        scaled_coords[:, 1] = np.floor((coords[:, 1] - y_min) / (y_range + eps) * LENGTH_CUBE_SIDE).astype(int)
+        scaled_coords[:, 2] = np.floor((coords[:, 2] - z_min) / (z_range + eps) * LENGTH_CUBE_SIDE).astype(int)
 
-        cube = np.zeros((length_cube_side, length_cube_side, length_cube_side, nb_feat))
+        cube = np.zeros((LENGTH_CUBE_SIDE, LENGTH_CUBE_SIDE, LENGTH_CUBE_SIDE, nb_feat))
         logger.debug("Cube size is %s", str(cube.shape))
 
         # Filling the cube with the features
@@ -341,7 +341,7 @@ def load_nparray(file_name: str):
     :return:
     """
 
-    example = np.loadtxt(file_name, dtype=float_type, comments=comment_delimiter)
+    example = np.loadtxt(file_name, dtype=FLOAT_TYPE, comments=COMMENT_DELIMITER)
     # If it's a vector (i.e if there is just one atom),
     # we reshape it into a (1,n nb_features) array
     if len(example.shape) == 1:

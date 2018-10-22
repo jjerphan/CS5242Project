@@ -2,16 +2,16 @@ import os
 
 from matplotlib import pyplot as plt
 from discretization import RelativeCubeRepresentation, load_nparray, AbsoluteCubeRepresentation
-from settings import training_examples_folder, length_cube_side
+from settings import TRAINING_EXAMPLES_FOLDER, LENGTH_CUBE_SIDE
 
 
 def compare_relative_cube_discretization(example_file):
     print(f"System {example_file}")
-    file_name = os.path.join(training_examples_folder, example_file)
+    file_name = os.path.join(TRAINING_EXAMPLES_FOLDER, example_file)
     example = load_nparray(file_name)
 
     print("Relative Compressed Representation")
-    rel_compressed_repr = RelativeCubeRepresentation(length_cube_side=length_cube_side,
+    rel_compressed_repr = RelativeCubeRepresentation(length_cube_side=LENGTH_CUBE_SIDE,
                                                      use_rotation_invariance=False,
                                                      keep_proportions=False,
                                                      verbose=True)
@@ -24,7 +24,7 @@ def compare_relative_cube_discretization(example_file):
     plt.pause(0.003)
 
     print("Relative Properly Scaled Representation")
-    rel_prop_scaled_representation = RelativeCubeRepresentation(length_cube_side=length_cube_side,
+    rel_prop_scaled_representation = RelativeCubeRepresentation(length_cube_side=LENGTH_CUBE_SIDE,
                                                                 use_rotation_invariance=False,
                                                                 keep_proportions=True,
                                                                 verbose=True)
@@ -35,7 +35,7 @@ def compare_relative_cube_discretization(example_file):
     plt.pause(1)
 
     print("Relative Properly Scaled Rotation Invariant Representation")
-    rel_prop_scaled_rot_inv_representation = RelativeCubeRepresentation(length_cube_side=length_cube_side,
+    rel_prop_scaled_rot_inv_representation = RelativeCubeRepresentation(length_cube_side=LENGTH_CUBE_SIDE,
                                                                         use_rotation_invariance=True,
                                                                         keep_proportions=True,
                                                                         verbose=True)
@@ -49,11 +49,11 @@ def compare_relative_cube_discretization(example_file):
 
 def compare_absolute_cube_discretization(example_file, cube_resolution=1.0):
     print(f"System {example_file}")
-    file_name = os.path.join(training_examples_folder, example_file)
+    file_name = os.path.join(TRAINING_EXAMPLES_FOLDER, example_file)
     example = load_nparray(file_name)
 
     print("Absolute Representation")
-    abs_repr = AbsoluteCubeRepresentation(length_cube_side=length_cube_side,
+    abs_repr = AbsoluteCubeRepresentation(length_cube_side=LENGTH_CUBE_SIDE,
                                           cube_resolution=cube_resolution,
                                           use_rotation_invariance=False,
                                           verbose=True)
@@ -65,7 +65,7 @@ def compare_absolute_cube_discretization(example_file, cube_resolution=1.0):
     plt.pause(0.003)
 
     print("Absolute Rotation Invariant Representation")
-    abs_repr_rot_inv = AbsoluteCubeRepresentation(length_cube_side=length_cube_side,
+    abs_repr_rot_inv = AbsoluteCubeRepresentation(length_cube_side=LENGTH_CUBE_SIDE,
                                                   cube_resolution=cube_resolution,
                                                   use_rotation_invariance=True,
                                                   verbose=True)
@@ -79,7 +79,7 @@ def compare_absolute_cube_discretization(example_file, cube_resolution=1.0):
 
 if __name__ == "__main__":
     # Just to test
-    examples_files = os.listdir(training_examples_folder)
+    examples_files = os.listdir(TRAINING_EXAMPLES_FOLDER)
     plt.ion()
     plt.show()
     for ex_file in examples_files[:10]:

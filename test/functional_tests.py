@@ -7,8 +7,8 @@ import shutil
 
 from src.models_inspector import ModelsInspector
 from src.pipeline_fixtures import get_current_timestamp
-from src.settings import history_file_name, serialized_model_file_name, parameters_file_name, \
-    training_logfile
+from src.settings import history_file_name, SERIALIZED_MODEL_FILE_NAME, PARAMETERS_FILE_NAME, \
+    TRAINING_LOGFILE
 from src.train_cnn import train_cnn
 
 
@@ -47,7 +47,7 @@ class TestTrainingJob(unittest.TestCase):
         self.assertEqual(len(list_res), nb_trials)
 
         should_be_saved = sorted(
-            [parameters_file_name, serialized_model_file_name, history_file_name, training_logfile])
+            [PARAMETERS_FILE_NAME, SERIALIZED_MODEL_FILE_NAME, history_file_name, TRAINING_LOGFILE])
         file_saved = sorted(os.listdir(os.path.join(self.test_folder, list_res[0])))
 
         self.assertEqual(should_be_saved, file_saved)

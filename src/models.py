@@ -1,10 +1,10 @@
 from keras import Sequential, Input, Model
 from keras.layers import Dense, Flatten, Conv3D, Activation, MaxPooling3D, Dropout
 
-from settings import length_cube_side, nb_channels
+from settings import LENGTH_CUBE_SIDE, NB_CHANNELS
 
 # Configurations of the shape of data
-input_shape = (length_cube_side, length_cube_side, length_cube_side, nb_channels)
+input_shape = (LENGTH_CUBE_SIDE, LENGTH_CUBE_SIDE, LENGTH_CUBE_SIDE, NB_CHANNELS)
 data_format = "channels_last"
 
 

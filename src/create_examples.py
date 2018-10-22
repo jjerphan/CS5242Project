@@ -5,11 +5,11 @@ import logging
 from concurrent import futures
 from discretization import load_nparray
 
-from settings import extracted_given_data_train_folder, extracted_given_data_validation_folder, \
-    extracted_protein_suffix, \
-    extracted_ligand_suffix, comment_delimiter, features_names, training_examples_folder, \
-    validation_examples_folder, nb_workers, max_nb_neg_per_pos, testing_examples_folder, extracted_predict_data_folder, \
-    predict_examples_folder, extracted_given_data_test_folder
+from settings import EXTRACTED_GIVEN_DATA_TRAIN_FOLDER, extracted_given_data_validation_folder, \
+    EXTRACTED_PROTEIN_SUFFIX, \
+    EXTRACTED_LIGAND_SUFFIX, COMMENT_DELIMITER, FEATURES_NAMES, TRAINING_EXAMPLES_FOLDER, \
+    VALIDATION_EXAMPLES_FOLDER, NB_WORKERS, MAX_NB_NEG_PER_POS, TESTING_EXAMPLES_FOLDER, EXTRACTED_PREDICT_DATA_FOLDER, \
+    PREDICT_EXAMPLES_FOLDER, extracted_given_data_test_folder
 
 
 logger = logging.getLogger('__main__.create_example')
@@ -61,9 +61,9 @@ def save_example(examples_folder: str, protein: np.ndarray, ligand: np.ndarray,
     comments = [f"{type_example} of (Protein, Ligand) : ({protein_system},{ligand_system})",
                 f" - Number of atoms in Protein: {protein.shape[0]}",
                 f" - Number of atoms in Ligand : {ligand.shape[0]}",
-                ','.join(features_names)]
+                ','.join(FEATURES_NAMES)]
 
-    comment = comment_delimiter + f"\n{comment_delimiter} ".join(comments) + "\n"
+    comment = COMMENT_DELIMITER + f"\n{COMMENT_DELIMITER} ".join(comments) + "\n"
 
     with open(file_path, "w") as f:
         f.write(comment)
@@ -89,12 +89,12 @@ def save_system_examples(system, list_systems, nb_neg, extracted_data_folder, ex
     """
 
     try:
-        system_protein = load_nparray(os.path.join(extracted_data_folder, system + extracted_protein_suffix))
-        system_ligand = load_nparray(os.path.join(extracted_data_folder, system + extracted_ligand_suffix))
+        system_protein = load_nparray(os.path.join(extracted_data_folder, system + EXTRACTED_PROTEIN_SUFFIX))
+        system_ligand = load_nparray(os.path.join(extracted_data_folder, system + EXTRACTED_LIGAND_SUFFIX))
     except Exception:
         warning_message = f"Loading protein/ligand failed. Protein folder " + \
-                          f"{os.path.join(extracted_data_folder, system + extracted_protein_suffix)}, " + \
-                          f"Ligand folder {os.path.join(extracted_data_folder, system + extracted_ligand_suffix)}"
+                          f"{os.path.join(extracted_data_folder, system + EXTRACTED_PROTEIN_SUFFIX)}, " + \
+                          f"Ligand folder {os.path.join(extracted_data_folder, system + EXTRACTED_LIGAND_SUFFIX)}"
         logger.debug(warning_message)
         print(warning_message)
         raise RuntimeError()
@@ -107,7 +107,7 @@ def save_system_examples(system, list_systems, nb_neg, extracted_data_folder, ex
     some_others_systems_indices = np.random.permutation(len(other_systems))[0:nb_neg]
 
     for other_system in map(lambda index: other_systems[index], some_others_systems_indices):
-        other_ligand = load_nparray(os.path.join(extracted_data_folder, other_system + extracted_ligand_suffix))
+        other_ligand = load_nparray(os.path.join(extracted_data_folder, other_system + EXTRACTED_LIGAND_SUFFIX))
 
         if other_system == system:
             raise RuntimeError(f"other_system = {other_system} shoud be != system = {system}")
@@ -170,7 +170,7 @@ def create_examples(from_folder, to_folder, nb_neg: int = -1):
 
     # For each system, we create the associated positive example and we generate some negative examples
     logger.debug('Create 1 positive binding and %d random negative protein-ligand bindings.', nb_neg)
-    with futures.ProcessPoolExecutor(max_workers=nb_workers) as executor:
+    with futures.ProcessPoolExecutor(max_workers=NB_WORKERS) as executor:
         for system in sorted(list_systems):
             executor.submit(save_system_examples, system, list_systems, nb_neg, from_folder, to_folder)
 
@@ -178,19 +178,19 @@ def create_examples(from_folder, to_folder, nb_neg: int = -1):
 
 
 if __name__ == "__main__":
-    print(f"Creating training examples with {max_nb_neg_per_pos} negatives examples per positive examples")
-    create_examples(from_folder=extracted_given_data_train_folder,
-                    to_folder=training_examples_folder,
-                    nb_neg=max_nb_neg_per_pos)
+    print(f"Creating training examples with {MAX_NB_NEG_PER_POS} negatives examples per positive examples")
+    create_examples(from_folder=EXTRACTED_GIVEN_DATA_TRAIN_FOLDER,
+                    to_folder=TRAINING_EXAMPLES_FOLDER,
+                    nb_neg=MAX_NB_NEG_PER_POS)
 
     print("Creating validation examples")
     create_examples(from_folder=extracted_given_data_validation_folder,
-                    to_folder=validation_examples_folder)
+                    to_folder=VALIDATION_EXAMPLES_FOLDER)
 
     print("Creating testing examples")
     create_examples(from_folder=extracted_given_data_test_folder,
-                    to_folder=testing_examples_folder)
+                    to_folder=TESTING_EXAMPLES_FOLDER)
 
     print("Creating examples for final prediction")
-    create_examples(from_folder=extracted_predict_data_folder,
-                    to_folder=predict_examples_folder)
+    create_examples(from_folder=EXTRACTED_PREDICT_DATA_FOLDER,
+                    to_folder=PREDICT_EXAMPLES_FOLDER)

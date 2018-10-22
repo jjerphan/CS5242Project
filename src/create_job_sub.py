@@ -3,8 +3,8 @@ import textwrap
 
 from models_inspector import ModelsInspector
 from models import models_available, models_available_names
-from settings import job_submissions_folder, nb_neg_ex_per_pos, nb_epochs_default, batch_size_default, n_gpu_default, \
-    results_folder, name_env
+from settings import JOB_SUBMISSIONS_FOLDER, NB_NEG_EX_PER_POS, NB_EPOCHS_DEFAULT, BATCH_SIZE_DEFAULT, N_GPU_DEFAULT, \
+    RESULTS_FOLDER, NAME_ENV
 
 
 def save_job_file(stub, name_job):
@@ -20,14 +20,14 @@ def save_job_file(stub, name_job):
     print("Stub inferred :")
     print(stub)
 
-    file_name = os.path.join(job_submissions_folder, f"{name_job}.pbs")
+    file_name = os.path.join(JOB_SUBMISSIONS_FOLDER, f"{name_job}.pbs")
 
     if input("Would you want to save the following job ? [y (default) /n]").lower() == "n":
         print("Not saved")
     else:
         # Creating the folder for job submissions if not existing
-        if not (os.path.exists(job_submissions_folder)):
-            os.makedirs(job_submissions_folder)
+        if not (os.path.exists(JOB_SUBMISSIONS_FOLDER)):
+            os.makedirs(JOB_SUBMISSIONS_FOLDER)
 
         with open(file_name, "w") as f_sub:
             # De-indenting the stub to make it in a file
@@ -52,14 +52,14 @@ def get_train_stub(model_index, name_job, nb_epochs, batch_size, nb_neg, max_exa
                 #PBS -l select=1:ngpus={n_gpu}
                 #PBS -l walltime=23:00:00
                 #PBS -N {name_job}
-                mkdir -p {results_folder}/$PBS_JOBID/
+                mkdir -p {RESULTS_FOLDER}/$PBS_JOBID/
                 cd $PBS_O_WORKDIR/src/
-                source activate {name_env}
+                source activate {NAME_ENV}
                 python $PBS_O_WORKDIR/src/{script_name}  --model_index {model_index} \\
                                                          --nb_epochs {nb_epochs} \\
                                                          --batch_size {batch_size} \\
                                                          --nb_neg {nb_neg} \\{option_max if max_examples is not None else ''}
-                                                         --job_folder {results_folder}/$PBS_JOBID/
+                                                         --job_folder {RESULTS_FOLDER}/$PBS_JOBID/
                 """
     # We remove the first return in the string
     stub = stub[1:]
@@ -88,20 +88,20 @@ def create_train_job():
 
         model_index = int(input("Your choice : # "))
 
-    nb_epochs = input(f"Number of epochs (default = {nb_epochs_default}) : ")
-    nb_epochs = nb_epochs_default if nb_epochs == "" else int(nb_epochs)
+    nb_epochs = input(f"Number of epochs (default = {NB_EPOCHS_DEFAULT}) : ")
+    nb_epochs = NB_EPOCHS_DEFAULT if nb_epochs == "" else int(nb_epochs)
 
-    batch_size = input(f"Batch size (default = {batch_size_default}) : ")
-    batch_size = batch_size_default if batch_size == "" else int(batch_size)
+    batch_size = input(f"Batch size (default = {BATCH_SIZE_DEFAULT}) : ")
+    batch_size = BATCH_SIZE_DEFAULT if batch_size == "" else int(batch_size)
 
-    nb_neg = input(f"Number of negatives examples to use (leave empty for default = {nb_neg_ex_per_pos}) : ")
-    nb_neg = nb_neg_ex_per_pos if nb_neg == "" else int(nb_neg)
+    nb_neg = input(f"Number of negatives examples to use (leave empty for default = {NB_NEG_EX_PER_POS}) : ")
+    nb_neg = NB_NEG_EX_PER_POS if nb_neg == "" else int(nb_neg)
 
     max_examples = input(f"Number of maximum examples to use (leave empty to use all examples) : ")
     max_examples = None if max_examples == "" else int(max_examples)
 
-    n_gpu = input(f"Choose number of GPU (leave blank for default = {n_gpu_default}) : ")
-    n_gpu = n_gpu_default if n_gpu == "" else int(n_gpu)
+    n_gpu = input(f"Choose number of GPU (leave blank for default = {N_GPU_DEFAULT}) : ")
+    n_gpu = N_GPU_DEFAULT if n_gpu == "" else int(n_gpu)
 
     assert (n_gpu > 0)
 
@@ -119,14 +119,14 @@ def create_job_with_for_one_serialized_model(script_name, name_job, evaluation=F
     """
 
     # Asking for the different parameters
-    model_inspector = ModelsInspector(results_folder=results_folder)
+    model_inspector = ModelsInspector(results_folder=RESULTS_FOLDER)
     id_model, serialized_model_path = model_inspector.choose_model()
 
     max_examples = input(f"Number of maximum examples to use (leave empty to use all examples) : ")
     max_examples = None if max_examples == "" else int(max_examples)
 
-    n_gpu = input(f"Choose number of GPU (leave blank for default = {n_gpu_default}) : ")
-    n_gpu = n_gpu_default if n_gpu == "" else int(n_gpu)
+    n_gpu = input(f"Choose number of GPU (leave blank for default = {N_GPU_DEFAULT}) : ")
+    n_gpu = N_GPU_DEFAULT if n_gpu == "" else int(n_gpu)
 
     # TODO : fix this hack to add the option
 
@@ -146,7 +146,7 @@ def create_job_with_for_one_serialized_model(script_name, name_job, evaluation=F
                     #PBS -l walltime=23:00:00
                     #PBS -N {name_job}
                     cd $PBS_O_WORKDIR/src/
-                    source activate {name_env}
+                    source activate {NAME_ENV}
                     python $PBS_O_WORKDIR/src/{script_name}  --model_path {serialized_model_path} \\ {option_max if max_examples is not None else ''} \\
                                                              {option_evaluation if evaluation else ''}
                     """

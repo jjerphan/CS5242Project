@@ -1,16 +1,17 @@
 import os
-from discretization import load_nparray, make_relative_cube
-from settings import length_cube_side
+from discretization import load_nparray, RelativeCubeRepresentation
+from settings import LENGTH_CUBE_SIDE
 import numpy as np
 
 
 def PredictGenerator(examples_folder):
     examples_files = os.listdir(examples_folder)
+    relative_representation = RelativeCubeRepresentation(length_cube_side=LENGTH_CUBE_SIDE)
     for file in examples_files:
         example = load_nparray(os.path.join(examples_folder, file))
-        cube = make_relative_cube(example, length_cube_side)
+        cube = relative_representation.make_cube(example)
         cube = np.array([cube])
         protein = file.split('_')[0]
-        ligend = file.split('_')[1].split('.')[0]
+        ligand = file.split('_')[1].split('.')[0]
 
-        yield (protein, ligend, cube)
+        yield (protein, ligand, cube)

@@ -96,7 +96,7 @@ def build_molecule_features(x_list: list, y_list: list, z_list: list, atom_type_
 
     is_from_protein_list = (2 * molecule_is_protein) * np.ones((nb_atoms,)) - 1
 
-    # See `features_names` in settings to see how the features are organised
+    # See `features_names` in settings to see how the features are organized
     formated_molecule = np.array([x_list, y_list, z_list, is_hydrophobic_list, is_from_protein_list]).T
 
     assert (formated_molecule.shape == (nb_atoms, NB_FEATURES))

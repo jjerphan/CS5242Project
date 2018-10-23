@@ -12,9 +12,11 @@ from discretization import RelativeCubeRepresentation, AbsoluteCubeRepresentatio
 from examples_iterator import ExamplesIterator
 from models import models_available, models_available_names
 from pipeline_fixtures import LogEpochBatchCallback, get_current_timestamp
-from settings import MAX_NB_NEG_PER_POS, LENGTH_CUBE_SIDE, HISTORY_FILE_NAME_PREFIX, JOB_FOLDER_DEFAULT, WEIGHT_POS_CLASS
+from settings import MAX_NB_NEG_PER_POS, LENGTH_CUBE_SIDE, HISTORY_FILE_NAME_PREFIX, JOB_FOLDER_DEFAULT, \
+    WEIGHT_POS_CLASS
 from settings import TRAINING_EXAMPLES_FOLDER, RESULTS_FOLDER, NB_NEG_EX_PER_POS, OPTIMIZER_DEFAULT, BATCH_SIZE_DEFAULT, \
-    NB_EPOCHS_DEFAULT, SERIALIZED_MODEL_FILE_NAME_PREFIX, PARAMETERS_FILE_NAME, TRAINING_LOGFILE, VALIDATION_EXAMPLES_FOLDER
+    NB_EPOCHS_DEFAULT, SERIALIZED_MODEL_FILE_NAME_PREFIX, PARAMETERS_FILE_NAME, TRAINING_LOGFILE, \
+    VALIDATION_EXAMPLES_FOLDER
 
 
 def f1(y_true, y_pred):
@@ -49,16 +51,16 @@ def f1(y_true, y_pred):
     return 2 * ((precision * recall) / (precision + recall + K.epsilon()))
 
 
-def train_cnn(model_index:int,
+def train_cnn(model_index: int,
               nb_epochs: int,
               nb_neg: int,
               max_examples: int,
               batch_size: int,
-              representation:CubeRepresentation=RelativeCubeRepresentation(length_cube_side=LENGTH_CUBE_SIDE),
-              weight_pos_class:int=WEIGHT_POS_CLASS,
+              representation: CubeRepresentation = RelativeCubeRepresentation(length_cube_side=LENGTH_CUBE_SIDE),
+              weight_pos_class: int = WEIGHT_POS_CLASS,
               optimizer=OPTIMIZER_DEFAULT,
-              results_folder:str=RESULTS_FOLDER,
-              job_folder:str=None):
+              results_folder: str = RESULTS_FOLDER,
+              job_folder: str = None):
     """
     Train a given CNN using some given parameters.
 
@@ -168,9 +170,8 @@ def train_cnn(model_index:int,
     logger.debug('Done training !')
     train_checkpoint = datetime.now()
 
-
     # Saving the serialized model and its history
-    id = job_folder.split(os.sep)[-1].replace(os.sep, "")
+    id = job_folder.split(os.sep)[-2]
     prefix = f"{id}_nbepoches_{nb_epochs}_nbneg_{nb_neg}"
     model_file = os.path.join(job_folder, f"{prefix}_{SERIALIZED_MODEL_FILE_NAME_PREFIX}")
     history_file = os.path.join(job_folder, f"{prefix}__{HISTORY_FILE_NAME_PREFIX}")
@@ -230,8 +231,8 @@ if __name__ == "__main__":
     assert (args.nb_neg > 0)
 
     representation = (RelativeCubeRepresentation(length_cube_side=LENGTH_CUBE_SIDE)
-        if args.representation == RelativeCubeRepresentation.name else
-        AbsoluteCubeRepresentation)
+                      if args.representation == RelativeCubeRepresentation.name else
+                      AbsoluteCubeRepresentation)
 
     train_cnn(model_index=args.model_index,
               nb_epochs=args.nb_epochs,

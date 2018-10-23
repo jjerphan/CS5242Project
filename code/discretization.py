@@ -12,7 +12,7 @@ class CubeRepresentation(ABC):
     a protein-ligand system.
 
     A cube is composed of voxels storing information about atom of the system present in it.
-    The number of voxels is here parametrised by at one parameter: the length of its sides `length_cube_side`.
+    The number of voxels is here parametrized by at one parameter: the length of its sides `length_cube_side`.
 
     `length_cube_side` represent the number of voxel on one direction.
 

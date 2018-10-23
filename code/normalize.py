@@ -4,7 +4,7 @@ import numpy as np
 from sklearn import preprocessing
 from pandas import DataFrame
 
-from settings import EXTRACTED_GIVEN_DATA_TRAIN_FOLDER, extracted_given_data_validation_folder, NORMALIZED_DATA_TRAIN_FOLDER, \
+from settings import EXTRACTED_GIVEN_DATA_TRAIN_FOLDER, EXTRACTED_GIVEN_DATA_VALIDATION_FOLDER, NORMALIZED_DATA_TRAIN_FOLDER, \
     NORMALIZED_DATA_TEST_FOLDER, NORMALIZED_DATA_FOLDER, GIVEN_DATA_FOLDER
 from pipeline_fixtures import show_progress, load_nparray
 
@@ -72,4 +72,4 @@ if __name__ == "__main__":
     scaler_on_training_data = get_data_scaler(EXTRACTED_GIVEN_DATA_TRAIN_FOLDER)
 
     normalize_data(scaler_on_training_data, EXTRACTED_GIVEN_DATA_TRAIN_FOLDER, NORMALIZED_DATA_TRAIN_FOLDER)
-    normalize_data(scaler_on_training_data, extracted_given_data_validation_folder, NORMALIZED_DATA_TEST_FOLDER)
+    normalize_data(scaler_on_training_data, EXTRACTED_GIVEN_DATA_VALIDATION_FOLDER, NORMALIZED_DATA_TEST_FOLDER)

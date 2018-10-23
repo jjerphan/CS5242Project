@@ -105,6 +105,8 @@ class CubeRepresentation(ABC):
 
         return original_coords
 
+    # TODO : change this method to actually gives a good representation of the data
+    # using the new set of features
     @staticmethod
     def plot_cube(cube):
         """
@@ -121,6 +123,8 @@ class CubeRepresentation(ABC):
         for x in range(LENGTH_CUBE_SIDE):
             for y in range(LENGTH_CUBE_SIDE):
                 for z in range(LENGTH_CUBE_SIDE):
+                    # "-3" because the 3 coordinates are present in INDICES_FEATURES
+                    # TODO : this part is to change here
                     is_from_protein_pos = INDICES_FEATURES["is_from_protein"] - 3
                     is_atom_in_voxel = cube[x, y, z, is_from_protein_pos] != 0
                     if is_atom_in_voxel:

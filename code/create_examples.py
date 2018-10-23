@@ -4,11 +4,11 @@ import logging
 from concurrent import futures
 from pipeline_fixtures import get_current_timestamp, load_nparray
 
-from settings import EXTRACTED_GIVEN_DATA_TRAIN_FOLDER, extracted_given_data_validation_folder, \
+from settings import EXTRACTED_GIVEN_DATA_TRAIN_FOLDER, EXTRACTED_GIVEN_DATA_VALIDATION_FOLDER, \
     EXTRACTED_PROTEIN_SUFFIX, \
     EXTRACTED_LIGAND_SUFFIX, COMMENT_DELIMITER, FEATURES_NAMES, TRAINING_EXAMPLES_FOLDER, \
     VALIDATION_EXAMPLES_FOLDER, NB_WORKERS, MAX_NB_NEG_PER_POS, TESTING_EXAMPLES_FOLDER, EXTRACTED_PREDICT_DATA_FOLDER, \
-    PREDICT_EXAMPLES_FOLDER, extracted_given_data_test_folder, LOGS_FOLDER
+    PREDICT_EXAMPLES_FOLDER, EXTRACTED_GIVEN_DATA_TEST_FOLDER, LOGS_FOLDER
 
 
 def save_example(examples_folder: str, protein: np.ndarray, ligand: np.ndarray,
@@ -63,10 +63,6 @@ def save_example(examples_folder: str, protein: np.ndarray, ligand: np.ndarray,
     with open(file_path, "w") as f:
         f.write(comment)
         np.savetxt(fname=f, X=example)
-
-
-# To get reproducible generations of examples
-np.random.seed(1337)
 
 
 def save_system_examples(system, list_systems, nb_neg, extracted_data_folder, examples_folder):
@@ -177,17 +173,20 @@ def create_examples(from_folder, to_folder, nb_neg: int = -1):
 
 
 if __name__ == "__main__":
+    # To get reproducible generations of examples
+    np.random.seed(1337)
+
     print(f"Creating training examples with {MAX_NB_NEG_PER_POS} negatives examples per positive examples")
     create_examples(from_folder=EXTRACTED_GIVEN_DATA_TRAIN_FOLDER,
                     to_folder=TRAINING_EXAMPLES_FOLDER,
                     nb_neg=MAX_NB_NEG_PER_POS)
 
     print("Creating all possible validation examples")
-    create_examples(from_folder=extracted_given_data_validation_folder,
+    create_examples(from_folder=EXTRACTED_GIVEN_DATA_VALIDATION_FOLDER,
                     to_folder=VALIDATION_EXAMPLES_FOLDER)
 
     print("Creating all possible testing examples")
-    create_examples(from_folder=extracted_given_data_test_folder,
+    create_examples(from_folder=EXTRACTED_GIVEN_DATA_TEST_FOLDER,
                     to_folder=TESTING_EXAMPLES_FOLDER)
 
     print("Creating all possible examples for final predictions")

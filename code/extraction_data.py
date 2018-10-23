@@ -5,9 +5,9 @@ from concurrent import futures
 from random import Random
 
 from settings import HYDROPHOBIC_TYPES, FLOAT_TYPE, FORMATTER, NB_FEATURES, PERCENT_TRAIN, PERCENT_TEST, NB_WORKERS, \
-    EXTRACTED_GIVEN_DATA_TRAIN_FOLDER, extracted_given_data_validation_folder, ORIGINAL_GIVEN_DATA_FOLDER, \
+    EXTRACTED_GIVEN_DATA_TRAIN_FOLDER, EXTRACTED_GIVEN_DATA_VALIDATION_FOLDER, ORIGINAL_GIVEN_DATA_FOLDER, \
     EXTRACTED_GIVEN_DATA_FOLDER, \
-    ORIGINAL_PREDICT_DATA_FOLDER, EXTRACTED_PREDICT_DATA_FOLDER, extracted_given_data_test_folder
+    ORIGINAL_PREDICT_DATA_FOLDER, EXTRACTED_PREDICT_DATA_FOLDER, EXTRACTED_GIVEN_DATA_TEST_FOLDER
 
 logger = logging.getLogger('__main__.extract_data')
 logger.addHandler(logging.NullHandler())
@@ -91,17 +91,21 @@ def build_molecule_features(x_list: list, y_list: list, z_list: list, atom_type_
     :return: np.ndarray of dimension (nb_atoms, 3 + nb_atom_features)
     """
     nb_atoms = len(x_list)
+
     # One hot encoding for atom type and molecule types
-    is_hydrophobic_list = np.array([1 if atom_type in HYDROPHOBIC_TYPES else -1 for atom_type in atom_type_list])
+    is_hydrophobic_list = np.array([1. if atom_type in HYDROPHOBIC_TYPES else 0. for atom_type in atom_type_list])
+    is_polar_list = 1. - is_hydrophobic_list
 
-    is_from_protein_list = (2 * molecule_is_protein) * np.ones((nb_atoms,)) - 1
+    is_from_protein_list = (1. * molecule_is_protein) * np.ones((nb_atoms,))
+    is_from_ligand_list = 1. - is_from_protein_list
 
-    # See `features_names` in settings to see how the features are organized
-    formated_molecule = np.array([x_list, y_list, z_list, is_hydrophobic_list, is_from_protein_list]).T
+    # See `FEATURES_NAMES` in settings to see how the features are organized
+    molecule_features = np.array([x_list, y_list, z_list,
+                                  is_hydrophobic_list, is_polar_list, is_from_protein_list, is_from_ligand_list]).T
 
-    assert (formated_molecule.shape == (nb_atoms, NB_FEATURES))
+    assert (molecule_features.shape == (nb_atoms, NB_FEATURES))
 
-    return formated_molecule
+    return molecule_features
 
 
 def save_given_data(pdb_file, group_indices):
@@ -129,12 +133,12 @@ def save_given_data(pdb_file, group_indices):
     if molecule_index in group_indices[0]:
         extracted_file_path = os.path.join(EXTRACTED_GIVEN_DATA_TRAIN_FOLDER, pdb_file_csv)
     elif molecule_index in group_indices[1]:
-        extracted_file_path = os.path.join(extracted_given_data_validation_folder, pdb_file_csv)
+        extracted_file_path = os.path.join(EXTRACTED_GIVEN_DATA_VALIDATION_FOLDER, pdb_file_csv)
     elif molecule_index in group_indices[2]:
-        extracted_file_path = os.path.join(extracted_given_data_test_folder, pdb_file_csv)
+        extracted_file_path = os.path.join(EXTRACTED_GIVEN_DATA_TEST_FOLDER, pdb_file_csv)
     else:
         logger.debug("Not inside indices. Something went wrong")
-        raise()
+        raise ()
 
     np.savetxt(fname=extracted_file_path, X=molecule, fmt=FORMATTER)
 
@@ -169,7 +173,7 @@ def extract_predict_data():
 
     :return:
     """
-    if not(os.path.exists(EXTRACTED_PREDICT_DATA_FOLDER)):
+    if not (os.path.exists(EXTRACTED_PREDICT_DATA_FOLDER)):
         logger.debug('The %s folder does not exist. Creating it.', EXTRACTED_PREDICT_DATA_FOLDER)
         os.makedirs(EXTRACTED_PREDICT_DATA_FOLDER)
 
@@ -191,8 +195,9 @@ def extract_given_data():
 
     :return:
     """
-    for folder in [EXTRACTED_GIVEN_DATA_FOLDER, extracted_given_data_validation_folder, extracted_given_data_test_folder, EXTRACTED_GIVEN_DATA_TRAIN_FOLDER]:
-        if not(os.path.exists(folder)):
+    for folder in [EXTRACTED_GIVEN_DATA_FOLDER, EXTRACTED_GIVEN_DATA_VALIDATION_FOLDER,
+                   EXTRACTED_GIVEN_DATA_TEST_FOLDER, EXTRACTED_GIVEN_DATA_TRAIN_FOLDER]:
+        if not (os.path.exists(folder)):
             logger.debug('The %s folder does not exist. Creating it.', folder)
             os.makedirs(folder)
 
@@ -228,4 +233,3 @@ if __name__ == "__main__":
     extract_given_data()
     print("Extracting the data for prediction")
     extract_predict_data()
-

@@ -19,8 +19,8 @@ GIVEN_DATA_FOLDER = os.path.join(ROOT, "training_data")
 ORIGINAL_GIVEN_DATA_FOLDER = os.path.join(GIVEN_DATA_FOLDER, "original")
 EXTRACTED_GIVEN_DATA_FOLDER = os.path.join(GIVEN_DATA_FOLDER, "extracted")
 EXTRACTED_GIVEN_DATA_TRAIN_FOLDER = os.path.join(EXTRACTED_GIVEN_DATA_FOLDER, "train")
-extracted_given_data_validation_folder = os.path.join(EXTRACTED_GIVEN_DATA_FOLDER, "validation")
-extracted_given_data_test_folder = os.path.join(EXTRACTED_GIVEN_DATA_FOLDER, "test")
+EXTRACTED_GIVEN_DATA_VALIDATION_FOLDER = os.path.join(EXTRACTED_GIVEN_DATA_FOLDER, "validation")
+EXTRACTED_GIVEN_DATA_TEST_FOLDER = os.path.join(EXTRACTED_GIVEN_DATA_FOLDER, "test")
 
 # Conversion to examples
 TRAINING_EXAMPLES_FOLDER = os.path.join(GIVEN_DATA_FOLDER, "training_examples")
@@ -46,7 +46,7 @@ PREDICT_EXAMPLES_FOLDER = os.path.join(PREDICT_DATA_FOLDER, "predict_examples")
 #  - 3 spatial coordinates : x , y, z (floating values)
 #  - 1 features for one hot encoding of atom types (is_hydrophobic)
 #  - 1 features for one hot encoding of molecules types (is_from_protein)
-FEATURES_NAMES = ["x", "y", "z", "is_hydrophobic", "is_from_protein"]
+FEATURES_NAMES = ["x", "y", "z", "is_hydrophobic", "is_polar", "is_from_protein", "is_from_ligand"]
 # Obtained with values_range on the complete original dataset
 HYDROPHOBIC_TYPES = {'h', 'C'}
 POLAR_TYPES = {'p', 'P', 'O', 'TE', 'F', 'N', 'AS', 'O1-', 'MO',
@@ -55,7 +55,7 @@ POLAR_TYPES = {'p', 'P', 'O', 'TE', 'F', 'N', 'AS', 'O1-', 'MO',
                'N1+', 'CO', 'W'}
 
 NB_FEATURES = len(FEATURES_NAMES)
-NB_CHANNELS = NB_FEATURES - 3  # coordinates are not used as features
+NB_CHANNELS = NB_FEATURES - 3  # coordinates are not used as features then
 
 # A mapping from names to their actual index
 INDICES_FEATURES = dict(zip(FEATURES_NAMES, list(range(NB_FEATURES))))

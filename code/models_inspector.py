@@ -24,8 +24,9 @@ class ModelsInspector:
 
     def __init__(self, results_folder):
         self._general_folder = results_folder
-        sub_folders = list(filter(lambda sub_folder: os.path.isdir(os.path.join(self._general_folder, sub_folder)),
-                               os.listdir(self._general_folder)))
+        # Storing absolute path of sub folders
+        sub_folders = list(filter(lambda folder: os.path.isdir(folder),
+                                  map(lambda folder: os.path.join(self._general_folder, folder), os.listdir(self._general_folder))))
         # sub_folders.append(self._general_folder)
 
         # It is possible that there exist sub-folders with no serialized model

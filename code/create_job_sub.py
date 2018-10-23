@@ -8,7 +8,7 @@ from settings import JOB_SUBMISSIONS_FOLDER, NB_NEG_EX_PER_POS, NB_EPOCHS_DEFAUL
     RESULTS_FOLDER, JOBS_ENV, WEIGHT_POS_CLASS
 
 
-def save_job_file(stub, name_job):
+def save_job_file(stub, name_job, ask_confirm=True):
     """
     Save a submission file.
 
@@ -23,7 +23,7 @@ def save_job_file(stub, name_job):
 
     file_name = os.path.join(JOB_SUBMISSIONS_FOLDER, f"{name_job}.pbs")
 
-    if input("Would you want to save the following job ? [y (default) /n]").lower() == "n":
+    if ask_confirm and input("Would you want to save the following job ? [y (default) /n]").lower() == "n":
         print("Not saved")
     else:
         # Creating the folder for job submissions if not existing
@@ -140,6 +140,49 @@ def create_train_job():
     save_job_file(stub, name_job)
 
 
+def create_eval_job_for_all_serialized_models():
+    """
+    Create submission files to evaluated models that haven't been evaluated yet.
+
+    Ask to recreate
+
+    :return:
+    """
+
+    # Asking for the different parameters
+    n_gpu = N_GPU_DEFAULT
+
+    model_inspector = ModelsInspector(results_folder=RESULTS_FOLDER)
+    for sub_folder, set_parameters, serialized_model_path, history_file_path, was_evaluated in model_inspector:
+        id_model = sub_folder.split(os.sep)[-1]
+        if was_evaluated:
+            print(f"Model {id_model} was already evaluated.")
+            if input("Enter 'y' to recreate the file ") != "y":
+                print(f"Not recreating file for {id_model}")
+                continue
+            print(f"Recreating file for {id_model}")
+
+        # We append the ID for the model to it
+        name_job = f"evaluate_{id_model}"
+
+        stub = f"""
+                        #! /bin/bash
+                        #PBS -P Personal
+                        #PBS -q gpu
+                        #PBS -j oe
+                        #PBS -l select=1:ngpus={n_gpu}
+                        #PBS -l walltime=23:00:00
+                        #PBS -N {name_job}
+                        cd $PBS_O_WORKDIR/code/
+                        source activate {JOBS_ENV}
+                        python $PBS_O_WORKDIR/code/evaluate.py  --model_path {serialized_model_path} --evaluation True
+                        """
+        # We remove the first return in the string
+        stub = stub[1:]
+
+        save_job_file(stub, name_job, ask_confirm=False)
+
+
 def create_job_with_for_one_serialized_model(script_name, evaluation=True):
     """
     Create submission files to executed on one serialized model.
@@ -227,7 +270,7 @@ def create_multiple_train_jobs(batch_size: int=BATCH_SIZE_DEFAULT, max_examples=
                                   n_gpu=n_gpu, weight_pos_class=weight_pos_class,
                                   representation=representation)
 
-            save_job_file(stub, name_job)
+            save_job_file(stub, name_job, ask_confirm=False)
 
 
 def create_evaluation_job():
@@ -255,10 +298,14 @@ def create_prediction_job():
 if __name__ == "__main__":
     # Choosing the time of job to create
     choice = -1
-    jobs = [create_train_job, create_multiple_train_jobs, create_evaluation_job, create_prediction_job]
+    jobs = [create_train_job, create_multiple_train_jobs,
+            create_evaluation_job,
+            create_eval_job_for_all_serialized_models,
+            create_prediction_job]
     description_jobs = ["File to train just one specific model",
                         "Several files to train specific models",
                         "File to evaluate a saved model",
+                        "Several files to evaluate non already evaluated models",
                         "File to predict using a saved model"]
     while choice not in range(len(jobs)):
         print("What do you want to create?")

@@ -92,9 +92,9 @@ TRAINING_LOGFILE = f"train_cnn.log"
 RESULTS_FOLDER = os.path.join(ROOT, "results")
 JOB_FOLDER_DEFAULT = os.path.join(RESULTS_FOLDER, "local")
 
-PARAMETERS_FILE_NAME = "parameters.txt"
-SERIALIZED_MODEL_FILE_NAME_PREFIX = "model.h5"
-HISTORY_FILE_NAME_PREFIX = "history.pickle"
+PARAMETERS_FILE_NAME_SUFFIX = "parameters.txt"
+SERIALIZED_MODEL_FILE_NAME_SUFFIX = "model.h5"
+HISTORY_FILE_NAME_SUFFIX = "history.pickle"
 NB_EPOCHS_DEFAULT = 1
 BATCH_SIZE_DEFAULT = 32
 N_GPU_DEFAULT = 1
@@ -108,6 +108,7 @@ WEIGHT_POS_CLASS = 2
 
 # Evaluation settings
 METRICS_FOR_EVALUATION = [accuracy_score, precision_score, recall_score, f1_score, confusion_matrix]
-
+EVALUATION_LOGS_FOLDER = os.path.join(RESULTS_FOLDER, "evaluation")
+EVALUATION_CSV_FILE = os.path.join(EVALUATION_LOGS_FOLDER, "evaluation_results.csv")
 
 

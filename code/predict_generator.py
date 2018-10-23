@@ -6,8 +6,7 @@ import numpy as np
 
 
 def PredictGenerator(examples_folder,
-                     representation: CubeRepresentation = RelativeCubeRepresentation(
-                         length_cube_side=LENGTH_CUBE_SIDE)) -> (str, str, np.ndarray):
+                     representation: CubeRepresentation) -> (str, str, np.ndarray):
     """
     A Generator that return examples in a specific examples_folder with the id of the protein and of the ligand.
 

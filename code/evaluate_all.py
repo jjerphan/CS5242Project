@@ -11,7 +11,8 @@ from discretization import RelativeCubeRepresentation
 from models_inspector import ModelsInspector
 from examples_iterator import ExamplesIterator
 from pipeline_fixtures import get_current_timestamp
-from settings import VALIDATION_EXAMPLES_FOLDER, METRICS_FOR_EVALUATION, RESULTS_FOLDER, LENGTH_CUBE_SIDE
+from settings import VALIDATION_EXAMPLES_FOLDER, METRICS_FOR_EVALUATION, RESULTS_FOLDER, LENGTH_CUBE_SIDE, \
+    EVALUATION_LOGS_FOLDER
 from train_cnn import f1
 
 
@@ -35,17 +36,16 @@ def evaluate_all(max_examples=None):
     logfile = f"evaluate_all{current_timestamp}.log"
     results_csv_file = f"evaluate_all{current_timestamp}.csv"
 
-    evaluation_logs_folder = os.path.join(RESULTS_FOLDER, "evaluation")
     # Making a folder for the job to save log, model, history in it.
     if not (os.path.exists(RESULTS_FOLDER)):
         print(f"The {RESULTS_FOLDER} does not exist. Creating it.")
         os.makedirs(RESULTS_FOLDER)
 
-    if not (os.path.exists(evaluation_logs_folder)):
-        print(f"The {evaluation_logs_folder} does not exist. Creating it.")
-        os.makedirs(evaluation_logs_folder)
+    if not (os.path.exists(EVALUATION_LOGS_FOLDER)):
+        print(f"The {EVALUATION_LOGS_FOLDER} does not exist. Creating it.")
+        os.makedirs(EVALUATION_LOGS_FOLDER)
 
-    fh = logging.FileHandler(os.path.join(evaluation_logs_folder, logfile))
+    fh = logging.FileHandler(os.path.join(EVALUATION_LOGS_FOLDER, logfile))
     fh.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     fh.setFormatter(formatter)
@@ -73,10 +73,10 @@ def evaluate_all(max_examples=None):
     headers = ["id", *metrics_name, "positives_prediction",
                "negatives_prediction", *parameters_name]
 
-    with open(os.path.join(evaluation_logs_folder, results_csv_file), "w+") as csv_fh:
+    with open(os.path.join(EVALUATION_LOGS_FOLDER, results_csv_file), "w+") as csv_fh:
         writer = csv.DictWriter(csv_fh, fieldnames=headers)
         writer.writeheader()
-        for subfolder, set_parameters, serialized_model_path, history_file_name in models_inspector:
+        for subfolder, set_parameters, serialized_model_path, history_file_name, _ in models_inspector:
 
             logger.debug(f"Evaluating {subfolder}")
             logger.debug(f"Parameters")

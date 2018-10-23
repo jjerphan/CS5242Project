@@ -12,10 +12,10 @@ from discretization import RelativeCubeRepresentation, AbsoluteCubeRepresentatio
 from examples_iterator import ExamplesIterator
 from models import models_available, models_available_names
 from pipeline_fixtures import LogEpochBatchCallback, get_current_timestamp
-from settings import MAX_NB_NEG_PER_POS, LENGTH_CUBE_SIDE, HISTORY_FILE_NAME_PREFIX, JOB_FOLDER_DEFAULT, \
+from settings import MAX_NB_NEG_PER_POS, LENGTH_CUBE_SIDE, HISTORY_FILE_NAME_SUFFIX, JOB_FOLDER_DEFAULT, \
     WEIGHT_POS_CLASS
 from settings import TRAINING_EXAMPLES_FOLDER, RESULTS_FOLDER, NB_NEG_EX_PER_POS, OPTIMIZER_DEFAULT, BATCH_SIZE_DEFAULT, \
-    NB_EPOCHS_DEFAULT, SERIALIZED_MODEL_FILE_NAME_PREFIX, PARAMETERS_FILE_NAME, TRAINING_LOGFILE, \
+    NB_EPOCHS_DEFAULT, SERIALIZED_MODEL_FILE_NAME_SUFFIX, PARAMETERS_FILE_NAME_SUFFIX, TRAINING_LOGFILE, \
     VALIDATION_EXAMPLES_FOLDER
 
 
@@ -104,6 +104,13 @@ def train_cnn(model_index: int,
     fh.setFormatter(formatter)
     logger.addHandler(fh)
 
+    # Results
+    id = job_folder.split(os.sep)[-2]
+    prefix = f"{id}_nbepoches_{nb_epochs}_nbneg_{nb_neg}"
+    model_file = os.path.join(job_folder, f"{prefix}_{SERIALIZED_MODEL_FILE_NAME_SUFFIX}")
+    history_file = os.path.join(job_folder, f"{prefix}__{HISTORY_FILE_NAME_SUFFIX}")
+    parameters_file = os.path.join(job_folder, f"{prefix}_{PARAMETERS_FILE_NAME_SUFFIX}")
+
     start_time = datetime.now()
 
     logger.debug('Creating network model')
@@ -124,7 +131,7 @@ def train_cnn(model_index: int,
     logger.debug(f'weight_pos_class   = {weight_pos_class}')
 
     # Saving parameters in a file
-    with open(os.path.join(job_folder, PARAMETERS_FILE_NAME), "w") as f:
+    with open(parameters_file, "w") as f:
         f.write(f'model={model.name}\n')
         f.write(f'nb_epochs={nb_epochs}\n')
         f.write(f'max_examples={max_examples}\n')
@@ -171,11 +178,6 @@ def train_cnn(model_index: int,
     train_checkpoint = datetime.now()
 
     # Saving the serialized model and its history
-    id = job_folder.split(os.sep)[-2]
-    prefix = f"{id}_nbepoches_{nb_epochs}_nbneg_{nb_neg}"
-    model_file = os.path.join(job_folder, f"{prefix}_{SERIALIZED_MODEL_FILE_NAME_PREFIX}")
-    history_file = os.path.join(job_folder, f"{prefix}__{HISTORY_FILE_NAME_PREFIX}")
-
     model.save(model_file)
     logger.debug(f"Model saved in {model_file}")
     with open(history_file, "wb") as handle:

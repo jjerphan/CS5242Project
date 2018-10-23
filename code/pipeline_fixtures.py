@@ -2,15 +2,40 @@ import datetime
 
 import keras
 import numpy as np
+import os
 import progressbar
+from collections import defaultdict
 
-from settings import FLOAT_TYPE, COMMENT_DELIMITER
+from settings import FLOAT_TYPE, COMMENT_DELIMITER, PARAMETERS_FILE_NAME_SUFFIX
 
 widgets_progressbar = [
     ' [', progressbar.Timer(), '] ',
     progressbar.Bar("░", fill="⋅"),
     ' (', progressbar.ETA(), ') ',
 ]
+
+
+def get_parameters_dict(job_folder):
+    """
+
+    :param job_folder:
+    :return:
+    """
+    parameters = defaultdict(str)
+
+    try:
+        parameters_file = list(filter(lambda file: PARAMETERS_FILE_NAME_SUFFIX in file, os.listdir(job_folder)))[0]
+        with open(os.path.join(job_folder, parameters_file), "r") as f:
+            lines = f.readlines()
+            for line in lines:
+                words = line.replace("\n", "").split("=")
+                key = words[0]
+                value = words[1]
+                parameters[key] = value
+    except Exception:
+        pass
+
+    return parameters
 
 
 def is_positive(name):

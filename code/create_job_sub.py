@@ -163,7 +163,7 @@ def create_job_with_for_one_serialized_model(script_name, evaluation=True):
     option_max = f"                                         --max_examples {max_examples} \\"
 
     # We append the ID for the model to it
-    name_job = f"{script_name.split('.')[0]}_{id_model}"
+    name_job = f"{'' if evaluation else 'final_'}{script_name.split('.')[0]}_{id_model}"
     assert (n_gpu > 0)
 
     stub = f"""

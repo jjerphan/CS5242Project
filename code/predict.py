@@ -9,7 +9,9 @@ from collections import defaultdict
 
 from keras.models import load_model
 
-from settings import TESTING_EXAMPLES_FOLDER
+from discretization import AbsoluteCubeRepresentation, RelativeCubeRepresentation
+from pipeline_fixtures import get_parameters_dict
+from settings import TESTING_EXAMPLES_FOLDER, LENGTH_CUBE_SIDE
 from predict_generator import PredictGenerator
 from settings import PREDICT_EXAMPLES_FOLDER, RESULTS_FOLDER
 from train_cnn import f1
@@ -71,18 +73,23 @@ def predict(serialized_model_path, evaluation=True):
     """
 
     nb_top_ligands = 10
-    id = serialized_model_path.split(os.sep)[-2]
-    job_folder = os.path.join(RESULTS_FOLDER, id)
 
+    # Formatting Fixtures
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.DEBUG)
-    fh = logging.FileHandler(os.path.join(job_folder, 'prediction.log'))
+    id = serialized_model_path.split(os.sep)[-2]
+    job_folder = os.path.join(RESULTS_FOLDER, id)
+    if not (os.path.exists(RESULTS_FOLDER)):
+        print(f"The {RESULTS_FOLDER} does not exist. Creating it.")
+        os.makedirs(RESULTS_FOLDER)
+
+    fh = logging.FileHandler(os.path.join(job_folder, f'{"" if evaluation else "final_"}prediction.log'))
     fh.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     fh.setFormatter(formatter)
     logger.addHandler(fh)
 
-    matching_file_name = os.path.join(job_folder, f"{id}_matching.pkl")
+    predictions_file_name = os.path.join(job_folder, f"{id}_matching.pkl")
     result_file_name = os.path.join(job_folder, f"{id}_result.txt")
 
     # Choose the corrected folder because we can evaluate (to test the performance of a model)
@@ -93,22 +100,29 @@ def predict(serialized_model_path, evaluation=True):
         predict_folder = PREDICT_EXAMPLES_FOLDER
     logger.debug(f'Using example folder: {predict_folder}.')
 
-    # Load pre-trained good model
-    my_model = load_model(serialized_model_path, custom_objects={'f1': f1})
+    model = load_model(serialized_model_path, custom_objects={'f1': f1})
     logger.debug(f'Model loaded. Summary: ')
-    keras.utils.print_summary(my_model, print_fn=logger.debug)
+    keras.utils.print_summary(model, print_fn=logger.debug)
+
+    parameters = get_parameters_dict(job_folder=job_folder)
+
+    cube_representation = AbsoluteCubeRepresentation(length_cube_side=LENGTH_CUBE_SIDE) \
+        if parameters["representation"] == AbsoluteCubeRepresentation.name \
+        else RelativeCubeRepresentation(length_cube_side=LENGTH_CUBE_SIDE)
 
     # Getting predictions
     predictions = defaultdict(list)
 
-    predict_examples_generator = PredictGenerator(predict_folder)
+    predict_examples_generator = PredictGenerator(predict_folder,
+                                                  representation=cube_representation)
     for pro, lig, cube in predict_examples_generator:
-        y_predict = my_model.predict(cube)
+        y_predict = model.predict(cube)
         predictions[pro].append((y_predict[0][0], lig))
 
-    with open(matching_file_name, 'wb') as f:
+    # Saving predictions
+    with open(predictions_file_name, 'wb') as f:
         pickle.dump(predictions, f)
-        logger.debug(f'Matching pickle file saved {matching_file_name}')
+        logger.debug(f'Matching pickle file saved {predictions_file_name}')
 
     # Getting the matching
     matching_list = perform_matching(predictions, nb_top_ligands)

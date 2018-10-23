@@ -1,4 +1,4 @@
-from keras import Sequential, Input, Model
+from keras import Input, Model
 from keras.layers import Dense, Flatten, Conv3D, Activation, MaxPooling3D, Dropout
 
 from settings import LENGTH_CUBE_SIDE, NB_CHANNELS

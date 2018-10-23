@@ -1,7 +1,8 @@
 import os
 from collections import defaultdict
 
-from settings import PARAMETERS_FILE_NAME, RESULTS_FOLDER, SERIALIZED_MODEL_FILE_NAME_PREFIX, HISTORY_FILE_NAME_PREFIX
+from pipeline_fixtures import get_parameters_dict
+from settings import PARAMETERS_FILE_NAME_SUFFIX, SERIALIZED_MODEL_FILE_NAME_SUFFIX, HISTORY_FILE_NAME_SUFFIX
 
 
 class ModelsInspector:
@@ -23,55 +24,52 @@ class ModelsInspector:
 
     def __init__(self, results_folder):
         self._general_folder = results_folder
-        sub_folders = list(map(lambda sub_folder: os.path.join(self._general_folder, sub_folder) \
-            if os.path.isdir(os.path.join(self._general_folder, sub_folder)) else None, \
+        sub_folders = list(filter(lambda sub_folder: os.path.isdir(os.path.join(self._general_folder, sub_folder)),
                                os.listdir(self._general_folder)))
-        sub_folders.append(self._general_folder)
-        sub_folders = [x for x in sub_folders if x is not None]
+        # sub_folders.append(self._general_folder)
 
         # It is possible that there exist sub-folders with no serialized model
         # (if the model is being trained for example) so, we chose here to
         # only keep sub folders that contains one.
-        self._sub_folders = list(filter(lambda folder: any([SERIALIZED_MODEL_FILE_NAME_PREFIX in file for file in os.listdir(folder)]), sub_folders))
+        self._sub_folders = list(filter(lambda folder: any([SERIALIZED_MODEL_FILE_NAME_SUFFIX in file for file in os.listdir(folder)]), sub_folders))
         serialized_models_file_names = defaultdict(str)
         histories_file_names = defaultdict(str)
+        was_evaluated = defaultdict(bool)
 
-        def str_default_dict():
+        def str_defaultdict():
             return defaultdict(str)
 
-        sets_parameters = defaultdict(str_default_dict)
+        sets_parameters = defaultdict(str_defaultdict)
 
-        for folder in self._sub_folders:
-            files_present = os.listdir(folder)
+        for sub_folder in self._sub_folders:
+            files_present = os.listdir(sub_folder)
 
             for file in files_present:
-                if HISTORY_FILE_NAME_PREFIX in file:
-                    histories_file_names[folder] = file
+                if HISTORY_FILE_NAME_SUFFIX in file:
+                    histories_file_names[sub_folder] = file
 
-                if SERIALIZED_MODEL_FILE_NAME_PREFIX in file:
-                    serialized_models_file_names[folder] = file
+                if SERIALIZED_MODEL_FILE_NAME_SUFFIX in file:
+                    serialized_models_file_names[sub_folder] = file
 
-                if file == PARAMETERS_FILE_NAME:
-                    with open(os.path.join(self._general_folder, folder, file), "r") as f:
-                        lines = f.readlines()
-                        for line in lines:
-                            words = line.replace("\n","").split("=")
-                            key = words[0]
-                            value = words[1]
-                            sets_parameters[folder][key] = value
+                if PARAMETERS_FILE_NAME_SUFFIX in file:
+                    sets_parameters[sub_folder] = get_parameters_dict(os.path.join(self._general_folder, sub_folder))
+
+                if "evaluate.log" in file:
+                    was_evaluated[sub_folder] = True
 
         # Each of those are default dict from folders to values
         # note that sets_parameters is a dictionary of dictionaries
+        self._was_evaluated = was_evaluated
         self._sets_parameters = sets_parameters
         self._serialized_models_file_names = serialized_models_file_names
         self._histories_file_names = histories_file_names
 
-    def __join_path(self, folder, attribut):
+    def __join_path(self, sub_folder, attribut):
         """
         Fixture to return the absolute path to of an attribute of a given folder
         :return:
         """
-        return os.path.join(self._general_folder, folder, attribut[folder])
+        return os.path.join(self._general_folder, sub_folder, attribut[sub_folder])
 
     def get_serialized_model_path(self, folder):
         """
@@ -114,7 +112,7 @@ class ModelsInspector:
         set_parameters = self.get_sets_parameters(sub_folder)
         serialized_model_path = self.get_serialized_model_path(sub_folder)
         history_file_path = self.get_history_path(sub_folder)
-        return sub_folder, set_parameters, serialized_model_path, history_file_path
+        return sub_folder, set_parameters, serialized_model_path, history_file_path, self._was_evaluated[sub_folder]
 
     def choose_model(self):
         """
@@ -128,14 +126,16 @@ class ModelsInspector:
         model_index = -1
         while model_index not in range(len(self)):
             print("Choose the model to evaluate")
-            for index, (folder, set_parameters, serialized_model_path, history) in enumerate(self):
+            for index, (folder, set_parameters, serialized_model_path, history, was_evaluated) in enumerate(self):
                 print(f"#{index} Name : {set_parameters['model_name']} (from {folder})")
+                if was_evaluated:
+                    print("Already evaluated")
                 for key, value in set_parameters.items():
                     print(f" - {key}: {value}")
 
             model_index = int(input("Your choice : # "))
 
-        sub_folder, _, serialized_model_path, _ = self[model_index]
+        sub_folder, _, serialized_model_path, _, _ = self[model_index]
 
         # Using the name sub folder as an identifier for now
         id = sub_folder.split(os.sep)[-1]

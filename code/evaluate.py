@@ -1,14 +1,18 @@
 import argparse
+import csv
 import logging
 
 import numpy as np
 import os
-from keras.models import load_model
 import keras.backend as K
+from keras.models import load_model
+from collections import defaultdict
 
-from discretization import RelativeCubeRepresentation
+from discretization import RelativeCubeRepresentation, AbsoluteCubeRepresentation
 from examples_iterator import ExamplesIterator
-from settings import VALIDATION_EXAMPLES_FOLDER, METRICS_FOR_EVALUATION, RESULTS_FOLDER, LENGTH_CUBE_SIDE
+from pipeline_fixtures import get_parameters_dict
+from settings import VALIDATION_EXAMPLES_FOLDER, METRICS_FOR_EVALUATION, RESULTS_FOLDER, LENGTH_CUBE_SIDE, \
+    PARAMETERS_FILE_NAME_SUFFIX, EVALUATION_LOGS_FOLDER, EVALUATION_CSV_FILE
 from train_cnn import f1
 
 
@@ -30,7 +34,6 @@ def evaluate(serialized_model_path, max_examples=None):
     # Formatting fixtures
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.DEBUG)
-    logfile = f"evaluate.log"
 
     # Making a folder for the job to save log, model, history in it.
     id = serialized_model_path.split(os.sep)[-2]
@@ -39,7 +42,7 @@ def evaluate(serialized_model_path, max_examples=None):
         print(f"The {RESULTS_FOLDER} does not exist. Creating it.")
         os.makedirs(RESULTS_FOLDER)
 
-    fh = logging.FileHandler(os.path.join(job_folder, logfile))
+    fh = logging.FileHandler(os.path.join(job_folder,  f"evaluate.log"))
     fh.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     fh.setFormatter(formatter)
@@ -49,7 +52,14 @@ def evaluate(serialized_model_path, max_examples=None):
 
     model = load_model(serialized_model_path, custom_objects={"mean_pred": mean_pred, "f1": f1})
 
-    cube_representation = RelativeCubeRepresentation(length_cube_side=LENGTH_CUBE_SIDE)
+    parameters = get_parameters_dict(job_folder=job_folder)
+
+    cube_representation = AbsoluteCubeRepresentation(length_cube_side=LENGTH_CUBE_SIDE) \
+        if parameters["representation"] == AbsoluteCubeRepresentation.name \
+        else RelativeCubeRepresentation(length_cube_side=LENGTH_CUBE_SIDE)
+
+    logger.debug(f"Representation: {cube_representation.name}")
+
     validation_examples_iterator = ExamplesIterator(representation=cube_representation,
                                                     examples_folder=VALIDATION_EXAMPLES_FOLDER,
                                                     max_examples=max_examples,
@@ -59,19 +69,48 @@ def evaluate(serialized_model_path, max_examples=None):
 
     ys = validation_examples_iterator.get_labels()
     y_preds = model.predict_generator(validation_examples_iterator)
-
     # Rounding the prediction : using the second one
     y_rounded = np.array([1 if y > 0.5 else 0 for y in y_preds])
 
     logger.debug("Computing metrics")
     metrics_results = dict(map(lambda metric: (metric.__name__, metric(ys, y_rounded)), METRICS_FOR_EVALUATION))
 
-    metrics_results["serialized_model_path"] = serialized_model_path
+    # Gathering all the info together
+    log = defaultdict(str, metrics_results)
+    log["id"] = id
 
-    logger.debug(metrics_results)
+    for param, value in parameters.items():
+        log[param] = value
 
-    # Counting positive predictions
-    logger.debug(len(list(filter(lambda y: y != 0, y_rounded))))
+    log["positives_prediction"] = len(list(filter(lambda y: y != 0, y_rounded)))
+    log["negatives_prediction"] = len(list(filter(lambda y: y == 0, y_rounded)))
+
+    logger.debug(log)
+    logger.debug("Results")
+    for k, v in log.items():
+        logger.debug(f" {k}: {v}")
+
+    logger.debug(f"Writting results in {EVALUATION_CSV_FILE}")
+
+    metrics_name = list(map(lambda m: m.__name__, METRICS_FOR_EVALUATION))
+    parameters_name = ["model", "nb_epochs", "nb_neg", "max_examples", "batch_size", "optimizer",
+                       "representation", "weight_pos_class"]
+    csv_headers = ["id", *metrics_name, "positives_prediction", "negatives_prediction", *parameters_name]
+    if not(os.path.exists(EVALUATION_CSV_FILE)):
+        logger.debug(f"{EVALUATION_CSV_FILE} not present ; Creating it")
+        logger.debug(f"Header used {csv_headers}")
+        with open(EVALUATION_CSV_FILE, "w+") as csv_fh:
+            writer = csv.DictWriter(csv_fh, fieldnames=csv_headers)
+            writer.writeheader()
+
+    with open(EVALUATION_CSV_FILE, "a") as csv_fh:
+        writer = csv.DictWriter(csv_fh, fieldnames=csv_headers)
+        try:
+            writer.writerow(log)
+        except Exception as e:
+            logger.debug(f"WARNING {e}")
+
+    logger.debug(f"Done writting results in {EVALUATION_CSV_FILE}")
 
 
 if __name__ == "__main__":

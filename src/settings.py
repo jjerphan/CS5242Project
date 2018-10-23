@@ -3,98 +3,111 @@ import numpy as np
 from keras.optimizers import Adam
 from sklearn.metrics import f1_score, recall_score, precision_score, accuracy_score, confusion_matrix
 
-# Folders
+# FOLDERS
 # Global folder for data and logs
-absolute_path = os.path.abspath(os.path.join(os.path.realpath(__file__), os.pardir, os.pardir))
+ROOT = os.path.abspath(os.path.join(os.path.realpath(__file__), os.pardir, os.pardir))
 
-job_submissions_folder = os.path.join(absolute_path, "job_submissions")
+JOB_SUBMISSIONS_FOLDER = os.path.join(ROOT, "job_submissions")
+LOGS_FOLDER = os.path.join(ROOT, "logs")
+
+for folder in [JOB_SUBMISSIONS_FOLDER, LOGS_FOLDER]:
+    if not(os.path.exists(folder)):
+        os.makedirs(folder)
 
 # Data given
-given_data_folder = os.path.join(absolute_path, "training_data")
-original_given_data_folder = os.path.join(given_data_folder, "original")
-extracted_given_data_folder = os.path.join(given_data_folder, "extracted")
-extracted_given_data_train_folder = os.path.join(extracted_given_data_folder, "train")
-extracted_given_data_validation_folder = os.path.join(extracted_given_data_folder, "validation")
-extracted_given_data_test_folder = os.path.join(extracted_given_data_folder, "test")
+GIVEN_DATA_FOLDER = os.path.join(ROOT, "training_data")
+ORIGINAL_GIVEN_DATA_FOLDER = os.path.join(GIVEN_DATA_FOLDER, "original")
+EXTRACTED_GIVEN_DATA_FOLDER = os.path.join(GIVEN_DATA_FOLDER, "extracted")
+EXTRACTED_GIVEN_DATA_TRAIN_FOLDER = os.path.join(EXTRACTED_GIVEN_DATA_FOLDER, "train")
+extracted_given_data_validation_folder = os.path.join(EXTRACTED_GIVEN_DATA_FOLDER, "validation")
+extracted_given_data_test_folder = os.path.join(EXTRACTED_GIVEN_DATA_FOLDER, "test")
 
 # Conversion to examples
-training_examples_folder = os.path.join(given_data_folder, "training_examples")
-validation_examples_folder = os.path.join(given_data_folder, "validation_examples")
-testing_examples_folder = os.path.join(given_data_folder, "testing_examples")
+TRAINING_EXAMPLES_FOLDER = os.path.join(GIVEN_DATA_FOLDER, "training_examples")
+VALIDATION_EXAMPLES_FOLDER = os.path.join(GIVEN_DATA_FOLDER, "validation_examples")
+TESTING_EXAMPLES_FOLDER = os.path.join(GIVEN_DATA_FOLDER, "testing_examples")
 
 # Not used for now
-normalized_data_folder = os.path.join(given_data_folder, "normalized")
-normalized_data_train_folder = os.path.join(normalized_data_folder, "train")
-normalized_data_validate_folder = os.path.join(normalized_data_folder, "validate")
-normalized_data_test_folder = os.path.join(normalized_data_folder, "test")
+NORMALIZED_DATA_FOLDER = os.path.join(GIVEN_DATA_FOLDER, "normalized")
+NORMALIZED_DATA_TRAIN_FOLDER = os.path.join(NORMALIZED_DATA_FOLDER, "train")
+NORMALIZED_DATA_VALIDATE_FOLDER = os.path.join(NORMALIZED_DATA_FOLDER, "validate")
+NORMALIZED_DATA_TEST_FOLDER = os.path.join(NORMALIZED_DATA_FOLDER, "test")
 
 # Data to predict final results
-predict_data_folder = os.path.join(absolute_path, "predict_data")
-original_predict_data_folder = os.path.join(predict_data_folder, "original")
-extracted_predict_data_folder = os.path.join(predict_data_folder, "extracted")
+PREDICT_DATA_FOLDER = os.path.join(ROOT, "testing_data_release")
+ORIGINAL_PREDICT_DATA_FOLDER = os.path.join(PREDICT_DATA_FOLDER, "testing_data")
+EXTRACTED_PREDICT_DATA_FOLDER = os.path.join(PREDICT_DATA_FOLDER, "extracted")
 
-predict_examples_folder = os.path.join(predict_data_folder, "predict_examples")
+PREDICT_EXAMPLES_FOLDER = os.path.join(PREDICT_DATA_FOLDER, "predict_examples")
 
-# Suffixes for extracted data files
-extracted_protein_suffix = "_pro_cg.csv"
-extracted_ligand_suffix = "_lig_cg.csv"
-
-# Results
-training_logfile = f"train_cnn.log"
-results_folder = os.path.join(absolute_path, "results")
-parameters_file_name = "parameters.txt"
-
-# Some settings for number and persisting tensors
-float_type = np.float32
-formatter = "%.16f"
-comment_delimiter = "#"
+# FEATURE AND REPRESENTATION SETTINGS
 
 # Features used to train:
 #  - 3 spatial coordinates : x , y, z (floating values)
 #  - 1 features for one hot encoding of atom types (is_hydrophobic)
 #  - 1 features for one hot encoding of molecules types (is_from_protein)
-
-features_names = ["x", "y", "z", "is_hydrophobic", "is_from_protein"]
-nb_features = len(features_names)
-nb_channels = nb_features - 3  # coordinates are not used as features
-indices_features = dict(zip(features_names, list(range(nb_features))))
-
-# We have 3000 positives pairs of ligands
-percent_train = 0.8
-percent_test = 0.1
-n_training_examples = 2400
-
-# All the other will be used to construct examples on the go
-
-# The maximum number of negative example to create per positive example to train
-# Used for creating training examples
-max_nb_neg_per_pos = 20
-
-# The number of negative example to use per positive example to train
-nb_neg_ex_per_pos = 10
-
-# To scale protein-ligands system in a cube of shape (resolution_cube,resolution_cube,resolution_cube)
-length_cube_side = 20
-shape_cube = (length_cube_side, length_cube_side, length_cube_side, 2)
-
+FEATURES_NAMES = ["x", "y", "z", "is_hydrophobic", "is_from_protein"]
 # Obtained with values_range on the complete original dataset
-hydrophobic_types = {'h', 'C'}
-polar_types = {'p', 'P', 'O', 'TE', 'F', 'N', 'AS', 'O1-', 'MO',
+HYDROPHOBIC_TYPES = {'h', 'C'}
+POLAR_TYPES = {'p', 'P', 'O', 'TE', 'F', 'N', 'AS', 'O1-', 'MO',
                'B', 'BR', 'SB', 'RU', 'SE', 'HG', 'CL',
                'S', 'FE', 'ZN', 'CU', 'SI', 'V', 'I', 'N+1',
                'N1+', 'CO', 'W'}
 
-# Training parameters
-nb_epochs_default = 1
-batch_size_default = 32
-n_gpu_default = 1
-optimizer_default = Adam()
+NB_FEATURES = len(FEATURES_NAMES)
+NB_CHANNELS = NB_FEATURES - 3  # coordinates are not used as features
 
-# Evaluation parameters
-metrics_for_evaluation = [accuracy_score, precision_score, recall_score, f1_score, confusion_matrix]
+# A mapping from names to their actual index
+INDICES_FEATURES = dict(zip(FEATURES_NAMES, list(range(NB_FEATURES))))
+
+# To scale protein-ligands system in a cube of shape (LENGTH_CUBE_SIDE,LENGTH_CUBE_SIDE,LENGTH_CUBE_SIDE)
+LENGTH_CUBE_SIDE = 20
+SHAPE_CUBE = (LENGTH_CUBE_SIDE, LENGTH_CUBE_SIDE, LENGTH_CUBE_SIDE, NB_CHANNELS)
+
+# PREPROCESSING SETTINGS
+
+# We have 3000 positives pairs of ligands: we keep 80% for training, 10% for evaluation and 10% for testing
+PERCENT_TRAIN = 0.8
+PERCENT_TEST = 0.1
+
+# The maximum number of negative example to create per positive example to train
+# Used for creating training examples
+MAX_NB_NEG_PER_POS = 20
 
 # Pre-processing settings
-nb_workers = 6
-name_env = "CS5242_gpu"
+NB_WORKERS = 6
+EXTRACTED_PROTEIN_SUFFIX = "_pro_cg.csv"
+EXTRACTED_LIGAND_SUFFIX = "_lig_cg.csv"
+FLOAT_TYPE = np.float32
+FORMATTER = "%.16f"
+COMMENT_DELIMITER = "#"
+
+# JOBS SETTINGS
+
+# The environment to use for jobs
+JOBS_ENV = "CS5242_gpu"
+
+# Training settings
+TRAINING_LOGFILE = f"train_cnn.log"
+RESULTS_FOLDER = os.path.join(ROOT, "results")
+JOB_FOLDER_DEFAULT = os.path.join(RESULTS_FOLDER, "local")
+
+PARAMETERS_FILE_NAME = "parameters.txt"
+SERIALIZED_MODEL_FILE_NAME_PREFIX = "model.h5"
+HISTORY_FILE_NAME_PREFIX = "history.pickle"
+NB_EPOCHS_DEFAULT = 1
+BATCH_SIZE_DEFAULT = 32
+N_GPU_DEFAULT = 1
+OPTIMIZER_DEFAULT = Adam()
+
+# The number of negative example to use per positive example to train
+NB_NEG_EX_PER_POS = 10
+
+# A constant to reduce the weight of the positive class
+WEIGHT_POS_CLASS = 2
+
+# Evaluation settings
+METRICS_FOR_EVALUATION = [accuracy_score, precision_score, recall_score, f1_score, confusion_matrix]
+
 
 

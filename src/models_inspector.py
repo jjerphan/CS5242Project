@@ -1,7 +1,7 @@
 import os
 from collections import defaultdict
 
-from settings import parameters_file_name, results_folder
+from settings import PARAMETERS_FILE_NAME, RESULTS_FOLDER, SERIALIZED_MODEL_FILE_NAME_PREFIX, HISTORY_FILE_NAME_PREFIX
 
 
 class ModelsInspector:
@@ -10,11 +10,11 @@ class ModelsInspector:
 
     This class exposes a way to get:
         - the path to the folder
-        - the set of parameters used as a dict (parameters are extracted from `parameters.txt`.
+        - the set of parameters used as a dict (parameters are extracted from `parameters.txt`).
         - the path of serialized models `model.h5`
         - the path of the history of training `history.pickle`
 
-    Only results folders that have a serialized model in it are shown.
+    By default, only results folders that have a serialized model in it are shown.
     This is because we are interested to study model that have been created only.
     We call those folder "inspectable".
 
@@ -32,7 +32,7 @@ class ModelsInspector:
         # It is possible that there exist sub-folders with no serialized model
         # (if the model is being trained for example) so, we chose here to
         # only keep sub folders that contains one.
-        self._sub_folders = list(filter(lambda folder: ['model.h5' in file for file in os.listdir(folder)], sub_folders))
+        self._sub_folders = list(filter(lambda folder: any([SERIALIZED_MODEL_FILE_NAME_PREFIX in file for file in os.listdir(folder)]), sub_folders))
         serialized_models_file_names = defaultdict(str)
         histories_file_names = defaultdict(str)
 
@@ -45,13 +45,13 @@ class ModelsInspector:
             files_present = os.listdir(folder)
 
             for file in files_present:
-                if 'history.pickle' in file:
+                if HISTORY_FILE_NAME_PREFIX in file:
                     histories_file_names[folder] = file
 
-                if 'model.h5' in file:
+                if SERIALIZED_MODEL_FILE_NAME_PREFIX in file:
                     serialized_models_file_names[folder] = file
 
-                if file == parameters_file_name:
+                if file == PARAMETERS_FILE_NAME:
                     with open(os.path.join(self._general_folder, folder, file), "r") as f:
                         lines = f.readlines()
                         for line in lines:
@@ -142,8 +142,3 @@ class ModelsInspector:
 
         return id, serialized_model_path
 
-
-if __name__ == "__main__":
-    model_inspector = ModelsInspector(results_folder=results_folder)
-
-    print(model_inspector[0])

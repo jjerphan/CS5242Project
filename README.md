@@ -1,196 +1,225 @@
 # CS5242 Project : Predicting Protein – Ligand Interaction by using Deep Learning Models
 
-## Installation
+## About this project
 
-We use Anaconda as well as an environment for this project.
+This is a term project for the module CS5242 (Deep Learning and Neural Networks). It has been realized by Wang Jun and Julien Jerphanion.
 
-To use this project on your machine, we recommend creating such an environment with the following command:
+## Usage
+
+The pipeline works in several stages: 
+
+- **Downloading the data**: 
+  - done via `scp`
+- **Installation of the environment** 
+- **Creating the environnement** 
+
+
+- **Extraction of data** and assignements of pair of molecules to the `training`, `validation`, `testing` and `predict` data sets
+  - Locally on the cluster 
+- **Creation of examples for each data set**
+  - Locally on the cluster
+- **Training a model:**
+  - As a job on the cluster
+- **Evaluating one or several model**
+  - As a job on the cluster
+- **Predicting using a model**
+  - As a job on the cluster
+- **Downloading results of training and evaluation**
+  - Locally on the cluster
+
+### Downloading the data and putting it in the right folder
+
+Before running anything, you need to place the original data in the `training_data/original` folder and to put the data for prediction in `testing_data_release/original`.
+
+We recommend using `scp` to upload the files on the server instead as it is faster than directly downloading the data set on the server.
+
+### Installation of the environments
+
+We use Anaconda as well as two environments for this project as some operations can be performed locally on the cluster and as some others need computational powers to be executed.
+
+You can create such environments with the following command:
+
 ```bash
-conda env create -f environment.yml
-conda env create -f environment_gpu.yml # for GPU only
+conda env create -f environment.yml # for small tasks
+conda env create -f environment_gpu.yml # for jobs (computational intensive tasks)
 ```
-Then, you can actrivate this environment like this:
+
+Then, you can activate one environment like this:
+
 ```bash
 source activate CS5242
-# source activate CS5242_gpu # for GPU only
+source activate CS5242_gpu
 ```
 
-To exit the environment:
+To exit one environment:
+
 ```bash
 source deactivate
 ```
 
+All the following operations are performed:
 
-## Description of the project
+- using the `CS5242` environment if they get run locally on the cluster and don't need (*you need to activate it first*)
+- using the `CS5242_gpu` environment if run as a job on the cluster (the environement is activated automatically when running it)
 
-**See [project_description.pdf](./project_description.pdf) for the full description of the project **
+*Hence, when you are in a session on the cluster, we recommand to directly activate the  `CS5242` environement directly.
 
-### Data Sets given — Notation and formalisation
+## Extraction of data
 
-An example is a pair of a protein and its associated ligand.
+To extract the data you have to run:
 
-For an example numebered `xxxx`, each molecules of the pair is represented in a file:
-
--  `xxxx_pro_cg_.pdb` for the protein
--  `xxxx_lig_cg_.pdb` for the ligand
-
-There is a **one-to-one association between proteins and ligands** ie: 
-
-​			`xxxx_lig_cg_.pdb` **cannot bind** `xxxx_pro_cg_.pdb`
-
-Each of those files contains information about the atom of the molecules ; for each atom there is **4 features**
-
-- $(x,y,z) \in \mathbb{R}^3$ : its position in 3D
--  $type \in \{hydrophobic, polar \}$
-
-**See comments bellow about "*Data and training*" for an overwiew of data** 
-
-### Goal and evaluation
-
-Find, for a each protein, *the* ligand that binds it.
-
-This is a hard problem, thus the evaluation is eased:
-
-​	For each new protein, find 10 ligens that could fit in the protein.
-
-If one on the match is in the set of the 10 ligens: the answer is considered good  !
-
-The final score is proportional to the total number of match for proteins.
-
-### Some related questions or ideas to experiment
-
-###### Rotations of proteins: 
-
-- Would performing 3D rotations be usefull to have more examples ? 
-- It is possible to find a canonical representation for molecules ? I.E for a given protein in a random position, is it possible to find a "natural" position of this same protein easily for every random position ?
-  - It should be possible using PCA on the system of protein and ligand, yes!
-
-###### Proteins and their atoms:
-
-- Is there a specific fixed number of atoms for each protein?
-  -  No : molecules do have differents number of atoms (see bellow). Generally, proteins have much more atoms than ligands.
-- Why considering only 2 types of atoms (*hydrophobic* and *polar*) instead of the 3 first types (*C*, *O* and *N*) ?
-
-###### Data and training
-
-- Where is the data coming from? What are the other features present in the files?
-  - It should be coming from the popular [PDBBind](http://www.pdbbind.org.cn/) data base.
-- For now, we have $n=3000$ examples (pair of protein and ligens). But if we see the problem as a classification problem from a couple protein/ligen to a prediction fit / not fit, we can construct loads of differents examples. More expecially, we can for each example construct $n-1$ other examples. Those examples won't represent a protein-ligand system, but can be used as example for the "not-fit" class. Hence we could have in total $3000 \times 2999 = 8\ 997\ 000$ examples
-- **Bigest problem for now:** the number of atoms is extremely variant for the molecules. See [`info`](exploration) .
-
-```
-# Number of atoms for proteins and ligands
-	pro             lig         
- Min.   :    0   Min.   :  1.000  
- 1st Qu.:  546   1st Qu.:  4.000  
- Median :  854   Median :  5.000  
- Mean   : 1343   Mean   :  8.502  
- 3rd Qu.: 1577   3rd Qu.:  9.000  
- Max.   :14102   Max.   :300.000 
+```bash
+(CS5242) $ python src/extract_data.py
 ```
 
-![Density estimation](exploration/density.png)
+The data will be extracted in the `training_data/extracted/train/`, `training_data/extracted/validation/`, `training_data/extracted/test`  for the original data and in `testing_data_release/extracted`for the data used for prediction
 
-We need to find a way to resolve this problem. There are [several approaches](https://ai.stackexchange.com/questions/2008/how-can-neural-networks-deal-with-varying-input-sizes):
+## Creation of examples
 
-> - Zero padding. 
-> - [RNNs](https://en.wikipedia.org/wiki/Recurrent_neural_network)
-> - Another possibility is using [recursive NNs](https://en.wikipedia.org/wiki/Recursive_neural_network).
+#### ⚠ BE CAREFULL : for this step, a lot of data will be created (with the default settings, more than 130Gb). By default, all the examples for validation, testing and prediction are created. If you want to create less data, we recommend using the `nb_neg` argument for the creation of examples (see the tail of `src/create_examples.py`)
 
+To extract the data you have to run:
 
+```bash
+(CS5242) $ python src/create_examples.py
+```
 
-- A (naîve ?) but working solution is to discretize the space containing the protein-ligand system and then represented on each little cube the information of atom. For a given cube, if there is no atom, then, the information is nulled. This approach is used in different models (such as AtomNet and Pafnucy).
+Examples will be populated in the `training_data/training_examples/`, `training_data/validation_examples/`, `training_data/test_examples` for the original data and in `testing_data_release/predict_examples`for the data used for prediction as follows
 
-  ​
+## Training a model
 
-###### Curious observations about the data set   
+Training a model is done as a job on the cluster. To do this, you have to `qsub` a submission file. We provide a way to create such a file with  `src/create_job_sub.py`.
 
-- Some files do not contain atoms, the molecules are empty, even for some proteins.
-  - We should identify wich are those files exactly and then think about how we could handle those missing examples
+```bash
+(CS5242) $ python src/create_job_sub.py
+```
 
-###### Some others thoughts
+Then choose `create_train_job` and enter the parameters than you want to use to train your model.
 
-- When we are going to test, the approach would be to return the ligands with the highest probability. However, we know that there is an extra constraint on atom, more precisely that there is a one to one correspondance. Hence, we *should or must* take decisions for ligands generally and not per case as we could choose several ligands for several protein with an high confidence. If we are given $n_p​$ proteins and $n_l​$ ligands to test :
-  - The first (naiver) approach would consist to evaluate the $n_l$ ligands and take the 10 best ones.
-  - The second approach would consist to evaluate the $n_p\times n_l$ systems and then take, for each ligands that are chosen several times, the associated protein of highest confidence.
+At the end, your file (let's call it `train_cnn_model_some_parameters.pbs`) will be create in `job_submissions`. 
 
+To run the job, you have to submit the file:
 
-## Organisation of the pipeline and of the files
+``` bash
+(CS5242) $ qsub job_submissions/train_cnn_model_some_parameters.pbs
+```
 
-In order to fit the model with the given data, some transformation need to be performed. Those transformation composed a pipeline that can be deconstructed in several stage. The first part of the pipeline is done in scripts wherease latter parts of the pipeline (training and testing) is done in the [`pipeline.ipynb`](./src/pipeline.ipynb) notebook for more interactivity (and to avoid forgetting to save a network after having it trained 🙃).
+An ID of the jobs (let's say `xxxxxxx.wlm01`) is returned. Results of this job are saved in  `results/xxxxxxx.wlm01` ;those results include:
 
-- **Extraction of data** : the extraction of features of interest from the "raw data";	
-  - Original data in [`training_data/orignal`](./training_data/original) will be extracted in [`training_data/extracted/`](./training_data/extracted) ;
-  - Data extracted are into $7$ features:
-    - coordinates $(x,y,z) \in \mathbb{R}^3$
-    - type of atom (represented one $2$ features as it is one-hot encoded)
-    - type of molecules (represented one $2$ features as it is one-hot encoded)
-  - The naming convention here is kept from the original data:
-    - `original/xxxx_lig_clg.pdb` will be extracted into `extracted/xxxx_lig_clg.csv`
-    -  `original/yyyy_pro_clg.pdb` will be extracted into `extracted/yyyy_pro_clg.csv`
-  - This stage is perform in  [`extraction_data.py`](src/extraction_data.py)
+- `history.pickle` : the `history` dictionarry of the `History`  object return by `model.fit`
+- `train_cnn.log`: the logs of the training procedure
+- `model.h5`: the serialized model
+- `parameters.txt`: the set of parameters used to train the model
 
+Note that you can submit those type of jobs as much as you want.
 
-- **Creating training examples**  (for now, $90/10$ is used)
-  - An **example** consist of the concatenation of the extracted file of a protein (let's say`extracted/xxxx_lig_clg.csv`) and of a ligand (let's say `extracted/yyyy_lig_clg.csv`)
-  - We have to splitting the data into 2 sets for training and testing purposes : 
-    - **Training set**: creation of training examples: *all* the positives examples and *some* negatives examples) from $90\%$ of the extracted data ;
-    - **Testing set** : creation of *all* the examples from $10\%$ of the extracted data
-    - *Only the training set gets created* (as the testing set is enormous as we are considering all the possible combinations!)
-    - `settings.py/split_index` indicates what is the last training example and what is the first testing example 
-  - Training examples are saved in `training_data/training_examples` under the naming convention `xxxx_yyyy.csv` (where `xxxx` is the id of the protein and `yyyy` the ligand's).
-  - This stage is perform in   [`create_examples.py`](src/create_examples.py)
+## Evaluating one model
 
-- **Training of the model with constructed examples**
-  - Examples from the Training set (`training_data/training_examples`) are fed in the network directly.
-    - They have to be converted into cubes for now (see "Cube Creation" bellow for more info).
-  - This stage is done in [`pipeline.ipynb`](./src/pipeline.ipynb) 
-- **[TODO] Saving the network to memory**
-  - This stage has to be perform to save the model that just have been learned
-  - This would alow us to compare and use them afterwards
-  - This stage has to be done in [`pipeline.ipynb`](./src/pipeline.ipynb) 
-- **[TODO/ to complete] Evaluation of the model **
-  - Testing examples are constructed on the go (see "Cube Creation" bellow);
-  - They consist of all the combinations possibles on the extracted remaining data (after split index)
-    - Let's say we have 10 total original pairs of files (of indices from 0 to 9). If `split_index` is 6, we have the following index for the training and the testing dataset:
-      - Training : (0,1,2,3,4,5)
-      - Testing : (6,7,8,9)
-    - As all the combinations of protein ligand are constructed we have at the end the following testing examples:
-      - (6_6), (6_7), (6_8), (6_9), 
-      - (7_6), (7_7), (7_8), (7_9)
-      - (8_6), (8_7), (8_8), (8_9)
-      - (9_6), (9_7), (9_8), (9_9)
-        - where (6_6), (7_7), (8_8) and (9_9) are possitive example and all the others are negative
-    - This stage has to be done in [`pipeline.ipynb`](./src/pipeline.ipynb) 
-  - Some notes: accuracy is now used I thin, but it would be better to use a confusion matrix (as there might be a lot of false negatives)
+You can evaluate a model using the pipeline given before:
 
+```bash	
+(CS5242) $ python src/create_job_sub.py
+```
 
+Then select `create_evaluation_job`, select the model associated to a job (for instance`xxxxxxx.wlm01`) you want to evaluate, and then the parameters used for the evaluation.
 
-### Cube creation
+At the end, your file named`evaluate_xxxxxxx.wlm01.pbs` will be created in `job_submissions`. 
 
-In order to fed examples (that are a  rotein-ligand system with varying number of atoms), we can discretize the space that surrounds this system into a cube whose voxel can contain information about atoms if any (like in Pufnacy — see the paper).
+To run the job, you have to submit the file:
 
-Hence, cubes, given a `resolution`, can be deconstructed in `resolution^3` voxels. Each voxel can contain 4 information namely the one-hot encoding of the atom and molecule types. Thus a cube can be represented as a tensor of shape `(resolution, resolution, resolution, 4)`. On the last axis, the molecule type is presented before the atom type, hence:
+```bash
+(CS5242) $ qsub job_submissions/evaluate_xxxxxxx.wlm01.pbs
+```
 
-- `cube[:, :, :, 0:2]` all the molecules types at each position in the space
--  `cube[:, :, :, 2:4]` all the atom types at each position in the space
-- `cube[42,42,42]` : all the information about the voxel in the 43rd position in every axes
+The result of the evaluation of one model is a log ``evaluate_xxxxxxx.wlm01.log`  that is saved in the same`results/xxxxxxx.wlm01` folder.
 
-The discretization was first "schrinking/squashing/flattening" long molecule ; this is now resolved to be scale invariant but this first behavior can be trigerred.
+## Evaluating all the models
 
-Also, the system is rotation to reach a representation invariance on the protein (using some bits of internals of PCA). This can be deactivate using an argument. 
+You can evaluate all the models presented in the `results/` folder using `job_submissions/evaluate_all.pbs`.
 
-This transformation that is used both for training and testing is done in [`discretization.py`](./src/discretization.py).
+ ```bash
+(CS5242) $ qsub job_submissions/evaluate_xxxxxxx.wlm01.pbs
+ ```
 
+Results of this job are saved in  `results/evaluation/.wlm01` ;those results include:
 
+- `evaluate_timestamp.csv`: the final result of the evaluation. For each model, the value of the metrics is present as well as the parameters used for the training
+- `evaluate_timestamp.log`: the logs of the evaluation procedure
 
-## Some resources
+#### Note that evaluating all the models can take a lot of time. We recommend evaluating model in parallel, one at the time.  
 
-- [Protein on Wikipedia](https://en.wikipedia.org/wiki/Protein)
-- [Protein Structure on Wikipedia](https://en.wikipedia.org/wiki/Protein_structure)
-- [Drug Design on Wikipedia](https://en.wikipedia.org/wiki/Drug_design)
-- [Format of `pdb` files](ftp://ftp.wwpdb.org/pub/pdb/doc/format_descriptions/Format_v33_A4.pdf)
-- [Download PyMol](https://pymol.org/2/#download)
-- [Doc of PyMol](http://pymol.sourceforge.net/newman/userman.pdf)
-- [Keras Documentation - Sequence Model](https://keras.io/getting-started/sequential-model-guide/)
-- [PDBBind](http://www.pdbbind.org.cn/)
+## Testing or predicting one model
+
+You can evaluate a model using the pipeline given before:
+
+```bash	
+(CS5242) $ python src/create_job_sub.py
+```
+
+Then select `create_predict_job`, select the model associated to a job (for instance`xxxxxxx.wlm01`) you want to test or predict with, and then the parameters used for the evaluation.
+
+At the end, your file named`evaluate_xxxxxxx.wlm01.pbs` will be created in `job_submissions`. 
+
+To run the job, you have to submit the file:
+
+```bash
+(CS5242) $ qsub job_submissions/evaluate_xxxxxxx.wlm01.pbs
+```
+
+The result of the evaluation of one model is a log ``evaluate_xxxxxxx.wlm01.log`  that is saved in the same`results/xxxxxxx.wlm01` folder.
+
+## Downloading the results of training and evaluation on the clusters
+
+Sometimes, it is easier to inspect the results of training and evaluation on one's local machine.
+
+We have written a little script to compress all the results of jobs (except serialized models, i.e. `model.h5` files) in an archive. The structure of the folder will be the same.
+
+To compress all your results simply run:
+
+```bash	
+chmod +x compress_results # to make it executable
+./compress_results
+```
+
+A `timestamp_exported_results.tar.gz` will be created. You can download this file on you machine using `scp`.
+
+## Using jobs of the pipeline without the cluster
+
+If you would like to train, evaluate and predict on another machine, you can just execute submissions file on your machine like so for example.
+
+```bash
+(CS5242) chmod +x ./job_submissions/train_cnn_model_some_parameters.pgb
+(CS5242) bash ./job_submissions/train_cnn_model_some_parameters.pgb
+```
+
+Alternatively, you can execute job directly running
+
+```bash
+(CS5242_gpu) $ python src/train_cnn.py --some options
+(CS5242_gpu) $ python src/evaluate.py --some options
+(CS5242_gpu) $ python src/evaluate_all.py --some options
+(CS5242_gpu) $ python src/predict.py --some options
+```
+
+With specified option. See the content of submissions files and of those `.py` for more guidance.
+
+## Code base in `src`
+
+Here is the organisation of the code base. 
+
+| FIle                   | Role                                                         |
+| ---------------------- | ------------------------------------------------------------ |
+| `settings.py`          | All the settings used for the project.                       |
+| `models.py`            | File containing the models developped.                       |
+| `examples_iterator.py` | A class to iterate through examples (used around in the project<br />to handle example from the different dataset). |
+| `pipeline_fixtures.py` | Some small helpers functions that are used several time in the pipeline. |
+| `create_job_sub.py`    | Used for the job submission for the NSCC cluster.            |
+| `models_inspector.py`  | A class to iterate on serialized model.                      |
+| `extraction_data.py`   | Set of functions to extract the original data and construct new data set of useful features. |
+| `create_examples.py`   | Set of functions to create positives and negatives examples. |
+| `discretization.py`    | Set of functions dedicated to the creation of 3D representations for examples |
+| `evaluate.py`          | A job to evaluate a given serialized model                   |
+| `evaluate_all.py`      | A job to evaluate all the serialized models                  |
+| `train_cnn.py`         | A job to evaluate a given specified model                    |
+| `predict.py`           | A job to test or predict final result using a given serialized model |
+| `predict_generator.py` | A generator of examples for predictions                      |

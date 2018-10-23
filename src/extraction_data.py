@@ -4,10 +4,10 @@ import logging
 from concurrent import futures
 from random import Random
 
-from settings import hydrophobic_types, float_type, formatter, nb_features, percent_train, percent_test, nb_workers, \
-    extracted_given_data_train_folder, extracted_given_data_validation_folder, original_given_data_folder, \
-    extracted_given_data_folder, \
-    original_predict_data_folder, extracted_predict_data_folder, extracted_given_data_test_folder
+from settings import HYDROPHOBIC_TYPES, FLOAT_TYPE, FORMATTER, NB_FEATURES, PERCENT_TRAIN, PERCENT_TEST, NB_WORKERS, \
+    EXTRACTED_GIVEN_DATA_TRAIN_FOLDER, extracted_given_data_validation_folder, ORIGINAL_GIVEN_DATA_FOLDER, \
+    EXTRACTED_GIVEN_DATA_FOLDER, \
+    ORIGINAL_PREDICT_DATA_FOLDER, EXTRACTED_PREDICT_DATA_FOLDER, extracted_given_data_test_folder
 
 logger = logging.getLogger('__main__.extract_data')
 logger.addHandler(logging.NullHandler())
@@ -39,9 +39,9 @@ def read_pdb(file_name) -> (list, list, list, list):
             #               ^                             ^       ^       ^       ^                     ^
             # Position     |0                            30      38      46      54                    76
 
-            x_list.append(float_type(stripped_line[30:38].strip()))
-            y_list.append(float_type(stripped_line[38:46].strip()))
-            z_list.append(float_type(stripped_line[46:54].strip()))
+            x_list.append(FLOAT_TYPE(stripped_line[30:38].strip()))
+            y_list.append(FLOAT_TYPE(stripped_line[38:46].strip()))
+            z_list.append(FLOAT_TYPE(stripped_line[46:54].strip()))
             atom_type_list.append(stripped_line[76:].strip())
 
     assert len(x_list) == len(y_list)
@@ -69,9 +69,9 @@ def read_pdb_predict(file_name) -> (list, list, list, list):
 
         splitted_line = stripped_line.split('\t')
 
-        x_list.append(float_type(splitted_line[0]))
-        y_list.append(float_type(splitted_line[1]))
-        z_list.append(float_type(splitted_line[2]))
+        x_list.append(FLOAT_TYPE(splitted_line[0]))
+        y_list.append(FLOAT_TYPE(splitted_line[1]))
+        z_list.append(FLOAT_TYPE(splitted_line[2]))
         atom_type_list.append(str(splitted_line[3]))
 
     return x_list, y_list, z_list, atom_type_list
@@ -92,14 +92,14 @@ def build_molecule_features(x_list: list, y_list: list, z_list: list, atom_type_
     """
     nb_atoms = len(x_list)
     # One hot encoding for atom type and molecule types
-    is_hydrophobic_list = np.array([1 if atom_type in hydrophobic_types else -1 for atom_type in atom_type_list])
+    is_hydrophobic_list = np.array([1 if atom_type in HYDROPHOBIC_TYPES else -1 for atom_type in atom_type_list])
 
     is_from_protein_list = (2 * molecule_is_protein) * np.ones((nb_atoms,)) - 1
 
     # See `features_names` in settings to see how the features are organised
     formated_molecule = np.array([x_list, y_list, z_list, is_hydrophobic_list, is_from_protein_list]).T
 
-    assert (formated_molecule.shape == (nb_atoms, nb_features))
+    assert (formated_molecule.shape == (nb_atoms, NB_FEATURES))
 
     return formated_molecule
 
@@ -111,7 +111,7 @@ def save_given_data(pdb_file, group_indices):
     :param pdb_file:
     :return:
     """
-    pdb_original_file_path = os.path.join(original_given_data_folder, pdb_file)
+    pdb_original_file_path = os.path.join(ORIGINAL_GIVEN_DATA_FOLDER, pdb_file)
     # Extract features from pdb files.
     x_list, y_list, z_list, atom_type_list = read_pdb(pdb_original_file_path)
 
@@ -127,7 +127,7 @@ def save_given_data(pdb_file, group_indices):
 
     assert len(group_indices) > 0
     if molecule_index in group_indices[0]:
-        extracted_file_path = os.path.join(extracted_given_data_train_folder, pdb_file_csv)
+        extracted_file_path = os.path.join(EXTRACTED_GIVEN_DATA_TRAIN_FOLDER, pdb_file_csv)
     elif molecule_index in group_indices[1]:
         extracted_file_path = os.path.join(extracted_given_data_validation_folder, pdb_file_csv)
     elif molecule_index in group_indices[2]:
@@ -136,7 +136,7 @@ def save_given_data(pdb_file, group_indices):
         logger.debug("Not inside indices. Something went wrong")
         raise()
 
-    np.savetxt(fname=extracted_file_path, X=molecule, fmt=formatter)
+    np.savetxt(fname=extracted_file_path, X=molecule, fmt=FORMATTER)
 
 
 def save_predict_data(pdb_file):
@@ -146,7 +146,7 @@ def save_predict_data(pdb_file):
     :param pdb_file:
     :return:
     """
-    pdb_original_file_path = os.path.join(original_predict_data_folder, pdb_file)
+    pdb_original_file_path = os.path.join(ORIGINAL_PREDICT_DATA_FOLDER, pdb_file)
     # Extract features from pdb files.
     x_list, y_list, z_list, atom_type_list = read_pdb_predict(pdb_original_file_path)
 
@@ -158,9 +158,9 @@ def save_predict_data(pdb_file):
     # Choosing the appropriate folder using the split index
     pdb_file_csv = pdb_file.replace(".pdb", ".csv")
 
-    extracted_file_path = os.path.join(extracted_predict_data_folder, pdb_file_csv)
+    extracted_file_path = os.path.join(EXTRACTED_PREDICT_DATA_FOLDER, pdb_file_csv)
 
-    np.savetxt(fname=extracted_file_path, X=molecule, fmt=formatter)
+    np.savetxt(fname=extracted_file_path, X=molecule, fmt=FORMATTER)
 
 
 def extract_predict_data():
@@ -169,16 +169,16 @@ def extract_predict_data():
 
     :return:
     """
-    if not(os.path.exists(extracted_predict_data_folder)):
-        logger.debug('The %s folder does not exist. Creating it.', extracted_predict_data_folder)
-        os.makedirs(extracted_predict_data_folder)
+    if not(os.path.exists(EXTRACTED_PREDICT_DATA_FOLDER)):
+        logger.debug('The %s folder does not exist. Creating it.', EXTRACTED_PREDICT_DATA_FOLDER)
+        os.makedirs(EXTRACTED_PREDICT_DATA_FOLDER)
 
-    original_files = sorted(os.listdir(original_predict_data_folder))
+    original_files = sorted(os.listdir(ORIGINAL_PREDICT_DATA_FOLDER))
 
-    logger.debug('Read original pdb files from %s.', original_predict_data_folder)
+    logger.debug('Read original pdb files from %s.', ORIGINAL_PREDICT_DATA_FOLDER)
     logger.debug('Total files are %d', len(original_files))
 
-    with futures.ProcessPoolExecutor(max_workers=nb_workers) as executor:
+    with futures.ProcessPoolExecutor(max_workers=NB_WORKERS) as executor:
         for pdb_original_file in original_files:
             executor.submit(save_predict_data, pdb_original_file)
 
@@ -191,32 +191,32 @@ def extract_given_data():
 
     :return:
     """
-    for folder in [extracted_given_data_folder, extracted_given_data_validation_folder, extracted_given_data_test_folder, extracted_given_data_train_folder]:
+    for folder in [EXTRACTED_GIVEN_DATA_FOLDER, extracted_given_data_validation_folder, extracted_given_data_test_folder, EXTRACTED_GIVEN_DATA_TRAIN_FOLDER]:
         if not(os.path.exists(folder)):
             logger.debug('The %s folder does not exist. Creating it.', folder)
             os.makedirs(folder)
 
     logger.debug('Splitting data into 80% training, 10% validation, 10% testing.')
 
-    original_files = sorted(os.listdir(original_given_data_folder))
+    original_files = sorted(os.listdir(ORIGINAL_GIVEN_DATA_FOLDER))
 
     indices = sorted(set(map(lambda x: x.split('_')[0], original_files)))
     Random(48).shuffle(indices)
 
     total = len(indices)
 
-    test_split_index = int(total * percent_train)
-    pred_split_index = int(total * (percent_test + percent_train))
+    test_split_index = int(total * PERCENT_TRAIN)
+    pred_split_index = int(total * (PERCENT_TEST + PERCENT_TRAIN))
     training_indices = indices[:test_split_index]
     validation_indices = indices[test_split_index:pred_split_index]
     test_indices = indices[pred_split_index:]
 
     group_indices = [training_indices, validation_indices, test_indices]
 
-    logger.debug('Read original pdb files from %s.', original_given_data_folder)
+    logger.debug('Read original pdb files from %s.', ORIGINAL_GIVEN_DATA_FOLDER)
     logger.debug('Total files are %d', len(original_files))
 
-    with futures.ProcessPoolExecutor(max_workers=nb_workers) as executor:
+    with futures.ProcessPoolExecutor(max_workers=NB_WORKERS) as executor:
         for pdb_original_file in original_files:
             executor.submit(save_given_data, pdb_original_file, group_indices)
 

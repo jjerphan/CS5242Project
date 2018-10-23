@@ -1,11 +1,9 @@
-import numpy as np
-import os
-import matplotlib.pyplot as plt
 import logging
-from mpl_toolkits.mplot3d import Axes3D  # needed by the 3D plotter
 
-from discretization import load_nparray
-from settings import float_type, comment_delimiter, training_examples_folder, length_cube_side, nb_features
+import matplotlib.pyplot as plt
+import numpy as np
+
+from settings import LENGTH_CUBE_SIDE
 
 logger = logging.getLogger('cnn.discretization')
 logger.addHandler(logging.NullHandler())
@@ -62,26 +60,11 @@ class Cube:
 
         ax.scatter(self.x, self.y, self.z, c=origin, marker="o")
 
-        ax.set_xlim((0, length_cube_side))
-        ax.set_ylim((0, length_cube_side))
-        ax.set_zlim((0, length_cube_side))
+        ax.set_xlim((0, LENGTH_CUBE_SIDE))
+        ax.set_ylim((0, LENGTH_CUBE_SIDE))
+        ax.set_zlim((0, LENGTH_CUBE_SIDE))
 
         ax.set_xlabel('X Label')
         ax.set_ylabel('Y Label')
         ax.set_zlabel('Z Label')
         fig.show()
-
-
-if __name__ == "__main__":
-
-    # Just to test
-    examples_files = sorted(os.listdir(training_examples_folder))
-    for ex_file in examples_files:
-        file_name = os.path.join(training_examples_folder, ex_file)
-        example = load_nparray(os.path.join(training_examples_folder, ex_file))
-
-        cube = Cube(example, length_cube_side)
-        cube.make_cube()
-        cube.plot_cube()
-
-        input()

@@ -6,8 +6,9 @@ import os
 from keras.models import load_model
 import keras.backend as K
 
+from discretization import RelativeCubeRepresentation
 from examples_iterator import ExamplesIterator
-from settings import validation_examples_folder, metrics_for_evaluation, results_folder
+from settings import VALIDATION_EXAMPLES_FOLDER, METRICS_FOR_EVALUATION, RESULTS_FOLDER, LENGTH_CUBE_SIDE
 from train_cnn import f1
 
 
@@ -19,9 +20,10 @@ def evaluate(serialized_model_path, max_examples=None):
     """
     Evaluate a given model using custom metrics.
 
+    Saves a log in its associated results folder.
+
     :param serialized_model_path: where the serialized_model is
     :param max_examples: the maximum number of examples to use
-    :param verbose: to have verbose outputs
     :return:
     """
 
@@ -32,10 +34,10 @@ def evaluate(serialized_model_path, max_examples=None):
 
     # Making a folder for the job to save log, model, history in it.
     id = serialized_model_path.split(os.sep)[-2]
-    job_folder = os.path.join(results_folder, id)
-    if not (os.path.exists(results_folder)):
-        print(f"The {results_folder} does not exist. Creating it.")
-        os.makedirs(results_folder)
+    job_folder = os.path.join(RESULTS_FOLDER, id)
+    if not (os.path.exists(RESULTS_FOLDER)):
+        print(f"The {RESULTS_FOLDER} does not exist. Creating it.")
+        os.makedirs(RESULTS_FOLDER)
 
     fh = logging.FileHandler(os.path.join(job_folder, logfile))
     fh.setLevel(logging.DEBUG)
@@ -47,19 +49,22 @@ def evaluate(serialized_model_path, max_examples=None):
 
     model = load_model(serialized_model_path, custom_objects={"mean_pred": mean_pred, "f1": f1})
 
-    validation_examples_iterator = ExamplesIterator(examples_folder=validation_examples_folder,
+    cube_representation = RelativeCubeRepresentation(length_cube_side=LENGTH_CUBE_SIDE)
+    validation_examples_iterator = ExamplesIterator(representation=cube_representation,
+                                                    examples_folder=VALIDATION_EXAMPLES_FOLDER,
                                                     max_examples=max_examples,
                                                     shuffle_after_completion=False)
 
-    logger.debug(f"Evaluating on {validation_examples_iterator.nb_examples()} examples")
+    logger.debug(f"Evaluating on {validation_examples_iterator.get_nb_examples()} examples")
 
     ys = validation_examples_iterator.get_labels()
     y_preds = model.predict_generator(validation_examples_iterator)
+
     # Rounding the prediction : using the second one
     y_rounded = np.array([1 if y > 0.5 else 0 for y in y_preds])
 
     logger.debug("Computing metrics")
-    metrics_results = dict(map(lambda metric: (metric.__name__, metric(ys, y_rounded)), metrics_for_evaluation))
+    metrics_results = dict(map(lambda metric: (metric.__name__, metric(ys, y_rounded)), METRICS_FOR_EVALUATION))
 
     metrics_results["serialized_model_path"] = serialized_model_path
 
@@ -80,6 +85,10 @@ if __name__ == "__main__":
     parser.add_argument('--max_examples', metavar='max_examples',
                         type=int, default=None,
                         help='the number of total examples to use in total')
+
+    parser.add_argument('--evaluation', metavar='evaluation',
+                        type=bool, default=True,
+                        help='if true: action on test data from training set')
 
     args = parser.parse_args()
 

@@ -3,7 +3,7 @@ import os
 import numpy as np
 
 from extraction_data import read_pdb
-from settings import original_given_data_folder
+from settings import ORIGINAL_GIVEN_DATA_FOLDER
 from pipeline_fixtures import show_progress
 
 
@@ -22,8 +22,8 @@ def values_range():
     atom_types = set()
     empty_files = set()
 
-    for pdb_original_file in show_progress(sorted(os.listdir(original_given_data_folder))):
-        pdb_original_file_path = os.path.join(original_given_data_folder, pdb_original_file)
+    for pdb_original_file in show_progress(sorted(os.listdir(ORIGINAL_GIVEN_DATA_FOLDER))):
+        pdb_original_file_path = os.path.join(ORIGINAL_GIVEN_DATA_FOLDER, pdb_original_file)
 
         x_list, y_list, z_list, atom_type_list = read_pdb(pdb_original_file_path)
 

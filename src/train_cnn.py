@@ -4,19 +4,17 @@ import os
 import pickle
 from datetime import datetime
 
-import keras
+from keras import backend as K
+from keras.utils import print_summary
 from keras.losses import binary_crossentropy
 
+from discretization import RelativeCubeRepresentation, AbsoluteCubeRepresentation, CubeRepresentation
 from examples_iterator import ExamplesIterator
 from models import models_available, models_available_names
-from pipeline_fixtures import LogEpochBatchCallback
-from pipeline_fixtures import get_current_timestamp
-from settings import max_nb_neg_per_pos
-from settings import training_examples_folder, results_folder, nb_neg_ex_per_pos, optimizer_default, batch_size_default, \
-    nb_epochs_default, parameters_file_name, training_logfile, validation_examples_folder
-from keras import backend as K
-from keras.callbacks import EarlyStopping
-
+from pipeline_fixtures import LogEpochBatchCallback, get_current_timestamp
+from settings import MAX_NB_NEG_PER_POS, LENGTH_CUBE_SIDE, HISTORY_FILE_NAME_PREFIX, JOB_FOLDER_DEFAULT, WEIGHT_POS_CLASS
+from settings import TRAINING_EXAMPLES_FOLDER, RESULTS_FOLDER, NB_NEG_EX_PER_POS, OPTIMIZER_DEFAULT, BATCH_SIZE_DEFAULT, \
+    NB_EPOCHS_DEFAULT, SERIALIZED_MODEL_FILE_NAME_PREFIX, PARAMETERS_FILE_NAME, TRAINING_LOGFILE, VALIDATION_EXAMPLES_FOLDER
 
 
 def f1(y_true, y_pred):
@@ -51,40 +49,54 @@ def f1(y_true, y_pred):
     return 2 * ((precision * recall) / (precision + recall + K.epsilon()))
 
 
-def train_cnn(model_index, nb_epochs, nb_neg, max_examples, batch_size,
-              optimizer=optimizer_default, results_folder=results_folder, job_folder=None):
+def train_cnn(model_index:int,
+              nb_epochs: int,
+              nb_neg: int,
+              max_examples: int,
+              batch_size: int,
+              representation:CubeRepresentation=RelativeCubeRepresentation(length_cube_side=LENGTH_CUBE_SIDE),
+              weight_pos_class:int=WEIGHT_POS_CLASS,
+              optimizer=OPTIMIZER_DEFAULT,
+              results_folder:str=RESULTS_FOLDER,
+              job_folder:str=None):
     """
-    Train a given CNN.
+    Train a given CNN using some given parameters.
+
+    Saved the results in a given `job_folder`. Results include:
+     - the serialized model
+     - a log of the training procedure
+     - a file listing the parameters
 
     :param model_index: the index of the model to use in the list `model_available`
     :param nb_epochs: the number of epochs to use
     :param nb_neg: the number of training examples to use to train the network
     :param max_examples: the maximum number of examples to choose
-    :param verbose: if != 0, make the output verbose
     :param batch_size: the number of examples to use per batch
-    :param optimizer: the optimizer to use to train (default = "rmsprop"
-    :param results_folder: where to save results
+    :param representation: the 3D representation of the cube to use for training
+    :param weight_pos_class: the weight to use for the positive class
+    :param optimizer: the optimizer to use to train (default = "Adam")
+    :param results_folder: where to save `job_folder` if it is None
+    :param job_folder: where results can saved
     :return:
     """
-    # Formatting fixtures
-    current_timestamp = get_current_timestamp()
-    logger = logging.getLogger(__name__)
-    logger.setLevel(logging.DEBUG)
 
     # Making a folder for the job to save log, model, history in it.
     if job_folder is None:
-        job_folder = os.path.join(results_folder, current_timestamp)
-        logger.debug(f'job_folder is None. Created timestamp based folder {job_folder}')
+        job_folder = os.path.join(results_folder, get_current_timestamp())
+
     if not (os.path.exists(results_folder)):
         print(f"The {results_folder} does not exist. Creating it.")
         os.makedirs(results_folder)
 
     # Creating the folder for the job
     if not (os.path.exists(job_folder)):
-        logger.debug(f'job folder does not exist, creating {job_folder}')
+        print(f'job folder does not exist, creating {job_folder}')
         os.makedirs(job_folder)
 
-    fh = logging.FileHandler(os.path.join(job_folder, training_logfile))
+    # Formatting fixtures
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.DEBUG)
+    fh = logging.FileHandler(os.path.join(job_folder, TRAINING_LOGFILE))
     fh.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     fh.setFormatter(formatter)
@@ -95,7 +107,7 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, batch_size,
     logger.debug('Creating network model')
     model = models_available[model_index]
     logger.debug(f"Model {model.name} chosen")
-    keras.utils.print_summary(model, print_fn=logger.debug)
+    print_summary(model, print_fn=logger.debug)
 
     model.compile(optimizer=optimizer, loss=binary_crossentropy, metrics=['accuracy', f1])
 
@@ -106,57 +118,62 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, batch_size,
     logger.debug(f'batch_size  = {batch_size}')
     logger.debug(f'nb_neg      = {nb_neg}')
     logger.debug(f'optimizer   = {optimizer}')
+    logger.debug(f'representation   = {representation.name}')
+    logger.debug(f'weight_pos_class   = {weight_pos_class}')
 
-    with open(os.path.join(job_folder, parameters_file_name), "w") as f:
+    # Saving parameters in a file
+    with open(os.path.join(job_folder, PARAMETERS_FILE_NAME), "w") as f:
         f.write(f'model={model.name}\n')
         f.write(f'nb_epochs={nb_epochs}\n')
         f.write(f'max_examples={max_examples}\n')
         f.write(f'batch_size={batch_size}\n')
         f.write(f'nb_neg={nb_neg}\n')
         f.write(f'optimizer={optimizer}\n')
+        f.write(f'representation={representation.name}\n')
+        f.write(f'weight_pos_class={weight_pos_class}\n')
 
-    logger.debug(f'model, log and history to be saved in {job_folder}')
+    logger.debug(f'Serialized model, log and history to be saved in {job_folder}')
 
     # To load the data incrementally
-    train_examples_iterator = ExamplesIterator(examples_folder=training_examples_folder,
+    train_examples_iterator = ExamplesIterator(representation=representation,
+                                               examples_folder=TRAINING_EXAMPLES_FOLDER,
                                                nb_neg=nb_neg,
                                                batch_size=batch_size,
                                                max_examples=max_examples)
 
-    validation_examples_iterator = ExamplesIterator(examples_folder=validation_examples_folder,
+    validation_examples_iterator = ExamplesIterator(representation=representation,
+                                                    examples_folder=VALIDATION_EXAMPLES_FOLDER,
                                                     nb_neg=nb_neg,
                                                     batch_size=batch_size,
                                                     max_examples=max_examples)
 
     # To log batches and epoch
     epoch_batch_callback = LogEpochBatchCallback(logger)
-    EarlyStopping(monitor='f1', mode='max', patience=3)
 
-    # To prevent having
-    class_weight = {
+    # To re-balance the class
+    classes_weights = {
         0: 1,
-        1: min(nb_neg, max_nb_neg_per_pos)
+        1: weight_pos_class
     }
 
-    logger.debug(f'Training with class_weight: {class_weight}')
+    logger.debug(f'Training with the following classes weights: {classes_weights}')
 
     # Here we go !
     history = model.fit_generator(generator=train_examples_iterator,
                                   epochs=nb_epochs,
                                   validation_data=validation_examples_iterator,
                                   callbacks=[epoch_batch_callback],
-                                  class_weight=class_weight)
+                                  class_weight=classes_weights)
 
     logger.debug('Done training !')
     train_checkpoint = datetime.now()
 
-    # Saving models.py and history
-    serialized_model_file_name = job_folder.split(os.sep)[-2].split('.')[0]  + "_nbepoches_" + str(nb_epochs) + "_nbneg_" + str(nb_neg) + '_model.h5'
-    model_file = os.path.join(job_folder, serialized_model_file_name)
-    logger.debug(f'Model file name is: {serialized_model_file_name}. Full file is: {model_file}')
-    history_file_name = job_folder.split(os.sep)[-2].split('.')[0] + "_nbepoches_" + str(nb_epochs) + "_nbneg_" + str(nb_neg) + '_history.pickle'
-    history_file = os.path.join(job_folder, history_file_name)
-    logger.debug(f'History file is {history_file}')
+
+    # Saving the serialized model and its history
+    id = job_folder.split(os.sep)[-1].replace(os.sep, "")
+    prefix = f"{id}_nbepoches_{nb_epochs}_nbneg_{nb_neg}"
+    model_file = os.path.join(job_folder, f"{prefix}_{SERIALIZED_MODEL_FILE_NAME_PREFIX}")
+    history_file = os.path.join(job_folder, f"{prefix}__{HISTORY_FILE_NAME_PREFIX}")
 
     model.save(model_file)
     logger.debug(f"Model saved in {model_file}")
@@ -164,7 +181,6 @@ def train_cnn(model_index, nb_epochs, nb_neg, max_examples, batch_size,
         pickle.dump(history.history, handle)
 
     logger.debug(f"History saved in {model_file}")
-    logger.debug(f"Done !")
     logger.debug(f"Training done in      : {train_checkpoint - start_time}")
 
 
@@ -177,23 +193,32 @@ if __name__ == "__main__":
                         help=f'the index of the model to use in the list {models_available_names}')
 
     parser.add_argument('--nb_epochs', metavar='nb_epochs',
-                        type=int, default=nb_epochs_default,
+                        type=int, default=NB_EPOCHS_DEFAULT,
                         help='the number of epochs to use')
 
     parser.add_argument('--batch_size', metavar='batch_size',
-                        type=int, default=batch_size_default,
+                        type=int, default=BATCH_SIZE_DEFAULT,
                         help='the number of examples to use per batch')
 
     parser.add_argument('--nb_neg', metavar='nb_neg',
-                        type=int, default=nb_neg_ex_per_pos,
+                        type=int, default=NB_NEG_EX_PER_POS,
                         help='the number of negatives examples to use per positive example')
 
     parser.add_argument('--max_examples', metavar='max_examples',
                         type=int, default=None,
                         help='the number of total examples to use in total')
 
+    parser.add_argument('--weight_pos_class', metavar='weight_pos_class',
+                        type=int, default=WEIGHT_POS_CLASS,
+                        help='the weight to readjust the class of positive example with respect to training')
+
+    parser.add_argument('--representation', metavar='weight_pos_class',
+                        type=str, default="relative",
+                        help=f'the representation to use for the 3D cube ("{RelativeCubeRepresentation.name}" or '
+                             f'"{AbsoluteCubeRepresentation.name}")')
+
     parser.add_argument('--job_folder', metavar='job_folder',
-                        type=str, default='./results/local/',
+                        type=str, default=JOB_FOLDER_DEFAULT,
                         help='the folder where results are to be saved')
 
     args = parser.parse_args()
@@ -204,9 +229,14 @@ if __name__ == "__main__":
     assert (args.nb_epochs > 0)
     assert (args.nb_neg > 0)
 
+    representation = (RelativeCubeRepresentation(length_cube_side=LENGTH_CUBE_SIDE)
+        if args.representation == RelativeCubeRepresentation.name else
+        AbsoluteCubeRepresentation)
+
     train_cnn(model_index=args.model_index,
               nb_epochs=args.nb_epochs,
               nb_neg=args.nb_neg,
               max_examples=args.max_examples,
               batch_size=args.batch_size,
+              weight_pos_class=args.weight_pos_class,
               job_folder=args.job_folder)

@@ -4,16 +4,15 @@ import numpy as np
 from sklearn import preprocessing
 from pandas import DataFrame
 
-from settings import extracted_given_data_train_folder, extracted_given_data_validation_folder, normalized_data_train_folder, \
-    normalized_data_test_folder, normalized_data_folder, given_data_folder
-from pipeline_fixtures import show_progress
-from discretization import load_nparray
+from settings import EXTRACTED_GIVEN_DATA_TRAIN_FOLDER, extracted_given_data_validation_folder, NORMALIZED_DATA_TRAIN_FOLDER, \
+    NORMALIZED_DATA_TEST_FOLDER, NORMALIZED_DATA_FOLDER, GIVEN_DATA_FOLDER
+from pipeline_fixtures import show_progress, load_nparray
 
 logger = logging.getLogger('cnn.Normalizing')
 logger.addHandler(logging.NullHandler())
 
 
-def get_data_scaler(folder: str = extracted_given_data_train_folder):
+def get_data_scaler(folder: str = EXTRACTED_GIVEN_DATA_TRAIN_FOLDER):
     """
     Return the scaler of data.
 
@@ -22,7 +21,7 @@ def get_data_scaler(folder: str = extracted_given_data_train_folder):
     :param folder: the folder to use to create the scaler.
     :return:
     """
-    serialized_scaler_file = os.path.join(given_data_folder, "scaler.pickle")
+    serialized_scaler_file = os.path.join(GIVEN_DATA_FOLDER, "scaler.pickle")
     try:
         scaler = pickle.load(open(serialized_scaler_file, "rb"))
     except:
@@ -61,16 +60,16 @@ def normalize_data(scaler, extracted_data_folder, normalized_data_folder):
 
 
 if __name__ == "__main__":
-    if not (os.path.exists(normalized_data_folder)):
+    if not (os.path.exists(NORMALIZED_DATA_FOLDER)):
         logger.debug('Creating data folder %s, %s and %s.',
-                     normalized_data_folder,
-                     normalized_data_train_folder,
-                     normalized_data_test_folder)
-        os.makedirs(normalized_data_folder)
-        os.makedirs(normalized_data_train_folder)
-        os.makedirs(normalized_data_test_folder)
+                     NORMALIZED_DATA_FOLDER,
+                     NORMALIZED_DATA_TRAIN_FOLDER,
+                     NORMALIZED_DATA_TEST_FOLDER)
+        os.makedirs(NORMALIZED_DATA_FOLDER)
+        os.makedirs(NORMALIZED_DATA_TRAIN_FOLDER)
+        os.makedirs(NORMALIZED_DATA_TEST_FOLDER)
 
-    scaler_on_training_data = get_data_scaler(extracted_given_data_train_folder)
+    scaler_on_training_data = get_data_scaler(EXTRACTED_GIVEN_DATA_TRAIN_FOLDER)
 
-    normalize_data(scaler_on_training_data, extracted_given_data_train_folder, normalized_data_train_folder)
-    normalize_data(scaler_on_training_data, extracted_given_data_validation_folder, normalized_data_test_folder)
+    normalize_data(scaler_on_training_data, EXTRACTED_GIVEN_DATA_TRAIN_FOLDER, NORMALIZED_DATA_TRAIN_FOLDER)
+    normalize_data(scaler_on_training_data, extracted_given_data_validation_folder, NORMALIZED_DATA_TEST_FOLDER)

@@ -1,7 +1,10 @@
 import datetime
 
 import keras
+import numpy as np
 import progressbar
+
+from settings import FLOAT_TYPE, COMMENT_DELIMITER
 
 widgets_progressbar = [
     ' [', progressbar.Timer(), '] ',
@@ -103,3 +106,19 @@ class LogEpochBatchCallback(keras.callbacks.LambdaCallback):
                          on_epoch_end=self._on_epoch_end,
                          on_batch_begin=self._on_batch_begin,
                          on_batch_end=self._on_batch_end)
+
+
+def load_nparray(file_name: str):
+    """
+    Loads an numpy ndarray stored in given file
+    :param file_name: the file to use
+    :return:
+    """
+
+    example = np.loadtxt(file_name, dtype=FLOAT_TYPE, comments=COMMENT_DELIMITER)
+    # If it's a vector (i.e if there is just one atom),
+    # we reshape it into a (1,n nb_features) array
+    if len(example.shape) == 1:
+        example = example.reshape(1, -1)
+
+    return example

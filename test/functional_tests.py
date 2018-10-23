@@ -5,11 +5,11 @@ warnings.simplefilter("ignore")
 
 import shutil
 
-from src.models_inspector import ModelsInspector
-from src.pipeline_fixtures import get_current_timestamp
-from src.settings import SERIALIZED_MODEL_FILE_NAME_PREFIX, PARAMETERS_FILE_NAME, \
+from code.models_inspector import ModelsInspector
+from code.pipeline_fixtures import get_current_timestamp
+from code.settings import SERIALIZED_MODEL_FILE_NAME_PREFIX, PARAMETERS_FILE_NAME, \
     TRAINING_LOGFILE, HISTORY_FILE_NAME_PREFIX
-from src.train_cnn import train_cnn
+from code.train_cnn import train_cnn
 
 
 class TestTrainingJob(unittest.TestCase):

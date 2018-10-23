@@ -5,6 +5,6 @@
 #PBS -l select=1:ngpus=1
 #PBS -l walltime=23:00:00
 #PBS -N evaluate_all
-cd ${PBS_O_WORKDIR}/src
+cd ${PBS_O_WORKDIR}/code
 source activate CS5242
-python $PBS_O_WORKDIR/src/evaluate_all.py
+python $PBS_O_WORKDIR/code/evaluate_all.py

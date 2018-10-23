@@ -4,7 +4,7 @@ import warnings
 
 warnings.simplefilter("ignore")
 
-from src.models_inspector import ModelsInspector
+from code.models_inspector import ModelsInspector
 
 
 class ModelsInspectorTest(unittest.TestCase):

@@ -19,20 +19,24 @@ class ModelsInspector:
     This is because we are interested to study model that have been created only.
     We call those folder "inspectable".
 
+    All folders can be shown by setting `show_without_serialized` to True
+
 
     """
 
-    def __init__(self, results_folder):
+    def __init__(self, results_folder, show_without_serialized=False):
         self._general_folder = results_folder
         # Storing absolute path of sub folders
-        sub_folders = list(filter(lambda folder: os.path.isdir(folder),
-                                  map(lambda folder: os.path.join(self._general_folder, folder), os.listdir(self._general_folder))))
-        # sub_folders.append(self._general_folder)
+        self._sub_folders = sorted(list(filter(lambda folder: os.path.isdir(folder),
+                                      map(lambda folder: os.path.join(self._general_folder, folder),
+                                          os.listdir(self._general_folder)))))
 
-        # It is possible that there exist sub-folders with no serialized model
-        # (if the model is being trained for example) so, we chose here to
-        # only keep sub folders that contains one.
-        self._sub_folders = list(filter(lambda folder: any([SERIALIZED_MODEL_FILE_NAME_SUFFIX in file for file in os.listdir(folder)]), sub_folders))
+        if not(show_without_serialized):
+            # It is possible that there exist sub-folders with no serialized model
+            # (if the model is being trained for example) so, we chose here to
+            # only keep sub folders that contains one.
+            contain_serialized_model = lambda folder: any([SERIALIZED_MODEL_FILE_NAME_SUFFIX in file for file in os.listdir(folder)])
+            self._sub_folders = list(filter(contain_serialized_model, self._sub_folders))
         serialized_models_file_names = defaultdict(str)
         histories_file_names = defaultdict(str)
         was_evaluated = defaultdict(bool)

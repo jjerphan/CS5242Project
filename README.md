@@ -131,11 +131,13 @@ To run the job, you have to submit the file:
 (CS5242) $ qsub job_submissions/evaluate_xxxxxxx.wlm01.pbs
 ```
 
-The result of the evaluation of one model is a log ``evaluate_xxxxxxx.wlm01.log`  that is saved in the same`results/xxxxxxx.wlm01` folder.
+The result of the evaluation of one model is a log `evaluate_xxxxxxx.wlm01.log`  that is saved in the same`results/xxxxxxx.wlm01` folder.
+A log is appended to `evaluation/evaluation.csv`: the final result of the evaluation.
+It contains for each model, values of the metrics as well as the parameters used for the training.
 
 ## Evaluating all the models
 
-You can evaluate all the models presented in the `results/` folder using `job_submissions/evaluate_all.pbs`.
+You can also create submissions files for model that aren't been evaluated yet.
 
  ```bash
 (CS5242) $ qsub job_submissions/evaluate_xxxxxxx.wlm01.pbs
@@ -143,7 +145,6 @@ You can evaluate all the models presented in the `results/` folder using `job_su
 
 Results of this job are saved in  `results/evaluation/.wlm01` ;those results include:
 
-- `evaluate_timestamp.csv`: the final result of the evaluation. For each model, the value of the metrics is present as well as the parameters used for the training
 - `evaluate_timestamp.log`: the logs of the evaluation procedure
 
 #### Note that evaluating all the models can take a lot of time. We recommend evaluating model in parallel, one at the time.  
@@ -197,7 +198,6 @@ Alternatively, you can execute job directly running
 ```bash
 (CS5242_gpu) $ python code/train_cnn.py --some options
 (CS5242_gpu) $ python code/evaluate.py --some options
-(CS5242_gpu) $ python code/evaluate_all.py --some options
 (CS5242_gpu) $ python code/predict.py --some options
 ```
 
@@ -219,7 +219,6 @@ Here is the organisation of the code base.
 | `create_examples.py`   | Set of functions to create positives and negatives examples. |
 | `discretization.py`    | Set of functions dedicated to the creation of 3D representations for examples |
 | `evaluate.py`          | A job to evaluate a given serialized model                   |
-| `evaluate_all.py`      | A job to evaluate all the serialized models                  |
 | `train_cnn.py`         | A job to evaluate a given specified model                    |
 | `predict.py`           | A job to test or predict final result using a given serialized model |
 | `predict_generator.py` | A generator of examples for predictions                      |

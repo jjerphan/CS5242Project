@@ -12,7 +12,7 @@ from discretization import RelativeCubeRepresentation, AbsoluteCubeRepresentatio
 from examples_iterator import ExamplesIterator
 from models import models_available, models_available_names
 from pipeline_fixtures import LogEpochBatchCallback, get_current_timestamp
-from settings import MAX_NB_NEG_PER_POS, LENGTH_CUBE_SIDE, HISTORY_FILE_NAME_SUFFIX, JOB_FOLDER_DEFAULT, \
+from settings import LENGTH_CUBE_SIDE, HISTORY_FILE_NAME_SUFFIX, JOB_FOLDER_DEFAULT, \
     WEIGHT_POS_CLASS
 from settings import TRAINING_EXAMPLES_FOLDER, RESULTS_FOLDER, NB_NEG_EX_PER_POS, OPTIMIZER_DEFAULT, BATCH_SIZE_DEFAULT, \
     NB_EPOCHS_DEFAULT, SERIALIZED_MODEL_FILE_NAME_SUFFIX, PARAMETERS_FILE_NAME_SUFFIX, TRAINING_LOGFILE, \
@@ -57,7 +57,7 @@ def train_cnn(model_index: int,
               max_examples: int,
               batch_size: int,
               representation: CubeRepresentation = RelativeCubeRepresentation(length_cube_side=LENGTH_CUBE_SIDE),
-              weight_pos_class: int = WEIGHT_POS_CLASS,
+              weight_pos_class: float = WEIGHT_POS_CLASS,
               optimizer=OPTIMIZER_DEFAULT,
               results_folder: str = RESULTS_FOLDER,
               job_folder: str = None):
@@ -212,7 +212,7 @@ if __name__ == "__main__":
                         help='the number of total examples to use in total')
 
     parser.add_argument('--weight_pos_class', metavar='weight_pos_class',
-                        type=int, default=WEIGHT_POS_CLASS,
+                        type=float, default=WEIGHT_POS_CLASS,
                         help='the weight to readjust the class of positive example with respect to training')
 
     parser.add_argument('--representation', metavar='weight_pos_class',

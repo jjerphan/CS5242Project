@@ -62,7 +62,7 @@ INDICES_FEATURES = dict(zip(FEATURES_NAMES, list(range(NB_FEATURES))))
 
 # To scale protein-ligands system in a cube of shape (LENGTH_CUBE_SIDE,LENGTH_CUBE_SIDE,LENGTH_CUBE_SIDE)
 LENGTH_CUBE_SIDE = 20
-DEFAULT_CUBE_RES = 3.0
+DEFAULT_CUBE_RES = 5.0
 SHAPE_CUBE = (LENGTH_CUBE_SIDE, LENGTH_CUBE_SIDE, LENGTH_CUBE_SIDE, NB_CHANNELS)
 
 # PREPROCESSING SETTINGS
@@ -73,7 +73,7 @@ PERCENT_TEST = 0.1
 
 # The maximum number of negative example to create per positive example to train
 # Used for creating training examples
-MAX_NB_NEG_PER_POS = 20
+MAX_NB_NEG_PER_POS = 40
 
 # Pre-processing settings
 NB_WORKERS = 6
@@ -96,16 +96,16 @@ JOB_FOLDER_DEFAULT = os.path.join(RESULTS_FOLDER, "local")
 PARAMETERS_FILE_NAME_SUFFIX = "parameters.txt"
 SERIALIZED_MODEL_FILE_NAME_SUFFIX = "model.h5"
 HISTORY_FILE_NAME_SUFFIX = "history.pickle"
-NB_EPOCHS_DEFAULT = 1
+NB_EPOCHS_DEFAULT = 15
 BATCH_SIZE_DEFAULT = 32
 N_GPU_DEFAULT = 1
 OPTIMIZER_DEFAULT = Adam()
 
 # The number of negative example to use per positive example to train
-NB_NEG_EX_PER_POS = 10
+NB_NEG_EX_PER_POS = 40
 
 # A constant to reduce the weight of the positive class
-WEIGHT_POS_CLASS = 2
+WEIGHT_POS_CLASS = 1
 
 # Evaluation settings
 METRICS_FOR_EVALUATION = [accuracy_score, precision_score, recall_score, f1_score, confusion_matrix]

@@ -234,12 +234,13 @@ if __name__ == "__main__":
 
     representation = (RelativeCubeRepresentation(length_cube_side=LENGTH_CUBE_SIDE)
                       if args.representation == RelativeCubeRepresentation.name else
-                      AbsoluteCubeRepresentation)
+                      AbsoluteCubeRepresentation(length_cube_side=LENGTH_CUBE_SIDE))
 
     train_cnn(model_index=args.model_index,
               nb_epochs=args.nb_epochs,
               nb_neg=args.nb_neg,
               max_examples=args.max_examples,
+              representation=representation,
               batch_size=args.batch_size,
               weight_pos_class=args.weight_pos_class,
               job_folder=args.job_folder)

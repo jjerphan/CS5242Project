@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from abc import ABC, abstractmethod
 
 from settings import LENGTH_CUBE_SIDE, NB_FEATURES, \
-    INDICES_FEATURES
+    INDICES_FEATURES, DEFAULT_CUBE_RES
 
 
 class CubeRepresentation(ABC):
@@ -170,8 +170,8 @@ class AbsoluteCubeRepresentation(CubeRepresentation):
     """
     name = "absolute"
 
-    def __init__(self, length_cube_side, cube_resolution=3.0, use_rotation_invariance=True, translate_ligand=False,
-                 verbose=False):
+    def __init__(self, length_cube_side, cube_resolution: float=DEFAULT_CUBE_RES,
+                 use_rotation_invariance=True, translate_ligand=False, verbose=False):
         """
 
         :param length_cube_side: length of the side of the cube to create

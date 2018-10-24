@@ -42,6 +42,10 @@ def evaluate(serialized_model_path, max_examples=None):
         print(f"The {RESULTS_FOLDER} does not exist. Creating it.")
         os.makedirs(RESULTS_FOLDER)
 
+    # For final CSV file
+    if not(os.path.exists(EVALUATION_LOGS_FOLDER)):
+        os.makedirs(EVALUATION_LOGS_FOLDER)
+
     fh = logging.FileHandler(os.path.join(job_folder,  f"evaluate.log"))
     fh.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -96,6 +100,7 @@ def evaluate(serialized_model_path, max_examples=None):
     parameters_name = ["model", "nb_epochs", "nb_neg", "max_examples", "batch_size", "optimizer",
                        "representation", "weight_pos_class"]
     csv_headers = ["id", *metrics_name, "positives_prediction", "negatives_prediction", *parameters_name]
+
     if not(os.path.exists(EVALUATION_CSV_FILE)):
         logger.debug(f"{EVALUATION_CSV_FILE} not present ; Creating it")
         logger.debug(f"Header used {csv_headers}")

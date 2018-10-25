@@ -124,7 +124,7 @@ def plot_local_results():
         for k,v in set_parameters.items():
             print(f" - {k} : {v}")
 
-        description = f"Repr. {set_parameters['representation']} ; Epochs {set_parameters['nb_epochs']} ;  Neg: {set_parameters['nb_neg']} Weight Pos : {set_parameters['weight_pos_class']} "
+        description = f"{set_parameters['model']} Repr. {set_parameters['representation']} ; Epochs {set_parameters['nb_epochs']} ;  Neg: {set_parameters['nb_neg']} Weight Pos : {set_parameters['weight_pos_class']} "
         fig = plot_losses_values(history_file_path, xlim_max=15, ylim_max=1, description=description)
         plt.pause(1)
         name_file = re.sub(r"\s+","_", re.sub(r'(\.|;|:)',"", description)).lower()

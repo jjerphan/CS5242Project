@@ -260,6 +260,14 @@ def create_multiple_train_jobs(batch_size: int=BATCH_SIZE_DEFAULT, max_examples=
     list_nb_neg = list(
         map(int, input(f"Number of negatives examples to use (separate with spaces then enter) : ").split()))
 
+    list_optimizer = list(input(
+            f"The optimizer to use ('adam' (default) ,'sgd', 'nesterov', 'adadelta', 'nadam') "
+            f"(separate with spaces then enter) : ").split())
+
+    list_lr_decay = list(map(float,input(
+            f"Learning rate decay to apply (float >= 0.0)"
+            f"(separate with spaces then enter) : ").split()))
+
     weight_pos_class = input(f"Weight for the positive class (leave blank for default = {WEIGHT_POS_CLASS}) : ")
     weight_pos_class = WEIGHT_POS_CLASS if weight_pos_class == "" else int(weight_pos_class)
 
@@ -268,19 +276,24 @@ def create_multiple_train_jobs(batch_size: int=BATCH_SIZE_DEFAULT, max_examples=
 
     for nb_epochs in list_nb_epochs:
         for nb_neg in list_nb_neg:
-            name_job = f'train_{models_available_names[model_index]}_{nb_epochs}epochs_{batch_size}batch_{nb_neg}neg'
-            name_job += f"_{max_examples}max" if max_examples else ""
+            for optimizer in list_optimizer:
+                for lr_decay in list_lr_decay:
+                    name_job = f'train_{models_available_names[model_index]}' \
+                               f'_{nb_epochs}epochs_{batch_size}batch_{nb_neg}neg'
+                    name_job += f"_{max_examples}max" if max_examples else ""
 
-            stub = get_train_stub(model_index=model_index,
-                                  name_job=name_job,
-                                  nb_epochs=nb_epochs,
-                                  batch_size=batch_size,
-                                  nb_neg=nb_neg,
-                                  max_examples=max_examples,
-                                  n_gpu=n_gpu, weight_pos_class=weight_pos_class,
-                                  representation=representation)
+                    stub = get_train_stub(model_index=model_index,
+                                          name_job=name_job,
+                                          nb_epochs=nb_epochs,
+                                          batch_size=batch_size,
+                                          nb_neg=nb_neg,
+                                          max_examples=max_examples,
+                                          n_gpu=n_gpu, weight_pos_class=weight_pos_class,
+                                          representation=representation,
+                                          optimizer=optimizer,
+                                          lr_decay=lr_decay)
 
-            save_job_file(stub, name_job, ask_confirm=False)
+                    save_job_file(stub, name_job, ask_confirm=False)
 
 
 def create_evaluation_job():

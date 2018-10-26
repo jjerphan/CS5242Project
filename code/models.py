@@ -1,5 +1,8 @@
+import keras
 from keras import Input, Model
-from keras.layers import Dense, Flatten, Conv3D, Activation, MaxPooling3D, Dropout, BatchNormalization
+from keras.layers import Dense, Flatten, Conv3D, Activation, MaxPooling3D, Dropout, BatchNormalization, \
+    AveragePooling2D, AveragePooling3D
+from keras.regularizers import l2
 
 from settings import LENGTH_CUBE_SIDE, NB_CHANNELS
 
@@ -243,7 +246,93 @@ def ProtVGGNet():
     return model
 
 
-models_available = [ProtNet(), ProtNet07(), ProtNetBN(), SimplerProtNet07(), SimplerProtNetBN(), ProtVGGNet()]
+def resnet_layer(inputs,
+                 num_filters=16,
+                 kernel_size=3,
+                 strides=1,
+                 activation='relu',
+                 use_batch_norm=True):
+    """
+    Return a ResNet layer using the given parameters
+
+    :param inputs:
+    :param num_filters:
+    :param kernel_size:
+    :param strides:
+    :param activation:
+    :param use_batch_norm:
+    :return:
+    """
+
+    conv = Conv3D(num_filters,
+                  kernel_size=kernel_size,
+                  strides=strides,
+                  padding='same',
+                  kernel_initializer='he_normal',
+                  kernel_regularizer=l2(1e-4))
+
+    x = inputs
+    x = conv(x)
+    if use_batch_norm:
+        x = BatchNormalization()(x)
+    if activation is not None:
+        x = Activation(activation)(x)
+    return x
+
+
+def ProtResNet():
+    """
+    ResNet inspired model.
+
+    Modified implementation : https://github.com/keras-team/keras/blob/master/examples/cifar10_resnet.py#L116
+
+    :return:
+    """
+    depth = 22 # can be 20, 32, 44
+
+    num_filters = 16
+    num_res_blocks = int((depth - 2) / 6)
+
+    inputs = Input(shape=input_shape)
+    x = resnet_layer(inputs=inputs)
+    # Instantiate the stack of residual units
+    for stack in range(3):
+        for res_block in range(num_res_blocks):
+            strides = 1
+            if stack > 0 and res_block == 0:  # first layer but not first stack
+                strides = 2  # downsample
+            y = resnet_layer(inputs=x,
+                             num_filters=num_filters,
+                             strides=strides)
+            y = resnet_layer(inputs=y,
+                             num_filters=num_filters,
+                             activation=None)
+            if stack > 0 and res_block == 0:  # first layer but not first stack
+                # linear projection residual shortcut connection to match
+                # changed dims
+                x = resnet_layer(inputs=x,
+                                 num_filters=num_filters,
+                                 kernel_size=1,
+                                 strides=strides,
+                                 activation=None,
+                                 use_batch_norm=False)
+            # Shortcut connection here
+            x = keras.layers.add([x, y])
+            x = Activation('relu')(x)
+        num_filters *= 2
+
+    x = AveragePooling3D(pool_size=5)(x)
+    y = Flatten()(x)
+    outputs = Dense(1,
+                    activation='sigmoid',
+                    kernel_initializer='he_normal')(y)
+
+    # Instantiate model.
+    model = Model(inputs=inputs, outputs=outputs,name="ProtResNet")
+    return model
+
+
+models_available = [ProtNet(), ProtNet07(), ProtNetBN(), SimplerProtNet07(), SimplerProtNetBN(), ProtVGGNet(), ProtResNet()]
 models_available_names = list(map(lambda model: model.name, models_available))
 
 if __name__ == "__main__":

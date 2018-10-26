@@ -52,7 +52,7 @@ def plot_f1_scores(file='', xlim_max=None):
     with open(file, 'rb') as f:
         data = pickle.load(f)
 
-    epoches = list(range(1, len(data['loss'])+1))
+    epoches = list(range(1, len(data['loss']) + 1))
 
     plt.figure()
     plt.plot(epoches, data['f1'], c='black', label='training')
@@ -76,7 +76,7 @@ def plot_losses_values(file='', xlim_max=None, ylim_max=None, description=""):
     with open(file, 'rb') as f:
         data = pickle.load(f)
 
-    epoches = list(range(1, len(data['loss'])+1))
+    epoches = list(range(1, len(data['loss']) + 1))
 
     fig, ax = plt.subplots(nrows=1, ncols=1)
     ax.plot(epoches, data['loss'], c='black', label='training')
@@ -92,7 +92,6 @@ def plot_losses_values(file='', xlim_max=None, ylim_max=None, description=""):
     plt.grid()
     plt.show()
     return fig
-
 
 
 def plot_remote_results():
@@ -121,13 +120,13 @@ def plot_local_results():
     plt.ion()
     for sub_folder, set_parameters, _, history_file_path, _ in models_inspector:
         print(f"Model {sub_folder}")
-        for k,v in set_parameters.items():
+        for k, v in set_parameters.items():
             print(f" - {k} : {v}")
 
         description = f"{set_parameters['model']} Repr. {set_parameters['representation']} ; Epochs {set_parameters['nb_epochs']} ;  Neg: {set_parameters['nb_neg']} Weight Pos : {set_parameters['weight_pos_class']} "
-        fig = plot_losses_values(history_file_path, xlim_max=15, ylim_max=1, description=description)
+        fig = plot_losses_values(history_file_path, xlim_max=30, ylim_max=1, description=description)
         plt.pause(1)
-        name_file = re.sub(r"\s+","_", re.sub(r'(\.|;|:)',"", description)).lower()
+        name_file = re.sub(r"\s+", "_", re.sub(r'(\.|;|:)', "", description)).lower()
         fig.savefig(os.path.join(EVALUATION_LOGS_FOLDER, name_file))
         # input("[Enter] to continue")
         plt.close('all')

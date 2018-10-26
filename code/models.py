@@ -332,7 +332,58 @@ def ProtResNet():
     return model
 
 
-models_available = [ProtNet(), ProtNet07(), ProtNetBN(), SimplerProtNet07(), SimplerProtNetBN(), ProtVGGNet(), ProtResNet()]
+def ProtInceptionNet():
+    """
+    Inception inspired model.
+
+
+    :return:
+    """
+    dropout_value = 0.5
+    nb_inception_modules = 3
+    nb_filters = 16
+
+    inputs = Input(shape=input_shape)
+
+    x = Conv3D(nb_filters, (1, 1, 1), padding='same', activation='relu')(inputs)
+    x = Conv3D(nb_filters, (1, 1, 1), padding='same', activation='relu')(x)
+    x = MaxPooling3D((3, 3, 3), strides=(1, 1, 1), padding='same')(x)
+
+    for num_module in range(1, nb_inception_modules+1):
+
+        sub_mod_1 = Conv3D(nb_filters*num_module, (1, 1, 1), padding='same', activation='relu')(x)
+        sub_mod_1 = Conv3D(nb_filters*num_module, (3, 3, 3), padding='same', activation='relu')(sub_mod_1)
+
+        sub_mod_2 = Conv3D(nb_filters*num_module, (1, 1, 1), padding='same', activation='relu')(x)
+        sub_mod_2 = Conv3D(nb_filters*num_module, (5, 5, 5), padding='same', activation='relu')(sub_mod_2)
+
+        sub_mod_3 = MaxPooling3D((3, 3, 3), strides=(1, 1, 1), padding='same')(x)
+        sub_mod_3 = Conv3D(nb_filters*num_module, (1, 1, 1), padding='same', activation='relu')(sub_mod_3)
+
+        y = keras.layers.concatenate([sub_mod_1, sub_mod_2, sub_mod_3], axis=4)
+
+        # To reduce dimensions:
+        x = MaxPooling3D((3, 3, 3), strides=(2, 2, 2))(y)
+
+    x = Flatten()(x)
+
+    x = Dense(128, activation="relu")(x)
+    x = Dropout(dropout_value)(x)
+
+    x = Dense(48, activation="relu")(x)
+    x = Dropout(dropout_value)(x)
+
+    outputs = Dense(1, activation='sigmoid')(x)
+
+    # Instantiate model.
+    model = Model(inputs=inputs, outputs=outputs,name="ProtInceptionNet")
+
+    return model
+
+
+models_available = [ProtNet(), ProtNet07(), ProtNetBN(),
+                    SimplerProtNet07(), SimplerProtNetBN(),
+                    ProtVGGNet(), ProtResNet(), ProtInceptionNet()]
 models_available_names = list(map(lambda model: model.name, models_available))
 
 if __name__ == "__main__":

@@ -279,7 +279,7 @@ def create_multiple_train_jobs(batch_size: int=BATCH_SIZE_DEFAULT, max_examples=
             for optimizer in list_optimizer:
                 for lr_decay in list_lr_decay:
                     name_job = f'train_{models_available_names[model_index]}' \
-                               f'_{nb_epochs}epochs_{batch_size}batch_{nb_neg}neg'
+                               f'_{nb_epochs}epochs_{lr_decay}lr_decay_{nb_neg}neg_{optimizer}'
                     name_job += f"_{max_examples}max" if max_examples else ""
 
                     stub = get_train_stub(model_index=model_index,

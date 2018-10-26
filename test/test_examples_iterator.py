@@ -8,9 +8,9 @@ from discretization import RelativeCubeRepresentation
 
 warnings.simplefilter("ignore")
 
-from src.examples_iterator import ExamplesIterator
-from src.pipeline_fixtures import is_positive
-from src.settings import TRAINING_EXAMPLES_FOLDER, LENGTH_CUBE_SIDE, VALIDATION_EXAMPLES_FOLDER, TESTING_EXAMPLES_FOLDER
+from code.examples_iterator import ExamplesIterator
+from code.pipeline_fixtures import is_positive
+from code.settings import TRAINING_EXAMPLES_FOLDER, LENGTH_CUBE_SIDE, VALIDATION_EXAMPLES_FOLDER, TESTING_EXAMPLES_FOLDER
 
 
 class ExamplesIteratorTest(unittest.TestCase):

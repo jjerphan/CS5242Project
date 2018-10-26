@@ -1,19 +1,19 @@
 import unittest
 import os
 import warnings
+
 warnings.simplefilter("ignore")
 
 import shutil
 
-from src.models_inspector import ModelsInspector
-from src.pipeline_fixtures import get_current_timestamp
-from src.settings import SERIALIZED_MODEL_FILE_NAME_PREFIX, PARAMETERS_FILE_NAME, \
-    TRAINING_LOGFILE, HISTORY_FILE_NAME_PREFIX
-from src.train_cnn import train_cnn
+from code.models_inspector import ModelsInspector
+from code.pipeline_fixtures import get_current_timestamp
+from code.settings import SERIALIZED_MODEL_FILE_NAME_SUFFIX, PARAMETERS_FILE_NAME_SUFFIX, \
+    TRAINING_LOGFILE, HISTORY_FILE_NAME_SUFFIX
+from code.train_cnn import train_cnn
 
 
 class TestTrainingJob(unittest.TestCase):
-
 
     def setUp(self):
         self.test_folder = os.path.abspath(os.path.join(os.path.realpath(__file__), os.pardir, get_current_timestamp()))
@@ -47,7 +47,8 @@ class TestTrainingJob(unittest.TestCase):
         self.assertEqual(len(list_res), nb_trials)
 
         should_be_saved = sorted(
-            [PARAMETERS_FILE_NAME, SERIALIZED_MODEL_FILE_NAME_PREFIX, HISTORY_FILE_NAME_PREFIX, TRAINING_LOGFILE])
+            [PARAMETERS_FILE_NAME_SUFFIX, SERIALIZED_MODEL_FILE_NAME_SUFFIX, HISTORY_FILE_NAME_SUFFIX,
+             TRAINING_LOGFILE])
 
         file_saved = sorted(os.listdir(os.path.join(self.test_folder, list_res[0])))
 

@@ -4,7 +4,7 @@ import warnings
 
 warnings.simplefilter("ignore")
 
-from src.models_inspector import ModelsInspector
+from code.models_inspector import ModelsInspector
 
 
 class ModelsInspectorTest(unittest.TestCase):
@@ -27,7 +27,7 @@ class ModelsInspectorTest(unittest.TestCase):
 
         self.assertEqual(len(self.models_inspector), 1)
 
-        sub_folder, set_parameters, serialized_model_path, history_file_path = self.models_inspector[0]
+        sub_folder, set_parameters, serialized_model_path, history_file_path, _ = self.models_inspector[0]
         true_sub_folder = os.path.join(self.test_folder, "with_serialized_model")
         self.assertEqual(sub_folder, true_sub_folder)
         self.assertEqual(serialized_model_path, os.path.join(sub_folder, "20181224122334model.h5"))

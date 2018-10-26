@@ -69,29 +69,29 @@ All the following operations are performed:
 To extract the data you have to run:
 
 ```bash
-(CS5242) $ python src/extract_data.py
+(CS5242) $ python code/extract_data.py
 ```
 
 The data will be extracted in the `training_data/extracted/train/`, `training_data/extracted/validation/`, `training_data/extracted/test`  for the original data and in `testing_data_release/extracted`for the data used for prediction
 
 ## Creation of examples
 
-#### ⚠ BE CAREFULL : for this step, a lot of data will be created (with the default settings, more than 130Gb). By default, all the examples for validation, testing and prediction are created. If you want to create less data, we recommend using the `nb_neg` argument for the creation of examples (see the tail of `src/create_examples.py`)
+#### ⚠ BE CAREFULL : for this step, a lot of data will be created (with the default settings, more than 130Gb). By default, all the examples for validation, testing and prediction are created. If you want to create less data, we recommend using the `nb_neg` argument for the creation of examples (see the tail of `code/create_examples.py`)
 
 To extract the data you have to run:
 
 ```bash
-(CS5242) $ python src/create_examples.py
+(CS5242) $ python code/create_examples.py
 ```
 
 Examples will be populated in the `training_data/training_examples/`, `training_data/validation_examples/`, `training_data/test_examples` for the original data and in `testing_data_release/predict_examples`for the data used for prediction as follows
 
 ## Training a model
 
-Training a model is done as a job on the cluster. To do this, you have to `qsub` a submission file. We provide a way to create such a file with  `src/create_job_sub.py`.
+Training a model is done as a job on the cluster. To do this, you have to `qsub` a submission file. We provide a way to create such a file with  `code/create_job_sub.py`.
 
 ```bash
-(CS5242) $ python src/create_job_sub.py
+(CS5242) $ python code/create_job_sub.py
 ```
 
 Then choose `create_train_job` and enter the parameters than you want to use to train your model.
@@ -118,7 +118,7 @@ Note that you can submit those type of jobs as much as you want.
 You can evaluate a model using the pipeline given before:
 
 ```bash	
-(CS5242) $ python src/create_job_sub.py
+(CS5242) $ python code/create_job_sub.py
 ```
 
 Then select `create_evaluation_job`, select the model associated to a job (for instance`xxxxxxx.wlm01`) you want to evaluate, and then the parameters used for the evaluation.
@@ -131,11 +131,13 @@ To run the job, you have to submit the file:
 (CS5242) $ qsub job_submissions/evaluate_xxxxxxx.wlm01.pbs
 ```
 
-The result of the evaluation of one model is a log ``evaluate_xxxxxxx.wlm01.log`  that is saved in the same`results/xxxxxxx.wlm01` folder.
+The result of the evaluation of one model is a log `evaluate_xxxxxxx.wlm01.log`  that is saved in the same`results/xxxxxxx.wlm01` folder.
+A log is appended to `evaluation/evaluation.csv`: the final result of the evaluation.
+It contains for each model, values of the metrics as well as the parameters used for the training.
 
 ## Evaluating all the models
 
-You can evaluate all the models presented in the `results/` folder using `job_submissions/evaluate_all.pbs`.
+You can also create submissions files for model that aren't been evaluated yet.
 
  ```bash
 (CS5242) $ qsub job_submissions/evaluate_xxxxxxx.wlm01.pbs
@@ -143,7 +145,6 @@ You can evaluate all the models presented in the `results/` folder using `job_su
 
 Results of this job are saved in  `results/evaluation/.wlm01` ;those results include:
 
-- `evaluate_timestamp.csv`: the final result of the evaluation. For each model, the value of the metrics is present as well as the parameters used for the training
 - `evaluate_timestamp.log`: the logs of the evaluation procedure
 
 #### Note that evaluating all the models can take a lot of time. We recommend evaluating model in parallel, one at the time.  
@@ -153,7 +154,7 @@ Results of this job are saved in  `results/evaluation/.wlm01` ;those results inc
 You can evaluate a model using the pipeline given before:
 
 ```bash	
-(CS5242) $ python src/create_job_sub.py
+(CS5242) $ python code/create_job_sub.py
 ```
 
 Then select `create_predict_job`, select the model associated to a job (for instance`xxxxxxx.wlm01`) you want to test or predict with, and then the parameters used for the evaluation.
@@ -195,15 +196,14 @@ If you would like to train, evaluate and predict on another machine, you can jus
 Alternatively, you can execute job directly running
 
 ```bash
-(CS5242_gpu) $ python src/train_cnn.py --some options
-(CS5242_gpu) $ python src/evaluate.py --some options
-(CS5242_gpu) $ python src/evaluate_all.py --some options
-(CS5242_gpu) $ python src/predict.py --some options
+(CS5242_gpu) $ python code/train_cnn.py --some options
+(CS5242_gpu) $ python code/evaluate.py --some options
+(CS5242_gpu) $ python code/predict.py --some options
 ```
 
 With specified option. See the content of submissions files and of those `.py` for more guidance.
 
-## Code base in `src`
+## Code base in `code`
 
 Here is the organisation of the code base. 
 
@@ -219,7 +219,6 @@ Here is the organisation of the code base.
 | `create_examples.py`   | Set of functions to create positives and negatives examples. |
 | `discretization.py`    | Set of functions dedicated to the creation of 3D representations for examples |
 | `evaluate.py`          | A job to evaluate a given serialized model                   |
-| `evaluate_all.py`      | A job to evaluate all the serialized models                  |
 | `train_cnn.py`         | A job to evaluate a given specified model                    |
 | `predict.py`           | A job to test or predict final result using a given serialized model |
 | `predict_generator.py` | A generator of examples for predictions                      |

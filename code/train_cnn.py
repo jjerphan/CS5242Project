@@ -5,6 +5,7 @@ import pickle
 from datetime import datetime
 
 from keras import backend as K
+from keras.optimizers import Adam, SGD, Adadelta, Nadam
 from keras.utils import print_summary
 from keras.losses import binary_crossentropy
 
@@ -203,6 +204,14 @@ if __name__ == "__main__":
                         type=int, default=BATCH_SIZE_DEFAULT,
                         help='the number of examples to use per batch')
 
+    parser.add_argument('--optimizer', metavar='optimizer',
+                        type=str, default="adam",
+                        help='the optimizer to use ("adam", "sgd", "nesterov","adadelta","nadam")')
+
+    parser.add_argument('--lr_decay', metavar='lr_decay',
+                        type=float, default=0.0,
+                        help='learning rate decay')
+
     parser.add_argument('--nb_neg', metavar='nb_neg',
                         type=int, default=NB_NEG_EX_PER_POS,
                         help='the number of negatives examples to use per positive example')
@@ -236,11 +245,27 @@ if __name__ == "__main__":
                       if args.representation == RelativeCubeRepresentation.name else
                       AbsoluteCubeRepresentation(length_cube_side=LENGTH_CUBE_SIDE))
 
+    lr_decay = args.lr_decay
+
+    optimizer_arg = args.optimizer.lower()
+    optimizer = Adam(decay=lr_decay)
+    if optimizer == "adam":
+        optimizer = Adam(decay=lr_decay)
+    if optimizer == "sgd":
+        optimizer = SGD(decay=lr_decay)
+    if optimizer == "nesterov":
+        optimizer = SGD(decay=lr_decay, nesterov=True)
+    if optimizer == "adadelta":
+        optimizer = Adadelta(decay=lr_decay)
+    if optimizer == "nadam":
+        optimizer = Nadam(schedule_decay=lr_decay)
+
     train_cnn(model_index=args.model_index,
               nb_epochs=args.nb_epochs,
               nb_neg=args.nb_neg,
               max_examples=args.max_examples,
               representation=representation,
               batch_size=args.batch_size,
+              optimizer=optimizer,
               weight_pos_class=args.weight_pos_class,
               job_folder=args.job_folder)

@@ -43,10 +43,12 @@ def save_job_file(stub, name_job, ask_confirm=True):
 
 
 def get_train_stub(model_index, name_job, nb_epochs, batch_size, nb_neg, max_examples, n_gpu, weight_pos_class,
-                   representation):
+                   representation, optimizer, lr_decay):
     """
     Return the stub for training a using the different parameters given.
 
+    :param lr_decay:
+    :param optimizer:
     :param model_index:
     :param name_job:
     :param nb_epochs:
@@ -76,6 +78,8 @@ def get_train_stub(model_index, name_job, nb_epochs, batch_size, nb_neg, max_exa
                 python $PBS_O_WORKDIR/code/{script_name}  --model_index {model_index} \\
                                                          --nb_epochs {nb_epochs} \\
                                                          --batch_size {batch_size} \\
+                                                         --optimizer {optimizer} \\
+                                                         --lr_decay {lr_decay} \\
                                                          --weight_pos_class {weight_pos_class} \\
                                                          --representation {representation} \\
                                                          --nb_neg {nb_neg}\\{option_max if max_examples is not None else ''}
@@ -120,6 +124,12 @@ def create_train_job():
     max_examples = input(f"Number of maximum examples to use (leave empty to use all examples) : ")
     max_examples = None if max_examples == "" else int(max_examples)
 
+    optimizer = input(f"The optimizer to use ('adam' (default) ,'sgd', 'nesterov', 'adadelta', 'nadam')")
+    optimizer = "adam" if optimizer == "" else optimizer
+
+    lr_decay = input(f"Learning rate decay to apply (default 0.0 ie no decay)")
+    lr_decay = 0.0 if lr_decay == "" else float(lr_decay)
+
     weight_pos_class = input(f"Weight for the positive class (leave blank for default = {WEIGHT_POS_CLASS}) : ")
     weight_pos_class = WEIGHT_POS_CLASS if weight_pos_class == "" else int(weight_pos_class)
 
@@ -135,7 +145,7 @@ def create_train_job():
     name_job += f"_{max_examples}max" if max_examples else ""
 
     stub = get_train_stub(model_index, name_job, nb_epochs, batch_size, nb_neg, max_examples, n_gpu, weight_pos_class,
-                          representation)
+                          representation,optimizer, lr_decay)
 
     save_job_file(stub, name_job)
 

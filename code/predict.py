@@ -11,7 +11,7 @@ from keras.models import load_model
 
 from discretization import AbsoluteCubeRepresentation, RelativeCubeRepresentation
 from pipeline_fixtures import get_parameters_dict
-from settings import TESTING_EXAMPLES_FOLDER, LENGTH_CUBE_SIDE
+from settings import TESTING_EXAMPLES_FOLDER, LENGTH_CUBE_SIDE, DELIMITER
 from predict_generator import PredictGenerator
 from settings import PREDICT_EXAMPLES_FOLDER, RESULTS_FOLDER
 from train_cnn import f1
@@ -130,7 +130,7 @@ def predict(serialized_model_path, evaluation=True):
     matching_list = perform_matching(predictions, nb_top_ligands)
 
     with open(os.path.join(result_file_name), 'w') as f:
-        csv_writer = csv.writer(f)
+        csv_writer = csv.writer(f, delimiter=DELIMITER)
         headers = ["pro_id", *[f"lig{i}_id" for i in range(1, nb_top_ligands+1)]]
         csv_writer.writerow(headers)
         csv_writer.writerows(matching_list)

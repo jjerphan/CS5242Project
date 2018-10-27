@@ -149,12 +149,14 @@ if __name__ == "__main__":
                         help=f'where the serialized file of the model (.h5) is.')
 
     parser.add_argument('--evaluation', metavar='evaluation',
-                        type=bool, default=True,
+                        type=str, default="True",
                         help='if true: action on test data from training set')
 
     args = parser.parse_args()
 
+    evaluation = (args.evaluation == "True")
+
     print("Argument parsed : ", args)
 
     predict(serialized_model_path=args.model_path,
-            evaluation=args.evaluation)
+            evaluation=evaluation)

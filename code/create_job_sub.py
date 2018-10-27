@@ -10,7 +10,7 @@ from settings import JOB_SUBMISSIONS_FOLDER, NB_NEG_EX_PER_POS, NB_EPOCHS_DEFAUL
 
 def save_job_file(stub, name_job, ask_confirm=True):
     """
-    Save a submission file.
+    Save a submission file into JOB_SUBMISSIONS_FOLDER folder.
 
     The stub is inserted in the given file.
 
@@ -45,17 +45,17 @@ def save_job_file(stub, name_job, ask_confirm=True):
 def get_train_stub(model_index, name_job, nb_epochs, batch_size, nb_neg, max_examples, n_gpu, weight_pos_class,
                    representation):
     """
-    Return the stub for training a using the different parameters given.
+    Return the stub for training a using the different parameters given. Parameters used for training.
 
-    :param model_index:
-    :param name_job:
-    :param nb_epochs:
-    :param batch_size:
-    :param nb_neg:
-    :param max_examples:
-    :param n_gpu:
-    :param weight_pos_class:
-    :param representation:
+    :param model_index: The index of model to be created.
+    :param name_job: NSCC qsub job name to be created.
+    :param nb_epochs: Number of epochs going to train.
+    :param batch_size: Batch size for mini batches.
+    :param nb_neg: Number of negative examples going to be trained.
+    :param max_examples: if specified, just use the number of examples given
+    :param n_gpu: Number of GPU resources used to train the model. Limit to 1 on NSCC cluster.
+    :param weight_pos_class: Weight of the clas.
+    :param representation: Relative or absolute cube representation.
     :return:
     """
     script_name = "train_cnn.py"
@@ -144,7 +144,7 @@ def create_eval_job_for_all_serialized_models():
     """
     Create submission files to evaluated models that haven't been evaluated yet.
 
-    Ask to recreate
+    This will create batch submission jobs.
 
     :return:
     """
@@ -231,6 +231,8 @@ def create_job_with_for_one_serialized_model(script_name, evaluation=True):
 def create_multiple_train_jobs(batch_size: int=BATCH_SIZE_DEFAULT, max_examples=None, n_gpu=N_GPU_DEFAULT):
     """
     Create several submissions files to train different models.
+
+    This will create batch training jobs in one shot based on mix and match of the given parameters.
 
     :return:
     """

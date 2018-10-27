@@ -83,14 +83,16 @@ def predict(serialized_model_path, evaluation=True):
         print(f"The {RESULTS_FOLDER} does not exist. Creating it.")
         os.makedirs(RESULTS_FOLDER)
 
-    fh = logging.FileHandler(os.path.join(job_folder, f'{"" if evaluation else "final_"}prediction.log'))
+    prefix = f'{id}_{"" if evaluation else "final_"}'
+
+    fh = logging.FileHandler(os.path.join(job_folder, f'{prefix}prediction.log'))
     fh.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     fh.setFormatter(formatter)
     logger.addHandler(fh)
 
-    predictions_file_name = os.path.join(job_folder, f"{id}_matching.pkl")
-    result_file_name = os.path.join(job_folder, f"{id}_result.txt")
+    predictions_file_name = os.path.join(job_folder, f'{prefix}matching.pkl')
+    result_file_name = os.path.join(job_folder, f'{prefix}result.txt')
 
     # Choose the corrected folder because we can evaluate (to test the performance of a model)
     # or because we can predict

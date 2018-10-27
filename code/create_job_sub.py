@@ -274,6 +274,12 @@ def create_multiple_train_jobs(batch_size: int=BATCH_SIZE_DEFAULT, max_examples=
     representation = input(f"Cube representation: leave blank for relative, type any character for absolute: ")
     representation = RelativeCubeRepresentation.name if representation == "" else AbsoluteCubeRepresentation.name
 
+    if len(list_optimizer) == 0:
+        list_optimizer = ["adam"]
+
+    if len(list_lr_decay) == 0:
+        list_lr_decay = [0.0]
+
     for nb_epochs in list_nb_epochs:
         for nb_neg in list_nb_neg:
             for optimizer in list_optimizer:

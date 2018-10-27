@@ -123,7 +123,12 @@ def plot_local_results():
         for k, v in set_parameters.items():
             print(f" - {k} : {v}")
 
-        description = f"{set_parameters['model']} Repr. {set_parameters['representation']} ; Epochs {set_parameters['nb_epochs']} ;  Neg: {set_parameters['nb_neg']} Weight Pos : {set_parameters['weight_pos_class']} "
+        optimizer_name = re.sub(r'object at .+>', "", set_parameters['optimizer'].replace('<keras.optimizers.',''))
+        description = f"{set_parameters['model']} Repr. {set_parameters['representation']} ; " \
+                      f"Epochs {set_parameters['nb_epochs']} ;  " \
+                      f"Neg: {set_parameters['nb_neg']} " \
+                      f"Weight Pos : {set_parameters['weight_pos_class']} ; " \
+                      f"{optimizer_name}"
         fig = plot_losses_values(history_file_path, xlim_max=30, ylim_max=1, description=description)
         plt.pause(1)
         name_file = re.sub(r"\s+", "_", re.sub(r'(\.|;|:)', "", description)).lower()

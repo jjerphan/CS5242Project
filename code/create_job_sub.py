@@ -43,7 +43,7 @@ def save_job_file(stub, name_job, ask_confirm=True):
 
 
 def get_train_stub(model_index, name_job, nb_epochs, batch_size, nb_neg, max_examples, n_gpu, weight_pos_class,
-                   representation):
+                   representation, optimizer, lr_decay):
     """
     Return the stub for training a using the different parameters given. Parameters used for training.
 
@@ -56,6 +56,8 @@ def get_train_stub(model_index, name_job, nb_epochs, batch_size, nb_neg, max_exa
     :param n_gpu: Number of GPU resources used to train the model. Limit to 1 on NSCC cluster.
     :param weight_pos_class: Weight of the clas.
     :param representation: Relative or absolute cube representation.
+    :param optimizer: NN optimizer to be used
+    :param lr_decay: Learning rate decay for the optimizer
     :return:
     """
     script_name = "train_cnn.py"
@@ -76,6 +78,8 @@ def get_train_stub(model_index, name_job, nb_epochs, batch_size, nb_neg, max_exa
                 python $PBS_O_WORKDIR/code/{script_name}  --model_index {model_index} \\
                                                          --nb_epochs {nb_epochs} \\
                                                          --batch_size {batch_size} \\
+                                                         --optimizer {optimizer} \\
+                                                         --lr_decay {lr_decay} \\
                                                          --weight_pos_class {weight_pos_class} \\
                                                          --representation {representation} \\
                                                          --nb_neg {nb_neg}\\{option_max if max_examples is not None else ''}
@@ -120,6 +124,12 @@ def create_train_job():
     max_examples = input(f"Number of maximum examples to use (leave empty to use all examples) : ")
     max_examples = None if max_examples == "" else int(max_examples)
 
+    optimizer = input(f"The optimizer to use ('adam' (default) ,'sgd', 'nesterov', 'adadelta', 'nadam')")
+    optimizer = "adam" if optimizer == "" else optimizer
+
+    lr_decay = input(f"Learning rate decay to apply (default 0.0 ie no decay)")
+    lr_decay = 0.0 if lr_decay == "" else float(lr_decay)
+
     weight_pos_class = input(f"Weight for the positive class (leave blank for default = {WEIGHT_POS_CLASS}) : ")
     weight_pos_class = WEIGHT_POS_CLASS if weight_pos_class == "" else int(weight_pos_class)
 
@@ -135,7 +145,7 @@ def create_train_job():
     name_job += f"_{max_examples}max" if max_examples else ""
 
     stub = get_train_stub(model_index, name_job, nb_epochs, batch_size, nb_neg, max_examples, n_gpu, weight_pos_class,
-                          representation)
+                          representation,optimizer, lr_decay)
 
     save_job_file(stub, name_job)
 
@@ -252,27 +262,46 @@ def create_multiple_train_jobs(batch_size: int=BATCH_SIZE_DEFAULT, max_examples=
     list_nb_neg = list(
         map(int, input(f"Number of negatives examples to use (separate with spaces then enter) : ").split()))
 
+    list_optimizer = list(input(
+            f"The optimizer to use ('adam' (default) ,'sgd', 'nesterov', 'adadelta', 'nadam') "
+            f"(separate with spaces then enter) : ").split())
+
+    list_lr_decay = list(map(float,input(
+            f"Learning rate decay to apply (float >= 0.0)"
+            f"(separate with spaces then enter) : ").split()))
+
     weight_pos_class = input(f"Weight for the positive class (leave blank for default = {WEIGHT_POS_CLASS}) : ")
     weight_pos_class = WEIGHT_POS_CLASS if weight_pos_class == "" else int(weight_pos_class)
 
     representation = input(f"Cube representation: leave blank for relative, type any character for absolute: ")
     representation = RelativeCubeRepresentation.name if representation == "" else AbsoluteCubeRepresentation.name
 
+    if len(list_optimizer) == 0:
+        list_optimizer = ["adam"]
+
+    if len(list_lr_decay) == 0:
+        list_lr_decay = [0.0]
+
     for nb_epochs in list_nb_epochs:
         for nb_neg in list_nb_neg:
-            name_job = f'train_{models_available_names[model_index]}_{nb_epochs}epochs_{batch_size}batch_{nb_neg}neg'
-            name_job += f"_{max_examples}max" if max_examples else ""
+            for optimizer in list_optimizer:
+                for lr_decay in list_lr_decay:
+                    name_job = f'train_{models_available_names[model_index]}' \
+                               f'_{nb_epochs}epochs_{lr_decay}lr_decay_{nb_neg}neg_{optimizer}'
+                    name_job += f"_{max_examples}max" if max_examples else ""
 
-            stub = get_train_stub(model_index=model_index,
-                                  name_job=name_job,
-                                  nb_epochs=nb_epochs,
-                                  batch_size=batch_size,
-                                  nb_neg=nb_neg,
-                                  max_examples=max_examples,
-                                  n_gpu=n_gpu, weight_pos_class=weight_pos_class,
-                                  representation=representation)
+                    stub = get_train_stub(model_index=model_index,
+                                          name_job=name_job,
+                                          nb_epochs=nb_epochs,
+                                          batch_size=batch_size,
+                                          nb_neg=nb_neg,
+                                          max_examples=max_examples,
+                                          n_gpu=n_gpu, weight_pos_class=weight_pos_class,
+                                          representation=representation,
+                                          optimizer=optimizer,
+                                          lr_decay=lr_decay)
 
-            save_job_file(stub, name_job, ask_confirm=False)
+                    save_job_file(stub, name_job, ask_confirm=False)
 
 
 def create_evaluation_job():

@@ -82,6 +82,7 @@ EXTRACTED_LIGAND_SUFFIX = "_lig_cg.csv"
 FLOAT_TYPE = np.float32
 FORMATTER = "%.16f"
 COMMENT_DELIMITER = "#"
+DELIMITER = "\t"
 
 # JOBS SETTINGS
 
@@ -89,7 +90,7 @@ COMMENT_DELIMITER = "#"
 JOBS_ENV = "CS5242_gpu"
 
 # Training settings
-TRAINING_LOGFILE = f"train_cnn.log"
+TRAINING_LOGFILE_SUFFIX = f"train_cnn.log"
 RESULTS_FOLDER = os.path.join(ROOT, "results")
 JOB_FOLDER_DEFAULT = os.path.join(RESULTS_FOLDER, "local")
 

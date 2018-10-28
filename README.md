@@ -4,6 +4,62 @@
 
 This is a term project for the module CS5242 (Deep Learning and Neural Networks). It has been realized by Wang Jun and Julien Jerphanion.
 
+
+
+## Quick Start Reference 
+
+This guide assumes the program will be running on NSCC gpu cluster. The steps might need some modification if you want to run it in other gpu resources. This guide includes the full cycle of preparing data, training, evaluation and prediction of protein/ligand binding. It does not include how to setup nuss conda environment. 
+
+
+
+##### 1. Copy project code into conda environment. Install required packages (refer Usage section).
+
+##### 2. Create soft link for training and testing data folder due to limited harddisk space. 
+
+```bash
+$ mkdir /scratch/users/nus/{student id}/training_data
+$ mkdir /scratch/users/nus/{student id}/testing_data_release
+$ cd {project folder}
+$ ln -s /scratch/users/nus/{student id}/training_data training_data
+$ ln -s /scratch/users/nus/{student id}/testing_data_release testing_data_release
+```
+
+##### 3. Save training data to training folder. Copy testing_data_release.zip to project root folder and unzip the files. 
+
+```bash
+$ unzip training_data.zip
+$ mv training_data training_data/original
+$ unzip testing_data_release.zip
+```
+
+##### 4. Extract data from original pdb files. 
+
+```$ python code/extraction_data.py```
+
+##### 5. Create protein/ligand complexes. (Note: This may takes a while depending on the compute resources)
+
+```$ python code/create_examples.py```
+
+##### 6. (Optional) Training new model. 
+
+```$ python code/create_job_sub.py```
+
+Choose 0 or 1 for training models
+
+##### 7. (Optional) Evaluation model using test datasets. 
+
+```$ python code/create_job_sub.py```
+
+Choose 2 or 3 for evaluation trained models.
+
+##### 8. Predicting testing data release.
+
+```$ python code/create_job_sub.py```
+
+Choose 4 for prediction, then choose the model used for prediction. 
+
+
+
 ## Usage
 
 The pipeline works in several stages: 

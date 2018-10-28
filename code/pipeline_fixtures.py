@@ -40,6 +40,7 @@ def get_parameters_dict(job_folder):
 
 def is_positive(name):
     """
+    Check if protein ligand able to bind based name.
     name is of the form "xxxx_yyyy[.csv]"
 
     'xxxx' corresponds to the protein.
@@ -56,6 +57,7 @@ def is_positive(name):
 
 def is_negative(name):
     """
+    Check if protein ligand not able to bind based name.
     name is of the form "xxxx_yyyy[.csv]"
 
     'xxxx' corresponds to the protein.

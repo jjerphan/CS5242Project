@@ -11,7 +11,7 @@ from settings import RESULTS_FOLDER, EVALUATION_LOGS_FOLDER
 
 def download_file():
     """
-    Download the histories present remotely
+    Download the training histories present remotely to local folder. It is used for plotting loss vs iteration.
     :return:
     """
     hostname = 'nus.nscc.sg'
@@ -69,7 +69,7 @@ def plot_f1_scores(file='', xlim_max=None):
 
 def plot_losses_values(file='', xlim_max=None, ylim_max=None, description=""):
     """
-    Plot the F1 score using a serialized history
+    Plot the loss using a serialized history
     :param file:
     :return:
     """

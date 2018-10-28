@@ -24,6 +24,8 @@ def evaluate(serialized_model_path, max_examples=None):
     """
     Evaluate a given model using custom metrics.
 
+    List of metrics are evaluated using validation data. Evaluation results are saved into evaluation log file.
+
     Saves a log in its associated results folder.
 
     :param serialized_model_path: where the serialized_model is

@@ -46,7 +46,10 @@ def perform_matching(predictions: dict, nb_top_ligands: int):
 
 def calculate_success_rate(matching_list: list):
     """
-    Compute the final success rate using a matching list
+    Compute the final success rate using a matching list. Considered success if true binding is inside the 10 candidates
+    ligands list.
+
+    success count / total count
 
     :param matching_list:
     :return: a number in [0,1] representing the final success rate
@@ -66,6 +69,9 @@ def calculate_success_rate(matching_list: list):
 def predict(serialized_model_path, evaluation=True):
     """
     Predict the results with a model.
+
+    It used to evaluate how is the model been trained using testing data when evaluation set to True. If evaluation
+    set to False, it will predict the testing release data.
 
     :param serialized_model_path: the file that contains the serialized model
     :param evaluation: if true, it evaluates the performances of the model instead of prediction

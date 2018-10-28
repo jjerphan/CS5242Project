@@ -35,7 +35,6 @@ class CubeRepresentation(ABC):
 
     def __init__(self, length_cube_side: int, use_rotation_invariance: bool, translate_ligand: bool, verbose: bool):
         """
-
         :param length_cube_side: the length of the cube (number of voxel on one dimension)
         :param use_rotation_invariance: to perform the PCA rotation and get a fixed position w.r.t the protein
         :param translate_ligand: to translated the ligand at the center of the protein
@@ -185,9 +184,11 @@ class AbsoluteCubeRepresentation(CubeRepresentation):
 
     def make_cube(self, system: np.ndarray):
         """
-        Creating a cube from a system.
+        Creating a cube from a numpy array consisting 3 axis coordinates of the cube. Cube is a numpy array representing
+        information in the 3D space. Each Protein and ligand are filled into the cube coordinates position, each
+        position contains atom features information.
 
-        :param system: the protein-ligand system
+        :param system: the protein-ligand system (x, y, z, is_hydrophobic, is_polar, is_from_protein, is_from_ligand)
         :return: a cube 4D np.ndarray of size (res, res, res, nb_features)
         """
 
@@ -263,7 +264,7 @@ class RelativeCubeRepresentation(CubeRepresentation):
     @staticmethod
     def _values_range(spatial_coordinates):
         """
-        Return the extreme values for atoms coordinates.
+        Return the extreme (maximum, minimum) values for atoms coordinates.
 
         :param spatial_coordinates: np.ndarray of size (nb_atoms, 3)
         :return: extreme values for each coordinates x, y, z
@@ -280,9 +281,11 @@ class RelativeCubeRepresentation(CubeRepresentation):
 
     def make_cube(self, system: np.ndarray):
         """
-        Creating a cube from a system.
+        Creating a cube from a numpy array consisting 3 axis coordinates of the cube. Cube is a numpy array representing
+        information in the 3D space. Each Protein and ligand are filled into the cube coordinates position, each
+        position contains atom features information.
 
-        :param system: the protein-ligand system
+        :param system: the protein-ligand system (x, y, z, is_hydrophobic, is_polar, is_from_protein, is_from_ligand)
         :return: a cube 4D np.ndarray of size (res, res, res, nb_features)
         """
 

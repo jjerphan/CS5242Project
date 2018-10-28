@@ -34,27 +34,27 @@ $ unzip testing_data_release.zip
 
 ##### 4. Extract data from original pdb files. 
 
-```$ python code/extraction_data.py```
+`$ python code/extraction_data.py`
 
 ##### 5. Create protein/ligand complexes. (Note: This may takes a while depending on the compute resources)
 
-```$ python code/create_examples.py```
+`$ python code/create_examples.py`
 
 ##### 6. (Optional) Training new model. 
 
-```$ python code/create_job_sub.py```
+`$ python code/create_job_sub.py`
 
 Choose 0 or 1 for training models
 
 ##### 7. (Optional) Evaluation model using test datasets. 
 
-```$ python code/create_job_sub.py```
+`$ python code/create_job_sub.py`
 
 Choose 2 or 3 for evaluation trained models.
 
 ##### 8. Predicting testing data release.
 
-```$ python code/create_job_sub.py```
+`$ python code/create_job_sub.py`
 
 Choose 4 for prediction, then choose the model used for prediction. 
 

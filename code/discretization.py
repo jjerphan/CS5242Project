@@ -188,7 +188,8 @@ class AbsoluteCubeRepresentation(CubeRepresentation):
         information in the 3D space. Each Protein and ligand are filled into the cube coordinates position, each
         position contains atom features information.
 
-        :param system: the protein-ligand system (x, y, z, is_hydrophobic, is_polar, is_from_protein, is_from_ligand)
+        :param system: the protein-ligand system with columns : (x, y, z, is_hydrophobic, is_polar, is_from_protein,
+        is_from_ligand)
         :return: a cube 4D np.ndarray of size (res, res, res, nb_features)
         """
 

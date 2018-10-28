@@ -57,7 +57,7 @@ def is_positive(name):
 
 def is_negative(name):
     """
-    Check if protein ligand not able to bind based name.
+    Check if the protein and the ligand don't bind together based on the name.
     name is of the form "xxxx_yyyy[.csv]"
 
     'xxxx' corresponds to the protein.
@@ -66,7 +66,7 @@ def is_negative(name):
     Return xxxx != yyyy (both molecules don't bind together)
 
     :param name: the name of a file of the form "xxxx_yyyy[.csv]"
-    :return:
+    :return: True/False
     """
     return not (is_positive(name))
 

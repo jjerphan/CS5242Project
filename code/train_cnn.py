@@ -5,6 +5,7 @@ import pickle
 from datetime import datetime
 
 from keras import backend as K
+from keras.optimizers import Adam, SGD, Adadelta, Nadam
 from keras.utils import print_summary
 from keras.losses import binary_crossentropy
 
@@ -15,7 +16,7 @@ from pipeline_fixtures import LogEpochBatchCallback, get_current_timestamp
 from settings import LENGTH_CUBE_SIDE, HISTORY_FILE_NAME_SUFFIX, JOB_FOLDER_DEFAULT, \
     WEIGHT_POS_CLASS
 from settings import TRAINING_EXAMPLES_FOLDER, RESULTS_FOLDER, NB_NEG_EX_PER_POS, OPTIMIZER_DEFAULT, BATCH_SIZE_DEFAULT, \
-    NB_EPOCHS_DEFAULT, SERIALIZED_MODEL_FILE_NAME_SUFFIX, PARAMETERS_FILE_NAME_SUFFIX, TRAINING_LOGFILE, \
+    NB_EPOCHS_DEFAULT, SERIALIZED_MODEL_FILE_NAME_SUFFIX, PARAMETERS_FILE_NAME_SUFFIX, TRAINING_LOGFILE_SUFFIX, \
     VALIDATION_EXAMPLES_FOLDER
 
 
@@ -58,6 +59,7 @@ def train_cnn(model_index: int,
               batch_size: int,
               representation: CubeRepresentation = RelativeCubeRepresentation(length_cube_side=LENGTH_CUBE_SIDE),
               weight_pos_class: float = WEIGHT_POS_CLASS,
+              lr_decay:float=0.0,
               optimizer=OPTIMIZER_DEFAULT,
               results_folder: str = RESULTS_FOLDER,
               job_folder: str = None):
@@ -95,21 +97,22 @@ def train_cnn(model_index: int,
         print(f'job folder does not exist, creating {job_folder}')
         os.makedirs(job_folder)
 
-    # Formatting fixtures
-    logger = logging.getLogger(__name__)
-    logger.setLevel(logging.DEBUG)
-    fh = logging.FileHandler(os.path.join(job_folder, TRAINING_LOGFILE))
-    fh.setLevel(logging.DEBUG)
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    fh.setFormatter(formatter)
-    logger.addHandler(fh)
-
     # Results
     id = job_folder.split(os.sep)[-2]
     prefix = f"{id}_nbepoches_{nb_epochs}_nbneg_{nb_neg}"
     model_file = os.path.join(job_folder, f"{prefix}_{SERIALIZED_MODEL_FILE_NAME_SUFFIX}")
     history_file = os.path.join(job_folder, f"{prefix}__{HISTORY_FILE_NAME_SUFFIX}")
     parameters_file = os.path.join(job_folder, f"{prefix}_{PARAMETERS_FILE_NAME_SUFFIX}")
+    log_file = os.path.join(job_folder, f"{prefix}_{TRAINING_LOGFILE_SUFFIX}")
+
+    # Formatting fixtures
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.DEBUG)
+    fh = logging.FileHandler(os.path.join(job_folder, log_file))
+    fh.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    fh.setFormatter(formatter)
+    logger.addHandler(fh)
 
     start_time = datetime.now()
 
@@ -129,6 +132,7 @@ def train_cnn(model_index: int,
     logger.debug(f'optimizer   = {optimizer}')
     logger.debug(f'representation   = {representation.name}')
     logger.debug(f'weight_pos_class   = {weight_pos_class}')
+    logger.debug(f'lr_decay   = {lr_decay}')
 
     # Saving parameters in a file
     with open(parameters_file, "w") as f:
@@ -203,6 +207,14 @@ if __name__ == "__main__":
                         type=int, default=BATCH_SIZE_DEFAULT,
                         help='the number of examples to use per batch')
 
+    parser.add_argument('--optimizer', metavar='optimizer',
+                        type=str, default="adam",
+                        help='the optimizer to use ("adam", "sgd", "nesterov","adadelta","nadam")')
+
+    parser.add_argument('--lr_decay', metavar='lr_decay',
+                        type=float, default=0.0,
+                        help='learning rate decay')
+
     parser.add_argument('--nb_neg', metavar='nb_neg',
                         type=int, default=NB_NEG_EX_PER_POS,
                         help='the number of negatives examples to use per positive example')
@@ -236,11 +248,29 @@ if __name__ == "__main__":
                       if args.representation == RelativeCubeRepresentation.name else
                       AbsoluteCubeRepresentation(length_cube_side=LENGTH_CUBE_SIDE))
 
+    lr_decay = args.lr_decay
+
+    optimizer_arg = args.optimizer.lower()
+    optimizer = Adam(decay=lr_decay)
+    if optimizer_arg == "adam":
+        optimizer = Adam(decay=lr_decay)
+    if optimizer_arg == "sgd":
+        optimizer = SGD(decay=lr_decay)
+    if optimizer_arg == "nesterov":
+        optimizer = SGD(decay=lr_decay, nesterov=True)
+    if optimizer_arg == "adadelta":
+        optimizer = Adadelta(decay=lr_decay)
+    if optimizer_arg == "nadam":
+        optimizer = Nadam(schedule_decay=lr_decay)
+
+    print(optimizer)
     train_cnn(model_index=args.model_index,
               nb_epochs=args.nb_epochs,
               nb_neg=args.nb_neg,
               max_examples=args.max_examples,
               representation=representation,
               batch_size=args.batch_size,
+              optimizer=optimizer,
               weight_pos_class=args.weight_pos_class,
+              lr_decay=lr_decay,
               job_folder=args.job_folder)

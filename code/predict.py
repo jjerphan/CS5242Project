@@ -11,7 +11,7 @@ from keras.models import load_model
 
 from discretization import AbsoluteCubeRepresentation, RelativeCubeRepresentation
 from pipeline_fixtures import get_parameters_dict
-from settings import TESTING_EXAMPLES_FOLDER, LENGTH_CUBE_SIDE
+from settings import TESTING_EXAMPLES_FOLDER, LENGTH_CUBE_SIDE, DELIMITER
 from predict_generator import PredictGenerator
 from settings import PREDICT_EXAMPLES_FOLDER, RESULTS_FOLDER
 from train_cnn import f1
@@ -46,7 +46,10 @@ def perform_matching(predictions: dict, nb_top_ligands: int):
 
 def calculate_success_rate(matching_list: list):
     """
-    Compute the final success rate using a matching list
+    Compute the final success rate using a matching list. Considered success if true binding is inside the 10 candidates
+    ligands list.
+
+    success count / total count
 
     :param matching_list:
     :return: a number in [0,1] representing the final success rate
@@ -67,6 +70,9 @@ def predict(serialized_model_path, evaluation=True):
     """
     Predict the results with a model.
 
+    It used to evaluate how is the model been trained using testing data when evaluation set to True. If evaluation
+    set to False, it will predict the testing release data.
+
     :param serialized_model_path: the file that contains the serialized model
     :param evaluation: if true, it evaluates the performances of the model instead of prediction
     :return:
@@ -83,14 +89,16 @@ def predict(serialized_model_path, evaluation=True):
         print(f"The {RESULTS_FOLDER} does not exist. Creating it.")
         os.makedirs(RESULTS_FOLDER)
 
-    fh = logging.FileHandler(os.path.join(job_folder, f'{"" if evaluation else "final_"}prediction.log'))
+    prefix = f'{id}_{"" if evaluation else "final_"}'
+
+    fh = logging.FileHandler(os.path.join(job_folder, f'{prefix}prediction.log'))
     fh.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     fh.setFormatter(formatter)
     logger.addHandler(fh)
 
-    predictions_file_name = os.path.join(job_folder, f"{id}_matching.pkl")
-    result_file_name = os.path.join(job_folder, f"{id}_result.txt")
+    predictions_file_name = os.path.join(job_folder, f'{prefix}matching.pkl')
+    result_file_name = os.path.join(job_folder, f'{prefix}result.txt')
 
     # Choose the corrected folder because we can evaluate (to test the performance of a model)
     # or because we can predict
@@ -128,7 +136,7 @@ def predict(serialized_model_path, evaluation=True):
     matching_list = perform_matching(predictions, nb_top_ligands)
 
     with open(os.path.join(result_file_name), 'w') as f:
-        csv_writer = csv.writer(f)
+        csv_writer = csv.writer(f, delimiter=DELIMITER)
         headers = ["pro_id", *[f"lig{i}_id" for i in range(1, nb_top_ligands+1)]]
         csv_writer.writerow(headers)
         csv_writer.writerows(matching_list)
@@ -147,12 +155,14 @@ if __name__ == "__main__":
                         help=f'where the serialized file of the model (.h5) is.')
 
     parser.add_argument('--evaluation', metavar='evaluation',
-                        type=bool, default=True,
+                        type=str, default="True",
                         help='if true: action on test data from training set')
 
     args = parser.parse_args()
 
+    evaluation = (args.evaluation == "True")
+
     print("Argument parsed : ", args)
 
     predict(serialized_model_path=args.model_path,
-            evaluation=args.evaluation)
+            evaluation=evaluation)

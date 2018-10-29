@@ -1,5 +1,6 @@
 # Data
 training_data/*
+predict_data/*
 testing_data_release/extracted/
 testing_data_release/testing_data/
 testing_data_release/predict_examples/

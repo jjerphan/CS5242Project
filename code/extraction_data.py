@@ -15,7 +15,7 @@ logger.addHandler(logging.NullHandler())
 
 def read_pdb(file_name) -> (list, list, list, list):
     """
-    Read a original pdb file and return the data.
+    Read a original pdb file and extract the interested data.
     The lists contains ordered information about each atom.
     :param file_name: the file to extract data
     :return: lists of coordinates and atom type for each atom
@@ -110,7 +110,8 @@ def build_molecule_features(x_list: list, y_list: list, z_list: list, atom_type_
 
 def save_given_data(pdb_file, group_indices):
     """
-    Save the data for a file from the given data set.
+    Save the data for a file from the given data set. Data are splited based on ratio and saved into training,
+    validation and testing data folder in csv format.
 
     :param pdb_file:
     :return:
@@ -145,7 +146,8 @@ def save_given_data(pdb_file, group_indices):
 
 def save_predict_data(pdb_file):
     """
-    Save the data for a file from the data set for final prediction.
+    Save the data for a file from the data set for final prediction. Data are extracted from pdb file then saved into
+    EXTRACTED_PREDICT_DATA_FOLDER folder.
 
     :param pdb_file:
     :return:

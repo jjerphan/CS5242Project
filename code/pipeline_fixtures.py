@@ -40,6 +40,7 @@ def get_parameters_dict(job_folder):
 
 def is_positive(name):
     """
+    Check if the protein and the ligand bind together based on the name.
     name is of the form "xxxx_yyyy[.csv]"
 
     'xxxx' corresponds to the protein.
@@ -48,7 +49,7 @@ def is_positive(name):
     Return xxxx == yyyy (both molecules bind together)
 
     :param name: the name of a file of the form "xxxx_yyyy[.csv]"
-    :return:
+    :return: True/False
     """
     systems = name.replace(".csv", "").split("_")
     return systems[0] == systems[1]
@@ -56,6 +57,7 @@ def is_positive(name):
 
 def is_negative(name):
     """
+    Check if the protein and the ligand don't bind together based on the name.
     name is of the form "xxxx_yyyy[.csv]"
 
     'xxxx' corresponds to the protein.
@@ -64,7 +66,7 @@ def is_negative(name):
     Return xxxx != yyyy (both molecules don't bind together)
 
     :param name: the name of a file of the form "xxxx_yyyy[.csv]"
-    :return:
+    :return: True/False
     """
     return not (is_positive(name))
 

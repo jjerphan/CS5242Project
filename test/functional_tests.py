@@ -9,7 +9,7 @@ import shutil
 from code.models_inspector import ModelsInspector
 from code.pipeline_fixtures import get_current_timestamp
 from code.settings import SERIALIZED_MODEL_FILE_NAME_SUFFIX, PARAMETERS_FILE_NAME_SUFFIX, \
-    TRAINING_LOGFILE, HISTORY_FILE_NAME_SUFFIX
+    TRAINING_LOGFILE_SUFFIX, HISTORY_FILE_NAME_SUFFIX
 from code.train_cnn import train_cnn
 
 
@@ -48,7 +48,7 @@ class TestTrainingJob(unittest.TestCase):
 
         should_be_saved = sorted(
             [PARAMETERS_FILE_NAME_SUFFIX, SERIALIZED_MODEL_FILE_NAME_SUFFIX, HISTORY_FILE_NAME_SUFFIX,
-             TRAINING_LOGFILE])
+             TRAINING_LOGFILE_SUFFIX])
 
         file_saved = sorted(os.listdir(os.path.join(self.test_folder, list_res[0])))
 

@@ -7,7 +7,8 @@ from settings import PARAMETERS_FILE_NAME_SUFFIX, SERIALIZED_MODEL_FILE_NAME_SUF
 
 class ModelsInspector:
     """
-    To iterate and access content of results sub-folders.
+    To iterate and access content of results sub-folders. This is used on create job submission to show the saved
+    models iteratively.
 
     This class exposes a way to get:
         - the path to the folder

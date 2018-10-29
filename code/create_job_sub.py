@@ -136,7 +136,7 @@ def create_train_job():
     lr = LR_DEFAULT if lr == "" else float(lr)
 
     weight_pos_class = input(f"Weight for the positive class (leave blank for default = {WEIGHT_POS_CLASS}) : ")
-    weight_pos_class = WEIGHT_POS_CLASS if weight_pos_class == "" else int(weight_pos_class)
+    weight_pos_class = WEIGHT_POS_CLASS if weight_pos_class == "" else float(weight_pos_class)
 
     representation = input(f"Cube representation: leave blank for relative, type any character for absolute : ")
     representation = RelativeCubeRepresentation.name if representation == "" else AbsoluteCubeRepresentation.name
@@ -279,7 +279,7 @@ def create_multiple_train_jobs(batch_size: int=BATCH_SIZE_DEFAULT, max_examples=
     lr = LR_DEFAULT if lr == "" else float(lr)
 
     weight_pos_class = input(f"Weight for the positive class (leave blank for default = {WEIGHT_POS_CLASS}) : ")
-    weight_pos_class = WEIGHT_POS_CLASS if weight_pos_class == "" else int(weight_pos_class)
+    weight_pos_class = WEIGHT_POS_CLASS if weight_pos_class == "" else float(weight_pos_class)
 
     representation = input(f"Cube representation: leave blank for relative, type any character for absolute: ")
     representation = RelativeCubeRepresentation.name if representation == "" else AbsoluteCubeRepresentation.name

@@ -11,7 +11,8 @@ from keras.models import load_model
 
 from discretization import AbsoluteCubeRepresentation, RelativeCubeRepresentation
 from pipeline_fixtures import get_parameters_dict
-from settings import TESTING_EXAMPLES_FOLDER, LENGTH_CUBE_SIDE, DELIMITER
+from settings import TESTING_EXAMPLES_FOLDER, LENGTH_CUBE_SIDE, DELIMITER, EVALUATION_LOGS_FOLDER, \
+    PREDICTION_RESULTS_FOLDER, FINAL_SCORE_RESULTS_CSV_FILE
 from predict_generator import PredictGenerator
 from settings import PREDICT_EXAMPLES_FOLDER, RESULTS_FOLDER
 from train_cnn import f1
@@ -37,7 +38,7 @@ def perform_matching(predictions: dict, nb_top_ligands: int):
     matching_list = []
     for pro, ligands_scores in sorted(predictions.items()):
         top_scores = sorted(ligands_scores, reverse=True)[:nb_top_ligands]
-        top_ligands = list(map(lambda x: x[1], top_scores))
+        top_ligands = list(map(lambda x: int(x[1]), top_scores))
         protein_with_best_ligands = [pro, *top_ligands]
         matching_list.append(protein_with_best_ligands)
 
@@ -88,6 +89,9 @@ def predict(serialized_model_path, evaluation=True):
     if not (os.path.exists(RESULTS_FOLDER)):
         print(f"The {RESULTS_FOLDER} does not exist. Creating it.")
         os.makedirs(RESULTS_FOLDER)
+    if not (os.path.exists(EVALUATION_LOGS_FOLDER)):
+        print(f"The {EVALUATION_LOGS_FOLDER} does not exist. Creating it.")
+        os.makedirs(EVALUATION_LOGS_FOLDER)
 
     prefix = f'{id}_{"" if evaluation else "final_"}'
 
@@ -98,7 +102,7 @@ def predict(serialized_model_path, evaluation=True):
     logger.addHandler(fh)
 
     predictions_file_name = os.path.join(job_folder, f'{prefix}matching.pkl')
-    result_file_name = os.path.join(job_folder, f'{prefix}result.txt')
+    result_file_name = os.path.join(job_folder if evaluation else PREDICTION_RESULTS_FOLDER, f'{prefix}result.txt')
 
     # Choose the corrected folder because we can evaluate (to test the performance of a model)
     # or because we can predict
@@ -143,7 +147,27 @@ def predict(serialized_model_path, evaluation=True):
         logger.debug(f'Result file saved {result_file_name}')
 
     success_rate = calculate_success_rate(matching_list)
-    logger.debug(f'Success rate for model {id} is : {success_rate}')
+
+    # We report the final score
+    if evaluation:
+        logger.debug(f'Success rate for model {id} is : {success_rate}')
+        csv_headers = ["id", "final_score"]
+
+        if not (os.path.exists(FINAL_SCORE_RESULTS_CSV_FILE)):
+            logger.debug(f"{FINAL_SCORE_RESULTS_CSV_FILE} not present ; Creating it")
+            logger.debug(f"Header used {csv_headers}")
+            with open(FINAL_SCORE_RESULTS_CSV_FILE, "w+") as csv_fh:
+                writer = csv.DictWriter(csv_fh, fieldnames=csv_headers)
+                writer.writeheader()
+
+        with open(FINAL_SCORE_RESULTS_CSV_FILE, "a") as csv_fh:
+            writer = csv.DictWriter(csv_fh, fieldnames=csv_headers)
+            try:
+                writer.writerow({"id": id,"final_score": success_rate})
+            except Exception as e:
+                logger.debug(f"WARNING {e}")
+
+        logger.debug(f"Done writting results in {FINAL_SCORE_RESULTS_CSV_FILE}")
 
 
 if __name__ == "__main__":

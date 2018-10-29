@@ -14,7 +14,7 @@ from examples_iterator import ExamplesIterator
 from models import models_available, models_available_names
 from pipeline_fixtures import LogEpochBatchCallback, get_current_timestamp
 from settings import LENGTH_CUBE_SIDE, HISTORY_FILE_NAME_SUFFIX, JOB_FOLDER_DEFAULT, \
-    WEIGHT_POS_CLASS
+    WEIGHT_POS_CLASS, LR_DEFAULT
 from settings import TRAINING_EXAMPLES_FOLDER, RESULTS_FOLDER, NB_NEG_EX_PER_POS, OPTIMIZER_DEFAULT, BATCH_SIZE_DEFAULT, \
     NB_EPOCHS_DEFAULT, SERIALIZED_MODEL_FILE_NAME_SUFFIX, PARAMETERS_FILE_NAME_SUFFIX, TRAINING_LOGFILE_SUFFIX, \
     VALIDATION_EXAMPLES_FOLDER
@@ -60,6 +60,7 @@ def train_cnn(model_index: int,
               representation: CubeRepresentation = RelativeCubeRepresentation(length_cube_side=LENGTH_CUBE_SIDE),
               weight_pos_class: float = WEIGHT_POS_CLASS,
               lr_decay:float=0.0,
+              lr:float=LR_DEFAULT,
               optimizer=OPTIMIZER_DEFAULT,
               results_folder: str = RESULTS_FOLDER,
               job_folder: str = None):
@@ -78,6 +79,8 @@ def train_cnn(model_index: int,
     :param batch_size: the number of examples to use per batch
     :param representation: the 3D representation of the cube to use for training
     :param weight_pos_class: the weight to use for the positive class
+    :param lr_decay: learning rate decay used
+    :param lr: learning_rate used
     :param optimizer: the optimizer to use to train (default = "Adam")
     :param results_folder: where to save `job_folder` if it is None
     :param job_folder: where results can saved
@@ -133,6 +136,7 @@ def train_cnn(model_index: int,
     logger.debug(f'representation   = {representation.name}')
     logger.debug(f'weight_pos_class   = {weight_pos_class}')
     logger.debug(f'lr_decay   = {lr_decay}')
+    logger.debug(f'lr   = {lr}')
 
     # Saving parameters in a file
     with open(parameters_file, "w") as f:
@@ -215,6 +219,10 @@ if __name__ == "__main__":
                         type=float, default=0.0,
                         help='learning rate decay')
 
+    parser.add_argument('--lr', metavar='lr',
+                        type=float, default=LR_DEFAULT,
+                        help='learning')
+
     parser.add_argument('--nb_neg', metavar='nb_neg',
                         type=int, default=NB_NEG_EX_PER_POS,
                         help='the number of negatives examples to use per positive example')
@@ -249,19 +257,20 @@ if __name__ == "__main__":
                       AbsoluteCubeRepresentation(length_cube_side=LENGTH_CUBE_SIDE))
 
     lr_decay = args.lr_decay
+    lr = args.lr
 
     optimizer_arg = args.optimizer.lower()
-    optimizer = Adam(decay=lr_decay)
+    optimizer = Adam(decay=lr_decay, lr=lr)
     if optimizer_arg == "adam":
-        optimizer = Adam(decay=lr_decay)
+        optimizer = Adam(decay=lr_decay, lr=lr)
     if optimizer_arg == "sgd":
-        optimizer = SGD(decay=lr_decay)
+        optimizer = SGD(decay=lr_decay, lr=lr)
     if optimizer_arg == "nesterov":
-        optimizer = SGD(decay=lr_decay, nesterov=True)
+        optimizer = SGD(decay=lr_decay, nesterov=True, lr=lr)
     if optimizer_arg == "adadelta":
-        optimizer = Adadelta(decay=lr_decay)
+        optimizer = Adadelta(decay=lr_decay, lr=lr)
     if optimizer_arg == "nadam":
-        optimizer = Nadam(schedule_decay=lr_decay)
+        optimizer = Nadam(schedule_decay=lr_decay, lr=lr)
 
     print(optimizer)
     train_cnn(model_index=args.model_index,
@@ -273,4 +282,5 @@ if __name__ == "__main__":
               optimizer=optimizer,
               weight_pos_class=args.weight_pos_class,
               lr_decay=lr_decay,
+              lr=lr,
               job_folder=args.job_folder)

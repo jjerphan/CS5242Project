@@ -1,7 +1,7 @@
 Papers
 ======
 
-Here are different papers to get inspired
+Here are different papers to get inspired:
 
  - [Development and evaluation of a deep learning model for protein–ligand binding affinity prediction](https://academic.oup.com/bioinformatics/advance-article/doi/10.1093/bioinformatics/bty374/4994792)
     - Interesting papers: gives the intuition as well as the desing of the network
@@ -10,7 +10,6 @@ Here are different papers to get inspired
     - Paphnucy : the implementation made using Tensorflow:
         - trained using the PDBbind database ;
         - implementation available online here 
-    
 
  - [DLSCORE: A Deep Learning Model for Predicting Protein-Ligand Binding Affinities](https://chemrxiv.org/articles/DLSCORE_A_Deep_Learning_Model_for_Predicting_Protein-Ligand_Binding_Affinities/6159143)
     - Pretty recent paper

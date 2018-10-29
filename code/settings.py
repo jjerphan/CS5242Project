@@ -107,10 +107,14 @@ NB_NEG_EX_PER_POS = 40
 
 # A constant to reduce the weight of the positive class
 WEIGHT_POS_CLASS = 1
+LR_DEFAULT = 0.001
+LR_DECAY_DEFAULT =0.0
 
 # Evaluation settings
 METRICS_FOR_EVALUATION = [accuracy_score, precision_score, recall_score, f1_score, confusion_matrix]
 EVALUATION_LOGS_FOLDER = os.path.join(RESULTS_FOLDER, "evaluation")
+PREDICTION_RESULTS_FOLDER = os.path.join(RESULTS_FOLDER, "prediction")
 EVALUATION_CSV_FILE = os.path.join(EVALUATION_LOGS_FOLDER, "evaluation_results.csv")
+FINAL_SCORE_RESULTS_CSV_FILE = os.path.join(EVALUATION_LOGS_FOLDER, "final_score_results.csv")
 
 

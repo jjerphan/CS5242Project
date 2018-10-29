@@ -18,9 +18,9 @@ The repository is publicly accessible [here](https://github.com/jjerphan/CS5242P
 
 ## Really Quick Start Reference 
 
-**This guide assumes the program will be running on NSCC GPU cluster.** The steps presented here might need some modification if you want to run it in other gpu resources (see Usage section).
+**This guide assumes the program will be running on NSCC GPU cluster.** The steps presented here might need some modification if you want to run it in other gpu resources (see "Using jobs of the pipeline without the cluster" section).
 
-This really quick start guide includes the full cycle of preparing data, training, evaluation and prediction of protein/ligand binding. If you want more guidance, read the Usage section that is more detailed. Aswell, we wrote a guide 
+This really quick start guide includes the full cycle of preparing data, training, evaluation and prediction of protein/ligand binding. If you want more guidance, read the "Detailed usage of the project" section.
 
 ##### 1. Copy project code into conda environment. Install required packages (refer Usage section).
 
@@ -78,7 +78,7 @@ Then submit the job:
 (CS5242) $ python code/create_job_sub.py
 ```
 
-Choose 2 or 3 for evaluating trained models, then choose the model used for evaluation.
+Choose 2 or 3 for evaluating trained models, then choose the model to use for evaluation.
 
 Then submit the job:
 
@@ -92,7 +92,7 @@ Then submit the job:
 (CS5242) $ python code/create_job_sub.py
 ```
 
-Choose 4 for prediction, then **enter any character to predict** then choose the model used for prediction. 
+Choose 4 for prediction, then **enter any character to predict** then choose the model to use for prediction. 
 
 Then submit the job:
 
@@ -136,8 +136,8 @@ We use Anaconda as well as two environments for this project as some operations 
 You can create such environments with the following command:
 
 ```bash
-conda env create -f environment.yml # for small tasks
-conda env create -f environment_gpu.yml # for jobs (computational intensive tasks)
+conda env create -f environment.yml # CPU env. for small tasks
+conda env create -f environment_gpu.yml # GPU env. for jobs (computational intensive tasks)
 ```
 
 Then, you can activate one environment like this:
@@ -180,7 +180,7 @@ To extract the data you have to run:
 (CS5242) $ python code/create_examples.py
 ```
 
-Examples will be populated in the `training_data/training_examples/`, `training_data/validation_examples/`, `training_data/test_examples` for the original data and in `testing_data_release/predict_examples`for the data used for prediction as follows
+Examples will be populated in the `training_data/training_examples/`, `training_data/validation_examples/`, `training_data/test_examples` for the original data and in `testing_data_release/predict_examples`for the data used for final predictions.
 
 ### Training a model
 
@@ -209,7 +209,7 @@ An ID of the jobs (let's say `xxxxxxx.wlm01`) is returned. Results of this job a
 
 Note that you can submit those type of jobs as much as you want.
 
-### Evaluating one model of all the models
+### Evaluating one model or all the models
 
 You can evaluate a model using the pipeline given before:
 
@@ -300,7 +300,7 @@ With specified option. See the content of submissions files and of those `.py` f
 
 The project is organised as follows:
 
-| FIle                  | Role                                                |
+| File or folder        | Role                                                |
 | --------------------- | --------------------------------------------------- |
 | `code/`               | Our code base (detailed in the section bellow).     |
 | `README.md`           | This file.                                          |

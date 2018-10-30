@@ -1,0 +1,21 @@
+#! /bin/bash
+#PBS -P Personal
+#PBS -q gpu
+#PBS -j oe
+#PBS -l select=1:ngpus=1
+#PBS -l walltime=23:00:00
+#PBS -N train_ProtInceptionNet_20epochs_32batch_40neg
+mkdir -p /scratch/users/nus/e0367937/other_features/results/$PBS_JOBID/
+cd $PBS_O_WORKDIR/code/
+source activate CS5242_gpu
+python $PBS_O_WORKDIR/code/train_cnn.py  --model_index 7 \
+                                         --nb_epochs 20 \
+                                         --batch_size 32 \
+                                         --optimizer adam \
+                                         --lr 0.001 \
+                                         --lr_decay 0.0 \
+                                         --weight_pos_class 1 \
+                                         --representation relative \
+                                         --nb_neg 40\
+                                         --job_folder /scratch/users/nus/e0367937/other_features/results/$PBS_JOBID/
+

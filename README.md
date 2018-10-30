@@ -58,13 +58,23 @@ $ unzip testing_data_release.zip
 (CS5242) $ python code/create_examples.py # create protein/ligand complexes. (Note: This may takes a while depending on the compute resources as +150 Gb of data are created)
 ````
 
-##### 5. (Optional) Training new model. 
+##### 5. (Optional) Train or best model new model. 
 
-````bash
+Just run:
+
+```bash
+(CS5242) $ qsub train_best_model.pbs
+```
+
+Results and informations about the model will be stored in `results/xxxxxxx.wlm01/`. Where `xxxxxxx` is a number of 7 digits.
+
+##### 6. (Optional) Evaluate the model using validation dataset. 
+
+```bash
 (CS5242) $ python code/create_job_sub.py
-````
+```
 
-Choose 0 or 1 for training models and then enter the parameters to use for the model and its training.
+Choose 2  for evaluating the trained model, then choose the model to use for evaluation.
 
 Then submit the job:
 
@@ -72,19 +82,7 @@ Then submit the job:
 (CS5242) $ qsub jobs_submissions/<the file created>.pbs
 ```
 
-##### 6. (Optional) Evaluation model using test datasets. 
-
-```bash
-(CS5242) $ python code/create_job_sub.py
-```
-
-Choose 2 or 3 for evaluating trained models, then choose the model to use for evaluation.
-
-Then submit the job:
-
-```bash
-(CS5242) $ qsub jobs_submissions/<the file created>.pbs
-```
+Evaluation metrics results of the model will be stored in `results/evaluation/evaluation.csv`.
 
 ##### 7. Predicting testing data release.
 
@@ -99,6 +97,8 @@ Then submit the job:
 ```bash
 (CS5242) $ qsub jobs_submissions/<the file created>.pbs
 ```
+
+The final prediction (best ligands for protein) are stored in `results/xxxxxxx.wlm01/xxxxxxx.wlm01_final_prediction.txt`.
 
 ## Detailed usage of the project
 
@@ -292,7 +292,7 @@ With specified option. See the content of submissions files and of those `.py` f
 
 ## Pipeline Diagram
 
-![Pipeline Diagram](/home/jsquared/Documents/UTC/GI05/CS5242/project/documentation/diagram.png)
+![Pipeline Diagram](./documentation/diagram.png)
 
 
 

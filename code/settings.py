@@ -107,6 +107,8 @@ NB_NEG_EX_PER_POS = 40
 
 # A constant to reduce the weight of the positive class
 WEIGHT_POS_CLASS = 1
+LR_DEFAULT = 0.001
+LR_DECAY_DEFAULT =0.0
 
 # Evaluation settings
 METRICS_FOR_EVALUATION = [accuracy_score, precision_score, recall_score, f1_score, confusion_matrix]

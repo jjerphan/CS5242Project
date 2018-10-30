@@ -5,7 +5,7 @@ from discretization import RelativeCubeRepresentation, AbsoluteCubeRepresentatio
 from models_inspector import ModelsInspector
 from models import models_available, models_available_names
 from settings import JOB_SUBMISSIONS_FOLDER, NB_NEG_EX_PER_POS, NB_EPOCHS_DEFAULT, BATCH_SIZE_DEFAULT, N_GPU_DEFAULT, \
-    RESULTS_FOLDER, JOBS_ENV, WEIGHT_POS_CLASS
+    RESULTS_FOLDER, JOBS_ENV, WEIGHT_POS_CLASS, LR_DEFAULT, LR_DECAY_DEFAULT
 
 
 def save_job_file(stub, name_job, ask_confirm=True):
@@ -43,7 +43,7 @@ def save_job_file(stub, name_job, ask_confirm=True):
 
 
 def get_train_stub(model_index, name_job, nb_epochs, batch_size, nb_neg, max_examples, n_gpu, weight_pos_class,
-                   representation, optimizer, lr_decay):
+                   representation, optimizer, lr_decay, lr):
     """
     Return the stub for training a using the different parameters given. Parameters used for training.
 
@@ -58,6 +58,7 @@ def get_train_stub(model_index, name_job, nb_epochs, batch_size, nb_neg, max_exa
     :param representation: Relative or absolute cube representation.
     :param optimizer: NN optimizer to be used
     :param lr_decay: Learning rate decay for the optimizer
+    :param lr: Learning rate for the optimizer
     :return:
     """
     script_name = "train_cnn.py"
@@ -79,6 +80,7 @@ def get_train_stub(model_index, name_job, nb_epochs, batch_size, nb_neg, max_exa
                                                          --nb_epochs {nb_epochs} \\
                                                          --batch_size {batch_size} \\
                                                          --optimizer {optimizer} \\
+                                                         --lr {lr} \\
                                                          --lr_decay {lr_decay} \\
                                                          --weight_pos_class {weight_pos_class} \\
                                                          --representation {representation} \\
@@ -127,11 +129,14 @@ def create_train_job():
     optimizer = input(f"The optimizer to use ('adam' (default) ,'sgd', 'nesterov', 'adadelta', 'nadam')")
     optimizer = "adam" if optimizer == "" else optimizer
 
-    lr_decay = input(f"Learning rate decay to apply (default 0.0 ie no decay)")
-    lr_decay = 0.0 if lr_decay == "" else float(lr_decay)
+    lr_decay = input(f"Learning rate decay to apply (default {LR_DECAY_DEFAULT} ie no decay)")
+    lr_decay = LR_DECAY_DEFAULT if lr_decay == "" else float(lr_decay)
+
+    lr = input(f"Learning rate (default {LR_DEFAULT} ie no decay)")
+    lr = LR_DEFAULT if lr == "" else float(lr)
 
     weight_pos_class = input(f"Weight for the positive class (leave blank for default = {WEIGHT_POS_CLASS}) : ")
-    weight_pos_class = WEIGHT_POS_CLASS if weight_pos_class == "" else int(weight_pos_class)
+    weight_pos_class = WEIGHT_POS_CLASS if weight_pos_class == "" else float(weight_pos_class)
 
     representation = input(f"Cube representation: leave blank for relative, type any character for absolute : ")
     representation = RelativeCubeRepresentation.name if representation == "" else AbsoluteCubeRepresentation.name
@@ -145,7 +150,7 @@ def create_train_job():
     name_job += f"_{max_examples}max" if max_examples else ""
 
     stub = get_train_stub(model_index, name_job, nb_epochs, batch_size, nb_neg, max_examples, n_gpu, weight_pos_class,
-                          representation,optimizer, lr_decay)
+                          representation, optimizer, lr_decay, lr)
 
     save_job_file(stub, name_job)
 
@@ -267,11 +272,14 @@ def create_multiple_train_jobs(batch_size: int=BATCH_SIZE_DEFAULT, max_examples=
             f"(separate with spaces then enter) : ").split())
 
     list_lr_decay = list(map(float,input(
-            f"Learning rate decay to apply (float >= 0.0)"
+            f"Learning rate decay to apply (float >= {LR_DECAY_DEFAULT})"
             f"(separate with spaces then enter) : ").split()))
 
+    lr = input(f"Learning rate (default {LR_DEFAULT} ie no decay)")
+    lr = LR_DEFAULT if lr == "" else float(lr)
+
     weight_pos_class = input(f"Weight for the positive class (leave blank for default = {WEIGHT_POS_CLASS}) : ")
-    weight_pos_class = WEIGHT_POS_CLASS if weight_pos_class == "" else int(weight_pos_class)
+    weight_pos_class = WEIGHT_POS_CLASS if weight_pos_class == "" else float(weight_pos_class)
 
     representation = input(f"Cube representation: leave blank for relative, type any character for absolute: ")
     representation = RelativeCubeRepresentation.name if representation == "" else AbsoluteCubeRepresentation.name
@@ -280,7 +288,7 @@ def create_multiple_train_jobs(batch_size: int=BATCH_SIZE_DEFAULT, max_examples=
         list_optimizer = ["adam"]
 
     if len(list_lr_decay) == 0:
-        list_lr_decay = [0.0]
+        list_lr_decay = [LR_DECAY_DEFAULT]
 
     for nb_epochs in list_nb_epochs:
         for nb_neg in list_nb_neg:
@@ -299,7 +307,8 @@ def create_multiple_train_jobs(batch_size: int=BATCH_SIZE_DEFAULT, max_examples=
                                           n_gpu=n_gpu, weight_pos_class=weight_pos_class,
                                           representation=representation,
                                           optimizer=optimizer,
-                                          lr_decay=lr_decay)
+                                          lr_decay=lr_decay,
+                                          lr=lr)
 
                     save_job_file(stub, name_job, ask_confirm=False)
 

@@ -2,24 +2,43 @@
 
 ## About this project
 
-This is a term project for the module CS5242 (Deep Learning and Neural Networks). It has been realized by Wang Jun and Julien Jerphanion.
+This is a term project for the module CS5242 (Deep Learning and Neural Networks). It has been realized by Wang Jun and Julien Jerphanion. The project description is accessible [here](./documentation/project_description.pdf).
 
+The repository is publicly accessible [here](https://github.com/jjerphan/CS5242Project/) and we recommend reading this document online for a better readability.
 
+#### Organisation of this document:
 
-## Quick Start Reference 
+- Really Quick Start Reference
+- Detailed usage of the project
+- Using jobs of the pipeline without the cluster
+- Pipeline Diagram
+- Structure of the project
+- Structure of the code base : `code`
+- About the license
 
-This guide assumes the program will be running on NSCC gpu cluster. The steps might need some modification if you want to run it in other gpu resources. This guide includes the full cycle of preparing data, training, evaluation and prediction of protein/ligand binding. It does not include how to setup nuss conda environment. 
+## Really Quick Start Reference 
 
+**This guide assumes the program will be running on NSCC GPU cluster.** The steps presented here might need some modification if you want to run it on other GPU resources (see "Using jobs of the pipeline without the cluster" section).
 
+This really quick start guide includes the full cycle of preparing data, training, evaluation and prediction of protein/ligand binding. If you want more guidance, read the "Detailed usage of the project" section.
 
 ##### 1. Copy project code into conda environment. Install required packages (refer Usage section).
+
+```bash
+# Install the complete Anaconda distribution
+$ git clone https://github.com/jjerphan/CS5242Project/
+$ cd CS5242Project # {project folder}
+$ conda env create -f environment.yml # for small tasks
+$ conda env create -f environment_gpu.yml # for jobs (computational intensive tasks)
+$ source activate CS5242
+```
 
 ##### 2. Create soft link for training and testing data folder due to limited harddisk space. 
 
 ```bash
 $ mkdir /scratch/users/nus/{student id}/training_data
 $ mkdir /scratch/users/nus/{student id}/testing_data_release
-$ cd {project folder}
+$ cd CS5242Project # {project folder}
 $ ln -s /scratch/users/nus/{student id}/training_data training_data
 $ ln -s /scratch/users/nus/{student id}/testing_data_release testing_data_release
 ```
@@ -32,37 +51,58 @@ $ mv training_data training_data/original
 $ unzip testing_data_release.zip
 ```
 
-##### 4. Extract data from original pdb files. 
+##### 4. Run full pre-processing pipeline 
 
-`$ python code/extraction_data.py`
+````bash
+(CS5242) $ python code/extraction_data.py
+(CS5242) $ python code/create_examples.py # create protein/ligand complexes. (Note: This may takes a while depending on the compute resources as +150 Gb of data are created)
+````
 
-##### 5. Create protein/ligand complexes. (Note: This may takes a while depending on the compute resources)
+##### 5. (Optional) Training new model. 
 
-`$ python code/create_examples.py`
+````bash
+(CS5242) $ python code/create_job_sub.py
+````
 
-##### 6. (Optional) Training new model. 
+Choose 0 or 1 for training models and then enter the parameters to use for the model and its training.
 
-`$ python code/create_job_sub.py`
+Then submit the job:
 
-Choose 0 or 1 for training models
+```bash
+(CS5242) $ qsub jobs_submissions/<the file created>.pbs
+```
 
-##### 7. (Optional) Evaluation model using test datasets. 
+##### 6. (Optional) Evaluation model using test datasets. 
 
-`$ python code/create_job_sub.py`
+```bash
+(CS5242) $ python code/create_job_sub.py
+```
 
-Choose 2 or 3 for evaluation trained models.
+Choose 2 or 3 for evaluating trained models, then choose the model to use for evaluation.
 
-##### 8. Predicting testing data release.
+Then submit the job:
 
-`$ python code/create_job_sub.py`
+```bash
+(CS5242) $ qsub jobs_submissions/<the file created>.pbs
+```
 
-Choose 4 for prediction, then choose the model used for prediction. 
+##### 7. Predicting testing data release.
 
+```bash
+(CS5242) $ python code/create_job_sub.py
+```
 
+Choose 4 for prediction, then **enter any character to predict** then choose the model to use for prediction. 
 
-## Usage
+Then submit the job:
 
-The pipeline works in several stages: 
+```bash
+(CS5242) $ qsub jobs_submissions/<the file created>.pbs
+```
+
+## Detailed usage of the project
+
+The workflows in composed of several stages: 
 
 - **Downloading the data**: 
   - done via `scp`
@@ -78,7 +118,7 @@ The pipeline works in several stages:
   - As a job on the cluster
 - **Evaluating one or several model**
   - As a job on the cluster
-- **Predicting using a model**
+- **Testing or predicting one model**
   - As a job on the cluster
 - **Downloading results of training and evaluation**
   - Locally on the cluster
@@ -96,8 +136,8 @@ We use Anaconda as well as two environments for this project as some operations 
 You can create such environments with the following command:
 
 ```bash
-conda env create -f environment.yml # for small tasks
-conda env create -f environment_gpu.yml # for jobs (computational intensive tasks)
+conda env create -f environment.yml # CPU env. for small tasks or debugging
+conda env create -f environment_gpu.yml # GPU env. for jobs (computational intensive tasks)
 ```
 
 Then, you can activate one environment like this:
@@ -118,9 +158,9 @@ All the following operations are performed:
 - using the `CS5242` environment if they get run locally on the cluster and don't need (*you need to activate it first*)
 - using the `CS5242_gpu` environment if run as a job on the cluster (the environement is activated automatically when running it)
 
-*Hence, when you are in a session on the cluster, we recommand to directly activate the  `CS5242` environement directly.
+*Hence, when you are in a session on the cluster, we recommand to directly activate the  `CS5242` environement directly.*
 
-## Extraction of data
+### Extraction of data
 
 To extract the data you have to run:
 
@@ -130,9 +170,9 @@ To extract the data you have to run:
 
 The data will be extracted in the `training_data/extracted/train/`, `training_data/extracted/validation/`, `training_data/extracted/test`  for the original data and in `testing_data_release/extracted`for the data used for prediction
 
-## Creation of examples
+### Creation of examples
 
-#### ⚠ BE CAREFULL : for this step, a lot of data will be created (with the default settings, more than 130Gb). By default, all the examples for validation, testing and prediction are created. If you want to create less data, we recommend using the `nb_neg` argument for the creation of examples (see the tail of `code/create_examples.py`)
+#### ⚠ BE CAREFUL : for this step, a lot of data will be created (with the default settings, more than 150Gb). By default, all the examples for validation, testing and prediction are created. If you want to create less data, we recommend using the `nb_neg` argument for the creation of examples (see the tail of `code/create_examples.py`)
 
 To extract the data you have to run:
 
@@ -140,9 +180,9 @@ To extract the data you have to run:
 (CS5242) $ python code/create_examples.py
 ```
 
-Examples will be populated in the `training_data/training_examples/`, `training_data/validation_examples/`, `training_data/test_examples` for the original data and in `testing_data_release/predict_examples`for the data used for prediction as follows
+Examples will be populated in the `training_data/training_examples/`, `training_data/validation_examples/`, `training_data/test_examples` for the original data and in `testing_data_release/predict_examples`for the data used for final predictions.
 
-## Training a model
+### Training a model
 
 Training a model is done as a job on the cluster. To do this, you have to `qsub` a submission file. We provide a way to create such a file with  `code/create_job_sub.py`.
 
@@ -160,16 +200,16 @@ To run the job, you have to submit the file:
 (CS5242) $ qsub job_submissions/train_cnn_model_some_parameters.pbs
 ```
 
-An ID of the jobs (let's say `xxxxxxx.wlm01`) is returned. Results of this job are saved in  `results/xxxxxxx.wlm01` ;those results include:
+An ID of the jobs (let's say `xxxxxxx.wlm01`) is returned. Results of this job are saved in  `results/xxxxxxx.wlm01`; those results include:
 
-- `history.pickle` : the `history` dictionarry of the `History`  object return by `model.fit`
-- `train_cnn.log`: the logs of the training procedure
-- `model.h5`: the serialized model
-- `parameters.txt`: the set of parameters used to train the model
+- `xxxxxxx.wlm01_history.pickle` : the `history` dictionarry of the `History`  object return by `model.fit`
+- `xxxxxxx.wlm01_train_cnn.log`: the logs of the training procedure
+- `xxxxxxx.wlm01_model.h5`: the serialized model
+- `xxxxxxx.wlm01_parameters.txt`: the set of parameters used to train the model
 
 Note that you can submit those type of jobs as much as you want.
 
-## Evaluating one model
+### Evaluating one model or all the models
 
 You can evaluate a model using the pipeline given before:
 
@@ -188,24 +228,11 @@ To run the job, you have to submit the file:
 ```
 
 The result of the evaluation of one model is a log `evaluate_xxxxxxx.wlm01.log`  that is saved in the same`results/xxxxxxx.wlm01` folder.
+
 A log is appended to `evaluation/evaluation.csv`: the final result of the evaluation.
 It contains for each model, values of the metrics as well as the parameters used for the training.
 
-## Evaluating all the models
-
-You can also create submissions files for model that aren't been evaluated yet.
-
- ```bash
-(CS5242) $ qsub job_submissions/evaluate_xxxxxxx.wlm01.pbs
- ```
-
-Results of this job are saved in  `results/evaluation/.wlm01` ;those results include:
-
-- `evaluate_timestamp.log`: the logs of the evaluation procedure
-
-#### Note that evaluating all the models can take a lot of time. We recommend evaluating model in parallel, one at the time.  
-
-## Testing or predicting one model
+### Testing or predicting one model
 
 You can evaluate a model using the pipeline given before:
 
@@ -223,13 +250,15 @@ To run the job, you have to submit the file:
 (CS5242) $ qsub job_submissions/evaluate_xxxxxxx.wlm01.pbs
 ```
 
+You can also choose to create mutliple files to evaluate models that have been trained but not evaluated yet.
+
 The result of the evaluation of one model is a log ``evaluate_xxxxxxx.wlm01.log`  that is saved in the same`results/xxxxxxx.wlm01` folder.
 
-## Downloading the results of training and evaluation on the clusters
+### Downloading the results of training and evaluation on the clusters and inspecting them
 
 Sometimes, it is easier to inspect the results of training and evaluation on one's local machine.
 
-We have written a little script to compress all the results of jobs (except serialized models, i.e. `model.h5` files) in an archive. The structure of the folder will be the same.
+We have written a little script to compress all the results of jobs (except serialized models, i.e. `*model.h5` files) in an archive. The structure of the folder will be the same.
 
 To compress all your results simply run:
 
@@ -239,6 +268,8 @@ chmod +x compress_results # to make it executable
 ```
 
 A `timestamp_exported_results.tar.gz` will be created. You can download this file on you machine using `scp`.
+
+You can then inspect those results locally. Just place the extracted `results` folder at the root of the project locally and run  `code/plot_training.py`.
 
 ## Using jobs of the pipeline without the cluster
 
@@ -259,9 +290,31 @@ Alternatively, you can execute job directly running
 
 With specified option. See the content of submissions files and of those `.py` for more guidance.
 
-## Code base in `code`
+## Pipeline Diagram
 
-Here is the organisation of the code base. 
+![Pipeline Diagram](/home/jsquared/Documents/UTC/GI05/CS5242/project/documentation/diagram.png)
+
+
+
+## Structure of the project
+
+The project is organised as follows:
+
+| File or folder        | Role                                                |
+| --------------------- | --------------------------------------------------- |
+| `code/`               | Our code base (detailed in the section bellow).     |
+| `README.md`           | This file.                                          |
+| `documentation/`      | A folder holding diverse elements of documentation. |
+| `environment.yml`     | Anaconda CPU environnement (used for installation). |
+| `environment_gpu.yml` | Anaconda GPU environnement (used for installation)  |
+| `._travis.yml`        | For running tests remotely (in standby for now)     |
+| `LICENSE`             | The License file of this project                    |
+| `compress_results.sh` | A script to extract results.                        |
+| `test/`               | Tests of the code base.                             |
+
+## Structure of the code base : `code`
+
+The code base is organised as follows: 
 
 | FIle                   | Role                                                         |
 | ---------------------- | ------------------------------------------------------------ |
@@ -277,4 +330,9 @@ Here is the organisation of the code base.
 | `evaluate.py`          | A job to evaluate a given serialized model                   |
 | `train_cnn.py`         | A job to evaluate a given specified model                    |
 | `predict.py`           | A job to test or predict final result using a given serialized model |
-| `predict_generator.py` | A generator of examples for predictions                      |
+| `predict_generator.py` | A generator that iterates through examples for predictions   |
+| `plot_training.py`     | A script to plot result obtained during training             |
+
+## About the license
+
+This project is accessible under GPL-3.0.

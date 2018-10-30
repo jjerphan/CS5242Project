@@ -58,7 +58,23 @@ $ unzip testing_data_release.zip
 (CS5242) $ python code/create_examples.py # create protein/ligand complexes. (Note: This may takes a while depending on the compute resources as +150 Gb of data are created)
 ````
 
-##### 5. (Optional) Train or best model new model. 
+**5. Run the model to predict final_results on our saved model**
+
+```bash
+(CS5242) $ python code/create_job_sub.py
+```
+
+Choose 4 for prediction, then **enter any character to predict** then choose `7799845.wlm01` for the model to use for prediction. 
+
+Then submit the job:
+
+```bash
+(CS5242) $ qsub jobs_submissions/<the file created>.pbs
+```
+
+The final prediction (best ligands for protein) are stored in `results/7799845.wlm01/7799845.wlm01_final_prediction.txt` and is equal to the submited `./test_predictions.txt` file modulo 0 padding.
+
+##### 6. (Optional) Train our best model again 
 
 Just run:
 
@@ -68,7 +84,7 @@ Just run:
 
 Results and informations about the model will be stored in `results/xxxxxxx.wlm01/`. Where `xxxxxxx` is a number of 7 digits.
 
-##### 6. (Optional) Evaluate the model using validation dataset. 
+##### 7. (Optional) Evaluate the model using validation dataset. 
 
 ```bash
 (CS5242) $ python code/create_job_sub.py
@@ -84,7 +100,7 @@ Then submit the job:
 
 Evaluation metrics results of the model will be stored in `results/evaluation/evaluation.csv`.
 
-##### 7. Predicting testing data release.
+##### 8. (Optional) Predicting testing data release our your trained model
 
 ```bash
 (CS5242) $ python code/create_job_sub.py
@@ -263,8 +279,8 @@ We have written a little script to compress all the results of jobs (except seri
 To compress all your results simply run:
 
 ```bash	
-chmod +x compress_results # to make it executable
-./compress_results
+$ chmod +x compress_results # to make it executable
+$ ./compress_results
 ```
 
 A `timestamp_exported_results.tar.gz` will be created. You can download this file on you machine using `scp`.
@@ -276,8 +292,10 @@ You can then inspect those results locally. Just place the extracted `results` f
 If you would like to train, evaluate and predict on another machine, you can just execute submissions file on your machine like so for example.
 
 ```bash
-(CS5242) chmod +x ./job_submissions/train_cnn_model_some_parameters.pgb
-(CS5242) bash ./job_submissions/train_cnn_model_some_parameters.pgb
+# At the root of the project
+(CS5242) $ chmod +x ./job_submissions/train_cnn_model_some_parameters.pgb
+(CS5242) $ export PBS_O_WORKDIR=`pwd` # needed for running the job
+(CS5242) $ bash ./job_submissions/train_cnn_model_some_parameters.pgb
 ```
 
 Alternatively, you can execute job directly running

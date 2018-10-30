@@ -123,6 +123,10 @@ def plot_local_results():
         for k, v in set_parameters.items():
             print(f" - {k} : {v}")
 
+        if "history" not in history_file_path:
+            print(f"No history present for {sub_folder}")
+            continue
+
         optimizer_name = re.sub(r'object at .+>', "", set_parameters['optimizer'].replace('<keras.optimizers.',''))
         description = f"{set_parameters['model']} Repr. {set_parameters['representation']} ; " \
                       f"Epochs {set_parameters['nb_epochs']} ;  " \
@@ -133,7 +137,6 @@ def plot_local_results():
         plt.pause(1)
         name_file = re.sub(r"\s+", "_", re.sub(r'(\.|;|:)', "", description)).lower()
         fig.savefig(os.path.join(EVALUATION_LOGS_FOLDER, name_file))
-        # input("[Enter] to continue")
         plt.close('all')
 
 

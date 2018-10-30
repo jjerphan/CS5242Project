@@ -189,8 +189,3 @@ python -c "import keras; print('if you see no errors, it\'s good to go.')"
   $ cat CS5242_Training.o7669473
   ```
 
-
-
-
-
-

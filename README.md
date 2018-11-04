@@ -6,6 +6,8 @@ This is a term project for the module CS5242 (Deep Learning and Neural Networks)
 
 The repository is publicly accessible [here](https://github.com/jjerphan/CS5242Project/) and we recommend reading this document online for a better readability.
 
+We wrote a short (6pages) report about our work, it is accessible [here](https://cloud.utc.fr/index.php/s/yiLPwGsvmVIZNCB).
+
 #### Organisation of this document:
 
 - Really Quick Start Reference
